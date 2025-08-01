@@ -13,21 +13,36 @@ export const checklistType = defineType({
       type: 'string',
     }),
     defineField({
-      name: 'type',
-      title: 'Checklist Type',
-      type: 'string',
-      options: {
-        list: [
-          { title: 'Onboarding', value: 'onboarding' },
-          { title: 'Training', value: 'training' },
-        ],
-      },
+      name: 'description',
+      title: 'Description',
+      type: 'text',
+      description: 'A brief description of the checklist.',
     }),
+    // Đã xóa định nghĩa trường 'type'
+    // defineField({
+    //   name: 'type',
+    //   title: 'Checklist Type',
+    //   type: 'string',
+    //   options: {
+    //     list: [
+    //       { title: 'Onboarding', value: 'onboarding' },
+    //       { title: 'Training', value: 'training' },
+    //     ],
+    //   },
+    // }),
   ],
   preview: {
     select: {
       title: 'title',
-      subtitle: 'type',
+      // Đã xóa subtitle 'type' khỏi preview select
+      // subtitle: 'type',
+    },
+    prepare({ title }) { // Cập nhật prepare để chỉ nhận title
+      return {
+        title,
+        // Không còn subtitle 'type'
+        // subtitle: subtitle ? `Type: ${subtitle}` : '',
+      };
     },
   },
-})
+});
