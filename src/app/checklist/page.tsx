@@ -13,10 +13,6 @@ const client = createClient({
 
 const builder = imageUrlBuilder(client);
 
-function urlFor(source: any) {
-  return builder.image(source);
-}
-
 type ChecklistItem = {
   _id: string;
   label: string;
