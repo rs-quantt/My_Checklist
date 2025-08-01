@@ -14,8 +14,7 @@ type ChecklistItem = {
 type Checklist = {
   _id: string;
   title: string;
-  description?: string; // Giữ lại description
-  // Đã xóa type: string;
+  description?: string;
   items: ChecklistItem[];
 };
 
@@ -43,7 +42,7 @@ export default function ChecklistPage() {
         setChecklists(result);
       } catch (err) {
         console.error('Failed to fetch checklists:', err);
-        setError('Failed to load checklists. Please try again later.');
+        setError('Failed to load checklists. Please try again later.'); // Đã loại bỏ dấu nháy kép
       } finally {
         setLoading(false);
       }
@@ -59,9 +58,7 @@ export default function ChecklistPage() {
     return checklists.filter(
       (checklist) =>
         checklist.title.toLowerCase().includes(lowercasedQuery) ||
-        (checklist.description &&
-          checklist.description.toLowerCase().includes(lowercasedQuery)),
-      // Logic tìm kiếm không còn tìm theo type
+        (checklist.description && checklist.description.toLowerCase().includes(lowercasedQuery))
     );
   }, [checklists, searchQuery]);
 
@@ -72,8 +69,7 @@ export default function ChecklistPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen text-xl text-gray-600">
-        <FaRegCheckSquare className="animate-spin text-blue-500 mr-3 text-3xl" />{' '}
-        Loading checklists...
+        <FaRegCheckSquare className="animate-spin text-blue-500 mr-3 text-3xl" /> Loading checklists...
       </div>
     );
   }
@@ -92,9 +88,7 @@ export default function ChecklistPage() {
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight">
           Checklist Dashboard
         </h1>
-        <p className="mt-4 text-lg text-gray-600">
-          Manage your tasks and track your progress effortlessly.
-        </p>
+        <p className="mt-4 text-lg text-gray-600">Manage your tasks and track your progress effortlessly.</p>
 
         <div className="mt-8 mx-auto w-full max-w-md px-4 sm:px-0 relative">
           <input
@@ -127,8 +121,7 @@ export default function ChecklistPage() {
         {filteredChecklists.length === 0 && searchQuery !== '' ? (
           <div className="text-center text-gray-500 text-xl py-10">
             <FaSearch className="mx-auto text-4xl mb-4 text-gray-400" />
-            No checklists found matching "{searchQuery}". Try a different search
-            term.
+            No checklists found matching "{searchQuery}". Try a different search term.
           </div>
         ) : filteredChecklists.length === 0 && searchQuery === '' ? (
           <div className="text-center text-gray-500 text-xl py-10">
@@ -138,11 +131,7 @@ export default function ChecklistPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredChecklists.map((checklist, index) => (
-              <Link
-                key={checklist._id}
-                href={`/checklists/${checklist._id}`}
-                passHref
-              >
+              <Link key={checklist._id} href={`/checklists/${checklist._id}`} passHref>
                 <div
                   className={`
                     block
@@ -158,9 +147,7 @@ export default function ChecklistPage() {
                     <div className="flex items-center mb-4">
                       <FaRegCheckSquare className="text-blue-600 text-2xl mr-4" />
                       <div>
-                        <h2 className="text-xl font-semibold text-gray-800 leading-tight">
-                          {checklist.title}
-                        </h2>
+                        <h2 className="text-xl font-semibold text-gray-800 leading-tight">{checklist.title}</h2>
                         {checklist.description && (
                           <p className="text-gray-600 text-sm mt-2 line-clamp-2">
                             {checklist.description}
@@ -170,13 +157,12 @@ export default function ChecklistPage() {
                     </div>
                   </div>
                   <div className="text-sm text-gray-600 mt-4 text-right">
-                    {checklist.items
-                      ? `${checklist.items.length} items`
-                      : '0 items'}
+                    {checklist.items ? `${checklist.items.length} items` : '0 items'}
                   </div>
                 </div>
               </Link>
-            ))}
+            ))
+          }
           </div>
         )}
       </div>
