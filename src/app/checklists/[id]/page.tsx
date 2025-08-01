@@ -196,9 +196,7 @@ export default function ChecklistDetailPage() {
                 </p>
                 {/* Optional: Add an arrow icon to indicate expanded/collapsed state */}
                 <svg
-                  className={
-                    `w-5 h-5 text-gray-600 transform transition-transform ${isExpanded ? 'rotate-180' : 'rotate-0'}`
-                  }
+                  className={`w-5 h-5 text-gray-600 transform transition-transform ${isExpanded ? 'rotate-180' : 'rotate-0'}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -245,16 +243,16 @@ export default function ChecklistDetailPage() {
                           }
                           className="sr-only peer"
                         />
-                        <div className={
-                          `w-5 h-5 border-2 rounded-full peer-checked:bg-current peer-checked:border-transparent flex items-center justify-center transition-all duration-200 ease-in-out
+                        <div
+                          className={`w-5 h-5 border-2 rounded-full peer-checked:bg-current peer-checked:border-transparent flex items-center justify-center transition-all duration-200 ease-in-out
                           ${status === 'OK' ? 'border-green-600' : status === 'notOK' ? 'border-red-600' : 'border-gray-600'}
-                          `
-                        }>
-                           <div className={
-                             `w-2 h-2 rounded-full bg-white transition-all duration-200 ease-in-out ${
-                               state.status === status ? 'scale-100' : 'scale-0'
-                             }`
-                           }></div>
+                          `}
+                        >
+                          <div
+                            className={`w-2 h-2 rounded-full bg-white transition-all duration-200 ease-in-out ${
+                              state.status === status ? 'scale-100' : 'scale-0'
+                            }`}
+                          ></div>
                         </div>
 
                         {status === 'OK'

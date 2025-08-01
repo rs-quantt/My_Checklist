@@ -17,7 +17,8 @@ const client = createClient({
 export async function GET(request: Request, context: { params: Params }) {
   const { id } = context.params;
 
-  const checklist = await client.fetch(`
+  const checklist = await client.fetch(
+    `
     *[_type == "checklist" && _id == $id][0]{
       _id,
       title,
@@ -30,7 +31,9 @@ export async function GET(request: Request, context: { params: Params }) {
         order
       }
     }
-  `, { id });
+  `,
+    { id },
+  );
 
   if (!checklist) {
     return new NextResponse('Checklist not found', { status: 404 });
