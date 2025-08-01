@@ -10,13 +10,18 @@ export const structure: StructureResolver = (S) =>
       S.documentTypeListItem('userChecklistItem').title(
         'User Check list items',
       ),
+      S.documentTypeListItem('checklistSummary').title('Checklist Summary'),
       S.documentTypeListItem('user').title('Users'),
       S.divider(),
       ...S.documentTypeListItems().filter(
         (item) =>
           item.getId() &&
-          !['checklist', 'checklistItem', 'userChecklistItem', 'user'].includes(
-            item.getId()!,
-          ),
+          ![
+            'checklist',
+            'checklistItem',
+            'userChecklistItem',
+            'checklistSummary',
+            'user',
+          ].includes(item.getId()!),
       ),
     ]);

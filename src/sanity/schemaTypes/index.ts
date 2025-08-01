@@ -1,10 +1,17 @@
 import { type SchemaTypeDefinition } from 'sanity';
 
-import { userChecklistItemType } from './userChecklistItemType';
 import { checklistType } from './checklistType';
-import { checklistItemType } from './checklistItemType';
 import { userType } from './userType';
+import { userChecklistItemType } from './userChecklistItemType';
+import { checklistItemType } from './checklistItemType';
+import { checklistSummaryType } from './checklistSummaryType';
 
 export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [userChecklistItemType, checklistType, checklistItemType, userType],
+  types: [
+    userChecklistItemType,
+    checklistType,
+    checklistItemType,
+    checklistSummaryType,
+    userType,
+  ],
 };

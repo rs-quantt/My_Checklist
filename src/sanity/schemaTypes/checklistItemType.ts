@@ -28,6 +28,11 @@ export const checklistItemType = defineType({
       title: 'Order (for sorting)',
       type: 'number',
     }),
+    defineField({
+      name: 'category',
+      title: 'Category',
+      type: 'string',
+    }),
   ],
   preview: {
     select: {

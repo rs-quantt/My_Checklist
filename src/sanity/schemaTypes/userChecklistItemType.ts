@@ -20,14 +20,32 @@ export const userChecklistItemType = defineType({
       to: [{ type: 'checklistItem' }],
     }),
     defineField({
-      name: 'checked',
-      title: 'Checked',
-      type: 'boolean',
-      initialValue: true,
+      name: 'status',
+      title: 'Status',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'OK', value: 'OK' },
+          { title: 'Not OK', value: 'notOK' },
+          { title: 'N/A', value: 'na' },
+        ],
+        layout: 'radio',
+      },
     }),
     defineField({
-      name: 'checkedAt',
-      title: 'Checked At',
+      name: 'note',
+      title: 'Reason / Note',
+      type: 'text',
+      hidden: ({ parent }) => parent?.status === 'OK',
+    }),
+    defineField({
+      name: 'taskCode',
+      title: 'Task Code',
+      type: 'string',
+    }),
+    defineField({
+      name: 'updatedAt',
+      title: 'Updated At',
       type: 'datetime',
     }),
   ],
