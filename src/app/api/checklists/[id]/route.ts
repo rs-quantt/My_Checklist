@@ -2,11 +2,6 @@ import { createClient } from 'next-sanity';
 import { apiVersion, dataset, projectId } from '@/sanity/env.server';
 import { NextResponse } from 'next/server';
 
-// Sử dụng kiểu dữ liệu rõ ràng cho params
-interface Params {
-  id: string;
-}
-
 const client = createClient({
   projectId,
   dataset,
@@ -14,8 +9,11 @@ const client = createClient({
   useCdn: true,
 });
 
-export async function GET(request: Request, context: { params: Params }) {
-  const { id } = context.params;
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
 
   const checklist = await client.fetch(
     `
@@ -33,7 +31,7 @@ export async function GET(request: Request, context: { params: Params }) {
     }
   `,
     { id },
-  );
+  ); // Explicitly type the context parameter
 
   if (!checklist) {
     return new NextResponse('Checklist not found', { status: 404 });
