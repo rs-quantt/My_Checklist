@@ -15,7 +15,6 @@ export async function GET() {
       _id,
       title,
       description,
-      // Đã xóa type,
       "items": *[_type == "checklistItem" && checklist._ref == ^._id] | order(order asc){
         _id,
         label,

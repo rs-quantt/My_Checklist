@@ -12,24 +12,37 @@ const client = createClient({
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, itemId, status, note, taskCode } = await req.json();
+    const { userId, taskCode, items } = await req.json();
 
-    if (!userId || !itemId || !status || !taskCode) {
-      return NextResponse.json({ error: 'Missing data' }, { status: 400 });
+    if (!userId || !taskCode || !items || !Array.isArray(items)) {
+      return NextResponse.json({ error: 'Missing or invalid data' }, { status: 400 });
     }
 
-    const docId = `${userId}-${itemId}`;
+    const transaction = client.transaction();
 
-    const result = await client.createOrReplace({
-      _id: docId,
-      _type: 'userChecklistItem',
-      user: { _type: 'reference', _ref: userId },
-      item: { _type: 'reference', _ref: itemId },
-      status,
-      note,
-      taskCode,
-      updatedAt: new Date().toISOString(),
-    });
+    for (const item of items) {
+      const { itemId, status, note } = item;
+
+      if (!itemId || !status) {
+        console.warn(`Skipping item due to missing data: ${JSON.stringify(item)}`);
+        continue;
+      }
+
+      const docId = `${userId}-${itemId}-${taskCode}`;
+
+      transaction.createOrReplace({
+        _id: docId,
+        _type: 'userChecklistItem',
+        user: { _type: 'reference', _ref: userId },
+        item: { _type: 'reference', _ref: itemId },
+        status,
+        note: note || '',
+        taskCode,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
+    const result = await transaction.commit();
 
     return NextResponse.json({ success: true, result });
   } catch (error) {
