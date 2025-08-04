@@ -2,7 +2,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 // Import thêm icon tìm kiếm và xóa
-import { FaRegCheckSquare, FaSearch, FaTimes } from 'react-icons/fa';
+import LoadingSpinner from '@/app/components/LoadingSpinner';
+import { FaSearch, FaTimes, FaCheckCircle } from 'react-icons/fa';
 
 type ChecklistItem = {
   _id: string;
@@ -62,13 +63,7 @@ export default function ChecklistPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen text-4xl text-blue-600 font-bold">
-        <div className="relative w-24 h-24 flex justify-center items-center">
-          <div className="absolute w-full h-full border-8 border-blue-300 border-t-transparent rounded-full animate-spin"></div>
-          <FaRegCheckSquare className="text-blue-500 text-4xl" />
-        </div>
-        <p className="mt-4">Đang tải danh sách checklist...</p>
-      </div>
+      <LoadingSpinner text="Đang tải danh sách checklist..." />
     );
   }
 
@@ -126,7 +121,7 @@ export default function ChecklistPage() {
           </div>
         ) : filteredChecklists.length === 0 && searchQuery === '' ? (
           <div className="text-center text-gray-500 text-xl py-10 animate-fadeIn">
-            <FaRegCheckSquare className="mx-auto text-5xl mb-4 text-gray-400" />
+            <FaCheckCircle className="mx-auto text-5xl mb-4 text-gray-400" />
             Bạn chưa có checklist nào. Hãy tạo một cái mới!
           </div>
         ) : (
@@ -148,7 +143,7 @@ export default function ChecklistPage() {
                 >
                   <div>
                     <div className="flex items-start mb-4">
-                      <FaRegCheckSquare className="text-blue-600 text-3xl mr-4 flex-shrink-0" />
+                      <FaCheckCircle className="text-blue-600 text-3xl mr-4 flex-shrink-0" />
                       <div>
                         <h2 className="text-xl font-bold text-gray-800 leading-tight mb-1">
                           {checklist.title}

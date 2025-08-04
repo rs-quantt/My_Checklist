@@ -4,9 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation'; // Import useRouter
 import { createClient } from 'next-sanity';
 import { apiVersion, dataset, projectId } from '@/sanity/env.client';
-import { FaRegCheckSquare } from 'react-icons/fa';
 import CommonSelect from '@/app/components/CommonSelect';
-// import CustomSelect from '../components/CustomSelect'; // Import the custom select component
+import LoadingSpinner from '@/app/components/LoadingSpinner';
 
 const client = createClient({
   projectId,
@@ -62,7 +61,9 @@ export default function ChecklistDetailPage() {
 
   // Effect to update save button disable state
   useEffect(() => {
-    const allItemsChecked = checklist?.items.every(item => itemStates[item._id]?.status !== '') ?? false;
+    const allItemsChecked =
+      checklist?.items.every((item) => itemStates[item._id]?.status !== '') ??
+      false;
     setIsSaveButtonDisabled(!selectedUserId || !taskCode || !allItemsChecked);
   });
 
@@ -96,13 +97,16 @@ export default function ChecklistDetailPage() {
 
   const saveChecklist = async () => {
     const validationErrors: string[] = [];
-    checklist?.items.forEach(item => {
+    checklist?.items.forEach((item) => {
       const state = itemStates[item._id] || { status: '', note: '' };
 
       if (state.status === '') {
         validationErrors.push(`Mục "${item.label}" chưa được chọn trạng thái.`);
       }
-      if ((state.status === 'notOK' || state.status === 'na') && !state.note.trim()) {
+      if (
+        (state.status === 'notOK' || state.status === 'na') &&
+        !state.note.trim()
+      ) {
         validationErrors.push(`Mục "${item.label}" yêu cầu ghi chú.`);
       }
     });
@@ -166,20 +170,24 @@ export default function ChecklistDetailPage() {
         const preCodeText = text.substring(lastIndex, match.index);
         preCodeText.split('\n').forEach((paragraph, pIndex) => {
           elements.push(
-            <p key={`text-${lastIndex}-${pIndex}`} className="text-sm text-gray-700 leading-relaxed mb-1">
+            <p
+              key={`text-${lastIndex}-${pIndex}`}
+              className="text-sm text-gray-700 leading-relaxed mb-1"
+            >
               {paragraph}
-            </p>
+            </p>,
           );
         });
       }
 
       const codeContent = match[1].trim();
       elements.push(
-        <pre key={`code-${match.index}`} className="bg-gray-100 p-3 rounded-md overflow-auto text-sm my-4 border border-gray-300 shadow-sm">
-          <code className="text-gray-800 font-mono">
-            {codeContent}
-          </code>
-        </pre>
+        <pre
+          key={`code-${match.index}`}
+          className="bg-gray-100 p-3 rounded-md overflow-auto text-sm my-4 border border-gray-300 shadow-sm"
+        >
+          <code className="text-gray-800 font-mono">{codeContent}</code>
+        </pre>,
       );
 
       lastIndex = regex.lastIndex;
@@ -189,9 +197,12 @@ export default function ChecklistDetailPage() {
       const postCodeText = text.substring(lastIndex);
       postCodeText.split('\n').forEach((paragraph, pIndex) => {
         elements.push(
-          <p key={`text-end-${lastIndex}-${pIndex}`} className="text-sm text-gray-700 leading-relaxed mb-1">
+          <p
+            key={`text-end-${lastIndex}-${pIndex}`}
+            className="text-sm text-gray-700 leading-relaxed mb-1"
+          >
             {paragraph}
-          </p>
+          </p>,
         );
       });
     }
@@ -199,49 +210,52 @@ export default function ChecklistDetailPage() {
     return elements;
   };
 
-  if (!checklist)
-    return (
-      <div className="flex flex-col justify-center items-center min-h-screen bg-gray-100 text-4xl text-blue-600 font-bold">
-        <div className="relative w-24 h-24 flex justify-center items-center">
-          <div className="absolute w-full h-full border-8 border-blue-300 border-t-transparent rounded-full animate-spin"></div>
-          <FaRegCheckSquare className="text-blue-500 text-4xl" />
-        </div>
-        <p className="mt-4">Đang tải checklist...</p>
-      </div>
-    );
+  if (!checklist) return <LoadingSpinner text="Đang tải checklist..." />;
 
   return (
     <div className="antialiased bg-gray-50 min-h-screen">
       {/* Main content with blur effect */}
-      <div className={`min-h-screen py-8 px-2 sm:px-4 lg:px-6`}
-        style={showSuccessPopup ? { filter: 'blur(3px)' } : {}}> {/* Apply blur effect conditionally */}
+      <div
+        className={`min-h-screen py-8 px-2 sm:px-4 lg:px-6`}
+        style={showSuccessPopup ? { filter: 'blur(3px)' } : {}}
+      >
+        {' '}
+        {/* Apply blur effect conditionally */}
         <div className="container mx-auto max-w-5xl bg-white text-gray-800 rounded-lg shadow-sm p-6 md:p-8 space-y-8 border border-gray-200">
           {/* Back Button */}
-        <button
-          onClick={() => router.back()}
-          className="mb-6 flex items-center bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors duration-200 text-sm font-medium border border-blue-200 py-2 px-4 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-        >
-          <svg
-            className="w-5 h-5 mr-2" 
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
+          <button
+            onClick={() => router.back()}
+            className="mb-6 flex items-center bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors duration-200 text-sm font-medium border border-blue-200 py-2 px-4 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M10 19l-7-7m0 0l7-7m-7 7h18"
-            ></path>
-          </svg>
-          Quay lại danh sách
-        </button>
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              ></path>
+            </svg>
+            Quay lại danh sách
+          </button>
 
           <div className="text-center mb-6">
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 leading-tight mb-3">
-              {checklist.title}
-            </h1>
+            {/* Wrap h1 and img in a flex container */}
+            <div className="flex items-center justify-center">
+              <img
+                src="/check.png"
+                alt="Checkmark icon"
+                className="w-6 h-6 mr-2 mb-2"
+              />
+              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 leading-tight mb-3">
+                {checklist.title}
+              </h1>
+            </div>
             {checklist.description && (
               <p className="mt-2 text-base text-gray-600 max-w-xl mx-auto leading-relaxed">
                 {checklist.description}
@@ -292,7 +306,8 @@ export default function ChecklistDetailPage() {
                 barColorClass = 'bg-slate-400';
               }
 
-              const isNoteRequired = state.status === 'notOK' || state.status === 'na';
+              const isNoteRequired =
+                state.status === 'notOK' || state.status === 'na';
               const isChecked = state.status !== '';
 
               return (
@@ -300,7 +315,9 @@ export default function ChecklistDetailPage() {
                   key={item._id}
                   className="relative overflow-hidden rounded-lg bg-white shadow-sm hover:shadow-md transition-all duration-200 ease-in-out border border-gray-200"
                 >
-                  <div className={`absolute top-0 left-0 bottom-0 w-2 ${barColorClass} rounded-l-lg`}></div>
+                  <div
+                    className={`absolute top-0 left-0 bottom-0 w-2 ${barColorClass} rounded-l-lg`}
+                  ></div>
 
                   <div className="pl-6 p-4">
                     <div
@@ -322,63 +339,99 @@ export default function ChecklistDetailPage() {
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 9l-7 7-7-7"
+                        ></path>
                       </svg>
                     </div>
 
-                  <div className={`overflow-hidden transition-max-height duration-500 ease-in-out ${isExpanded ? 'max-h-[1000px]' : 'max-h-0'}`}>
-                    <div className="mt-4 space-y-3">
-                      {item.description && (
+                    <div
+                      className={`overflow-hidden transition-max-height duration-500 ease-in-out ${isExpanded ? 'max-h-[1000px]' : 'max-h-0'}`}
+                    >
+                      <div className="mt-4 space-y-3">
+                        {item.description && (
+                          <div>
+                            <hr className="my-4 border-gray-200" />
+                            {renderDescriptionContent(item.description)}
+                            <hr className="my-4 border-gray-200" />
+                          </div>
+                        )}
                         <div>
-                          <hr className="my-4 border-gray-200" />
-                          {renderDescriptionContent(item.description)}
-                          <hr className="my-4 border-gray-200" />
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Trạng thái
+                          </label>
+                          <div className="flex flex-wrap items-center gap-2">
+                            {['OK', 'notOK', 'na'].map((statusOption) => {
+                              const isSelected = state.status === statusOption;
+                              let optionClasses = '';
+                              if (statusOption === 'OK') {
+                                optionClasses = isSelected
+                                  ? 'bg-green-600 text-white border-green-600'
+                                  : 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200';
+                              } else if (statusOption === 'notOK') {
+                                optionClasses = isSelected
+                                  ? 'bg-red-600 text-white border-red-600'
+                                  : 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200';
+                              } else if (statusOption === 'na') {
+                                optionClasses = isSelected
+                                  ? 'bg-slate-600 text-white border-slate-600'
+                                  : 'bg-slate-200 text-slate-800 border-slate-300 hover:bg-slate-300';
+                              }
+                              return (
+                                <button
+                                  key={statusOption}
+                                  onClick={() =>
+                                    handleStatusChange(
+                                      item._id,
+                                      statusOption as Status,
+                                    )
+                                  }
+                                  className={`px-4 py-2 rounded-md font-medium text-xs transition-all duration-200 ease-in-out border ${optionClasses}`}
+                                >
+                                  {statusOption === 'OK'
+                                    ? 'OK'
+                                    : statusOption === 'notOK'
+                                      ? 'Not OK'
+                                      : 'N/A'}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
-                      )}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
-                        <div className="flex flex-wrap items-center gap-2">
-                          {['OK', 'notOK', 'na'].map((statusOption) => {
-                            const isSelected = state.status === statusOption;
-                            let optionClasses = '';
-                            if (statusOption === 'OK') {
-                              optionClasses = isSelected ? 'bg-green-600 text-white border-green-600' : 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200';
-                            } else if (statusOption === 'notOK') {
-                              optionClasses = isSelected ? 'bg-red-600 text-white border-red-600' : 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200';
-                            } else if (statusOption === 'na') {
-                              optionClasses = isSelected ? 'bg-slate-600 text-white border-slate-600' : 'bg-slate-200 text-slate-800 border-slate-300 hover:bg-slate-300';
-                            }
-                            return (
-                              <button
-                                key={statusOption}
-                                onClick={() => handleStatusChange(item._id, statusOption as Status)}
-                                className={`px-4 py-2 rounded-md font-medium text-xs transition-all duration-200 ease-in-out border ${optionClasses}`}
-                              >
-                                {statusOption === 'OK' ? 'OK' : statusOption === 'notOK' ? 'Not OK' : 'N/A'}
-                              </button>
-                            );
-                          })}
-                        </div>
+                        <label
+                          htmlFor={`note-${item._id}`}
+                          className="block text-sm font-medium text-gray-700 mt-3"
+                        >
+                          Lý do / Ghi chú{' '}
+                          <span
+                            className={`text-red-500 ${isNoteRequired ? '' : 'hidden'}`}
+                          >
+                            *
+                          </span>
+                        </label>
+                        <textarea
+                          id={`note-${item._id}`}
+                          value={state.note}
+                          onChange={(e) =>
+                            handleNoteChange(item._id, e.target.value)
+                          }
+                          placeholder={
+                            isNoteRequired ? 'Bắt buộc' : 'Không bắt buộc'
+                          }
+                          className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+                          rows={2}
+                          required={isNoteRequired}
+                        />
                       </div>
-                      <label htmlFor={`note-${item._id}`} className="block text-sm font-medium text-gray-700 mt-3">
-                        Lý do / Ghi chú <span className={`text-red-500 ${isNoteRequired ? '' : 'hidden'}`}>*</span>
-                      </label>
-                      <textarea
-                        id={`note-${item._id}`}
-                        value={state.note}
-                        onChange={(e) => handleNoteChange(item._id, e.target.value)}
-                        placeholder={isNoteRequired ? "Bắt buộc" : "Không bắt buộc"}
-                        className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
-                        rows={2}
-                        required={isNoteRequired}
-                      />
                     </div>
                   </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                </li>
+              );
+            })}
+          </ul>
           {/* Save Button */}
           <button
             className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-md w-full text-base tracking-wide 
@@ -394,17 +447,26 @@ export default function ChecklistDetailPage() {
 
       {/* Success Popup - Rendered without overlay */}
       {showSuccessPopup && (
-        <div className="fixed inset-0 flex items-center justify-center z-50"> {/* Position fixed and centered */}
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm mx-auto text-center border border-gray-200"> {/* Popup content */}
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Thành công!</h3>
-            <p className="text-gray-700 mb-6">Checklist của bạn đã được lưu thành công.</p>
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          {' '}
+          {/* Position fixed and centered */}
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm mx-auto text-center border border-gray-200">
+            {' '}
+            {/* Popup content */}
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              Thành công!
+            </h3>
+            <p className="text-gray-700 mb-6">
+              Checklist của bạn đã được lưu thành công.
+            </p>
             <button
               onClick={() => setShowSuccessPopup(false)}
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 ease-in-out"
             >
               OK
             </button>
-          </div> {/* End Popup content */}
+          </div>{' '}
+          {/* End Popup content */}
         </div>
       )}
     </div>

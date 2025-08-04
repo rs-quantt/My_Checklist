@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { FaPlus, FaTrash, FaRegCheckSquare, FaTimes } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaTimes } from 'react-icons/fa';
 import { User } from '@/types/user';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -82,15 +83,7 @@ export default function UserManagementPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex flex-col justify-center items-center min-h-screen bg-gray-100 text-4xl text-blue-600 font-bold">
-        <div className="relative w-24 h-24 flex justify-center items-center">
-          <div className="absolute w-full h-full border-8 border-blue-300 border-t-transparent rounded-full animate-spin"></div>
-          <FaRegCheckSquare className="text-blue-500 text-4xl" />
-        </div>
-        <p className="mt-4">Loading users...</p>
-      </div>
-    );
+    return <LoadingSpinner text='Đang tải danh sách users ...' />;
   }
 
   if (error) {
