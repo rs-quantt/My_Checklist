@@ -114,6 +114,16 @@ export async function deleteChecklist(id: string): Promise<void> {
   }
 }
 
+export async function countChecklists(): Promise<number> {
+  try {
+    const count = await client.fetch('count(*[_type == "checklist"])');
+    return count;
+  } catch (error) {
+    console.error('Error counting checklists:', error);
+    throw new Error('Failed to count checklists.');
+  }
+}
+
 export async function saveUserChecklistItems(
   userId: string,
   taskCode: string,

@@ -14,6 +14,16 @@ export async function createUser(user: Omit<User, '_id'>): Promise<User> {
   }
 }
 
+export async function countUsers(): Promise<number> {
+  try {
+    const count = await client.fetch<number>(`count(*[_type == "user"])`);
+    return count;
+  } catch (error) {
+    console.error('Error counting users:', error);
+    throw error;
+  }
+}
+
 export async function deleteUser(userId: string): Promise<void> {
   await client.delete(userId);
 }
