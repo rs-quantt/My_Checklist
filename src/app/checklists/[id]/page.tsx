@@ -134,6 +134,27 @@ export default function ChecklistDetailPage() {
       console.error('Lưu thất bại:', await res.text());
     } else {
       console.log('Lưu thành công!');
+      // Now, prepare and send the checklist summary
+      // Calculate total and passed items for summary based on the final itemStates
+      const totalItems = checklist?.items.length || 0;
+      const passedItems =
+        checklist?.items.filter((item) => itemStates[item._id]?.status === 'OK')
+          .length || 0;
+
+      const summaryPayload = {
+        _type: 'checklistSummary',
+        user: { _ref: selectedUserId, _type: 'reference' },
+        checklist: { _ref: id, _type: 'reference' },
+        totalItems: totalItems,
+        passedItems: passedItems,
+      };
+
+      // Send the summary payload
+      fetch('/api/save-checklist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(summaryPayload),
+      }).catch((error) => console.error('Failed to save summary:', error));
       setShowSuccessPopup(true); // Show success popup on success
       window.scrollTo(0, 0); // Scroll to the top of the page
     }
@@ -144,11 +165,6 @@ export default function ChecklistDetailPage() {
     setItemStates((prev) => ({ ...prev, [itemId]: newState }));
   };
 
-  const handleNoteChange = (itemId: string, note: string) => {
-    const newState = { ...itemStates[itemId], note };
-    setItemStates((prev) => ({ ...prev, [itemId]: newState }));
-  };
-
   const toggleItem = (itemId: string) => {
     setExpandedItems((prev) => ({
       ...prev,
@@ -156,6 +172,30 @@ export default function ChecklistDetailPage() {
     }));
   };
 
+  // Function to update item state and send summary
+  const updateItemStateAndSaveSummary = async (
+    itemId: string,
+    updates: Partial<ItemState>,
+  ) => {
+    const newState = { ...itemStates[itemId], ...updates };
+    const updatedItemStates = { ...itemStates, [itemId]: newState };
+    setItemStates(updatedItemStates); // Update local state immediately
+
+    // Calculate total and passed items for summary based on the updated state
+    const totalItems = checklist?.items.length || 0;
+    const passedItems =
+      checklist?.items.filter(
+        (item) => updatedItemStates[item._id]?.status === 'OK',
+      ).length || 0;
+
+    const summaryPayload = {
+      _type: 'checklistSummary',
+      user: { _ref: selectedUserId, _type: 'reference' },
+      checklist: { _ref: id, _type: 'reference' },
+      totalItems: totalItems,
+      passedItems: passedItems,
+    };
+  };
   // Utility function to render description with code blocks
   const renderDescriptionContent = (text: string) => {
     if (!text) return null;
@@ -208,6 +248,11 @@ export default function ChecklistDetailPage() {
     }
 
     return elements;
+  };
+
+  const handleNoteChange = (itemId: string, note: string) => {
+    const newState = { ...itemStates[itemId], note };
+    setItemStates((prev) => ({ ...prev, [itemId]: newState }));
   };
 
   if (!checklist) return <LoadingSpinner text="Đang tải checklist..." />;

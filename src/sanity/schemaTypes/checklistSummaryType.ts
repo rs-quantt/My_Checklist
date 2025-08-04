@@ -29,11 +29,5 @@ export const checklistSummaryType = defineType({
       title: 'Passed Items (Oke)',
       type: 'number',
     }),
-    defineField({
-      name: 'resultText',
-      title: 'Result (e.g. 9/10)',
-      type: 'string',
-      readOnly: true,
-    }),
   ],
 });
