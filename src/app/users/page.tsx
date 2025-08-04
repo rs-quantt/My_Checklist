@@ -102,66 +102,68 @@ export default function UserManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-50 py-8 px-2 sm:px-4 lg:px-6">
-      <div className="container mx-auto max-w-4xl bg-white text-gray-800 rounded-lg shadow-sm p-6 md:p-8 space-y-8 border border-gray-200">
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 leading-tight mb-6 text-center">
-          User Management
-        </h1>
+    <div className="min-h-screen bg-gray-50">
+      <div className="py-8 px-2 sm:px-4 lg:px-6">
+        <div className="container mx-auto max-w-4xl bg-white text-gray-800 rounded-lg shadow-sm p-6 md:p-8 space-y-8 border border-gray-200">
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 leading-tight mb-6 text-center">
+            User Management
+          </h1>
 
-        <div className="mb-8 p-4 border border-gray-200 rounded-lg bg-gray-50 shadow-sm">
-          <h2 className="text-xl font-bold mb-4">Add New User</h2>
-          <form onSubmit={handleCreateUser} className="flex flex-col sm:flex-row gap-4">
-            <input
-              type="text"
-              placeholder="User Name"
-              value={newUser.name}
-              onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-              className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out"
-              required
-            />
-            <input
-              type="email"
-              placeholder="User Email"
-              value={newUser.email}
-              onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-              className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out"
-              required
-            />
-            <button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md flex items-center justify-center transition-colors duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isAddingUser}
-            >
-              <FaPlus className="mr-2" /> {isAddingUser ? 'Adding...' : 'Add User'}
-            </button>
-          </form>
-        </div>
+          <div className="mb-8 p-4 border border-gray-200 rounded-lg bg-gray-50 shadow-sm">
+            <h2 className="text-xl font-bold mb-4">Add New User</h2>
+            <form onSubmit={handleCreateUser} className="flex flex-col sm:flex-row gap-4">
+              <input
+                type="text"
+                placeholder="User Name"
+                value={newUser.name}
+                onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out"
+                required
+              />
+              <input
+                type="email"
+                placeholder="User Email"
+                value={newUser.email}
+                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out"
+                required
+              />
+              <button
+                type="submit"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md flex items-center justify-center transition-colors duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isAddingUser}
+              >
+                <FaPlus className="mr-2" /> {isAddingUser ? 'Adding...' : 'Add User'}
+              </button>
+            </form>
+          </div>
 
-        <div>
-          <h2 className="text-xl font-bold mb-4">Existing Users</h2>
-          {users.length === 0 ? (
-            <p className="text-center text-gray-500">No users found. Add a new user above!</p>
-          ) : (
-            <ul className="space-y-3">
-              {users.map((user) => (
-                <li
-                  key={user._id}
-                  className="flex justify-between items-center p-3 border border-gray-200 rounded-lg bg-white shadow-sm"
-                >
-                  <div>
-                    <p className="font-semibold text-lg text-gray-800">{user.name}</p>
-                    <p className="text-sm text-gray-600">{user.email}</p>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteUser(user._id)}
-                    className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50 transition-colors duration-200"
+          <div>
+            <h2 className="text-xl font-bold mb-4">Existing Users</h2>
+            {users.length === 0 ? (
+              <p className="text-center text-gray-500">No users found. Add a new user above!</p>
+            ) : (
+              <ul className="space-y-3">
+                {users.map((user) => (
+                  <li
+                    key={user._id}
+                    className="flex justify-between items-center p-3 border border-gray-200 rounded-lg bg-white shadow-sm"
                   >
-                    <FaTrash className="text-lg" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+                    <div>
+                      <p className="font-semibold text-lg text-gray-800">{user.name}</p>
+                      <p className="text-sm text-gray-600">{user.email}</p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteUser(user._id)}
+                      className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50 transition-colors duration-200"
+                    >
+                      <FaTrash className="text-lg" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -125,7 +125,7 @@ export default function ChecklistPage() {
             Hãy thử từ khóa khác.
           </div>
         ) : filteredChecklists.length === 0 && searchQuery === '' ? (
-          <div className="text-center text-gray-500 text-xl py-10">
+          <div className="text-center text-gray-500 text-xl py-10 animate-fadeIn">
             <FaRegCheckSquare className="mx-auto text-5xl mb-4 text-gray-400" />
             Bạn chưa có checklist nào. Hãy tạo một cái mới!
           </div>
@@ -135,7 +135,6 @@ export default function ChecklistPage() {
               <Link
                 key={checklist._id}
                 href={`/checklists/${checklist._id}`}
-                passHref
               >
                 <div
                   className={`

@@ -211,7 +211,7 @@ export default function ChecklistDetailPage() {
     );
 
   return (
-    <>
+    <div className="antialiased bg-gray-50 min-h-screen">
       {/* Main content with blur effect */}
       <div className={`min-h-screen py-8 px-2 sm:px-4 lg:px-6`}
         style={showSuccessPopup ? { filter: 'blur(3px)' } : {}}> {/* Apply blur effect conditionally */}
@@ -407,6 +407,6 @@ export default function ChecklistDetailPage() {
           </div> {/* End Popup content */}
         </div>
       )}
-    </>
+    </div>
   );
 }
