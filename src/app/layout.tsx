@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   title: "My Checklist",
   description: "My Checklist",
   icons: {
-    icon: '/favicon.ico',
+    icon: '/check.png',
   },
 };
 
