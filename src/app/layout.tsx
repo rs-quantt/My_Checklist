@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Checklist",
-  description: "Checklist",
+  title: "My Checklist",
+  description: "My Checklist",
 };
 
 export default function RootLayout({

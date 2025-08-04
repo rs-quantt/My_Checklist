@@ -1,13 +1,10 @@
-import { createClient } from 'next-sanity';
-import { apiVersion, dataset, projectId } from '@/sanity/env.server';
 import { NextResponse } from 'next/server';
-
-const client = createClient({
-  projectId,
-  dataset,
-  apiVersion,
-  useCdn: true,
-});
+import {
+  getChecklistById,
+  updateChecklist,
+  deleteChecklist,
+} from '@/services/checklistService';
+import { client } from '@/sanity/lib/client';
 
 export async function GET(
   request: Request,

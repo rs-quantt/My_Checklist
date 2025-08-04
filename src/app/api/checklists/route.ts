@@ -1,27 +1,24 @@
-import { createClient } from 'next-sanity';
-import { apiVersion, dataset, projectId } from '@/sanity/env.server';
 import { NextResponse } from 'next/server';
+import { getChecklists, createChecklist } from '@/services/checklistService';
 
-const client = createClient({
-  projectId,
-  dataset,
-  apiVersion,
-  useCdn: true,
-});
 
 export async function GET() {
-  const checklists = await client.fetch(`
-    *[_type == "checklist"]{
-      _id,
-      title,
-      description,
-      "items": *[_type == "checklistItem" && checklist._ref == ^._id] | order(order asc){
-        _id,
-        label,
-        description,
-        order
-      }
-    }
-  `);
-  return NextResponse.json(checklists);
+  try {
+    const checklists = await getChecklists();
+    return NextResponse.json(checklists);
+  } catch (error) {
+    console.error('Error in GET /api/checklists:', error);
+    return new NextResponse('Internal Server Error', { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const checklistData = await request.json();
+    const newChecklist = await createChecklist(checklistData);
+    return NextResponse.json(newChecklist, { status: 201 });
+  } catch (error) {
+    console.error('Error in POST /api/checklists:', error);
+    return new NextResponse('Internal Server Error', { status: 500 });
+  }
 }

@@ -1,14 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from 'next-sanity';
-import { apiVersion, dataset, projectId, token } from '@/sanity/env.server';
-
-const client = createClient({
-  projectId,
-  dataset,
-  apiVersion,
-  token,
-  useCdn: false,
-});
+import { saveUserChecklistItems } from '@/services/checklistService';
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,31 +9,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing or invalid data' }, { status: 400 });
     }
 
-    const transaction = client.transaction();
-
-    for (const item of items) {
-      const { itemId, status, note } = item;
-
-      if (!itemId || !status) {
-        console.warn(`Skipping item due to missing data: ${JSON.stringify(item)}`);
-        continue;
-      }
-
-      const docId = `${userId}-${itemId}-${taskCode}`;
-
-      transaction.createOrReplace({
-        _id: docId,
-        _type: 'userChecklistItem',
-        user: { _type: 'reference', _ref: userId },
-        item: { _type: 'reference', _ref: itemId },
-        status,
-        note: note || '',
-        taskCode,
-        updatedAt: new Date().toISOString(),
-      });
-    }
-
-    const result = await transaction.commit();
+    // Call the service function to handle saving the checklist items
+    const result = await saveUserChecklistItems(userId, taskCode, items);
 
     return NextResponse.json({ success: true, result });
   } catch (error) {

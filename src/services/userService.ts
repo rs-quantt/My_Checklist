@@ -1,0 +1,29 @@
+import { client } from '@/sanity/lib/client';
+import { User } from '@/types/user';
+
+export async function createUser(user: Omit<User, '_id'>): Promise<User> {
+  try {
+    const newUser = await client.create({
+      _type: 'user',
+      ...user,
+    });
+    return newUser;
+  } catch (error) {
+    console.error('Error creating user:', error);
+    throw error;
+  }
+}
+
+export async function deleteUser(userId: string): Promise<void> {
+  await client.delete(userId);
+}
+
+export async function getUsers(): Promise<User[]> {
+  try {
+    const users = await client.fetch<User[]>(`*[_type == "user"]`);
+    return users;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+}
