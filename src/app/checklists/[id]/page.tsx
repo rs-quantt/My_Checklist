@@ -118,6 +118,7 @@ export default function ChecklistDetailPage() {
     const payload = {
       userId: selectedUserId,
       taskCode,
+      checklistId: id, // Add checklistId from useParams
       items: Object.entries(itemStates).map(([itemId, state]) => ({
         itemId,
         ...state,
@@ -134,27 +135,7 @@ export default function ChecklistDetailPage() {
       console.error('Lưu thất bại:', await res.text());
     } else {
       console.log('Lưu thành công!');
-      // Now, prepare and send the checklist summary
-      // Calculate total and passed items for summary based on the final itemStates
-      const totalItems = checklist?.items.length || 0;
-      const passedItems =
-        checklist?.items.filter((item) => itemStates[item._id]?.status === 'OK')
-          .length || 0;
-
-      const summaryPayload = {
-        _type: 'checklistSummary',
-        user: { _ref: selectedUserId, _type: 'reference' },
-        checklist: { _ref: id, _type: 'reference' },
-        totalItems: totalItems,
-        passedItems: passedItems,
-      };
-
-      // Send the summary payload
-      fetch('/api/save-checklist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(summaryPayload),
-      }).catch((error) => console.error('Failed to save summary:', error));
+      // The API now handles saving the summary as part of the main payload
       setShowSuccessPopup(true); // Show success popup on success
       window.scrollTo(0, 0); // Scroll to the top of the page
     }

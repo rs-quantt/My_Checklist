@@ -20,14 +20,22 @@ export const checklistSummaryType = defineType({
       to: [{ type: 'checklist' }],
     }),
     defineField({
+      name: 'taskCode',
+      title: 'Task Code',
+      type: 'string',
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
       name: 'totalItems',
       title: 'Total Items',
       type: 'number',
+      readOnly: true, // Calculated based on checklist items
     }),
     defineField({
       name: 'passedItems',
-      title: 'Passed Items (Oke)',
+      title: 'Passed Items',
       type: 'number',
+      readOnly: true, // Calculated based on userChecklistItems status
     }),
   ],
 });
