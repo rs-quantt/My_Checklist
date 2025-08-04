@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 // Import thêm icon tìm kiếm và xóa
 import LoadingSpinner from '@/app/components/LoadingSpinner';
-import { FaSearch, FaTimes, FaCheckCircle } from 'react-icons/fa';
+import { FaSearch, FaTimes } from 'react-icons/fa';
 
 type ChecklistItem = {
   _id: string;
@@ -121,7 +121,11 @@ export default function ChecklistPage() {
           </div>
         ) : filteredChecklists.length === 0 && searchQuery === '' ? (
           <div className="text-center text-gray-500 text-xl py-10 animate-fadeIn">
-            <FaCheckCircle className="mx-auto text-5xl mb-4 text-gray-400" />
+            <img
+              src="/check.png"
+              alt="Checkmark icon"
+              className="w-6 h-6 mr-2 mb-2"
+            />
             Bạn chưa có checklist nào. Hãy tạo một cái mới!
           </div>
         ) : (
@@ -143,7 +147,11 @@ export default function ChecklistPage() {
                 >
                   <div>
                     <div className="flex items-start mb-4">
-                      <FaCheckCircle className="text-blue-600 text-3xl mr-4 flex-shrink-0" />
+                      <img
+                        src="/check.png"
+                        alt="Checkmark icon"
+                        className="w-6 h-6 mr-2 mt-0.5"
+                      />
                       <div>
                         <h2 className="text-xl font-bold text-gray-800 leading-tight mb-1">
                           {checklist.title}
