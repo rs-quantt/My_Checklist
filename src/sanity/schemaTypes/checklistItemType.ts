@@ -21,7 +21,46 @@ export const checklistItemType = defineType({
     defineField({
       name: 'description',
       title: 'Description',
-      type: 'text',
+      type: 'array',
+      of: [
+        {
+          type: 'block',
+          styles: [{ title: 'Normal', value: 'normal' }],
+          lists: [],
+          marks: {
+            decorators: [
+              { title: 'Strong', value: 'strong' },
+              { title: 'Emphasis', value: 'em' },
+              { title: 'Code', value: 'code' },
+              { title: 'Underline', value: 'underline' },
+              { title: 'Strike', value: 'strike-through' },
+            ],
+            annotations: [
+              {
+                name: 'link',
+                type: 'object',
+                title: 'URL',
+                fields: [{ name: 'href', type: 'url' }],
+              },
+            ],
+          },
+        },
+        {
+          type: 'code',
+          options: {
+            highlightedLines: true,
+          },
+        },
+        // Add image type to the array
+        {
+          type: 'image',
+          options: {
+            hotspot: true, // Allows for better image cropping
+          },
+          // No custom fields
+          fields: [],
+        },
+      ],
     }),
     defineField({
       name: 'order',

@@ -6,6 +6,12 @@ import { createClient } from 'next-sanity';
 import { apiVersion, dataset, projectId } from '@/sanity/env.client';
 import CommonSelect from '@/app/components/CommonSelect';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
+import { PortableText, PortableTextComponents } from '@portabletext/react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { coldarkDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { urlFor } from '@/sanity/lib/image'; // Import the urlFor helper
+import { SanityImageSource } from '@sanity/image-url/lib/types/types';
+import { PortableTextBlock } from '@portabletext/types';
 
 const client = createClient({
   projectId,
@@ -14,10 +20,48 @@ const client = createClient({
   useCdn: true,
 });
 
+// Custom components for rendering Portable Text
+const ptComponents: PortableTextComponents = {
+  types: {
+    code: ({ value }) => {
+      if (!value || !value.code) {
+        return null;
+      }
+      return (
+        <div className="my-4 rounded-lg overflow-hidden">
+          <SyntaxHighlighter
+            language={value.language || 'text'}
+            style={coldarkDark}
+            showLineNumbers
+          >
+            {value.code}
+          </SyntaxHighlighter>
+        </div>
+      );
+    },
+    image: ({ value }) => {
+      if (!value?.asset?._ref) {
+        return null;
+      }
+      return (
+        // Wrap with a div and use flex to center the image
+        <div className="flex justify-center my-6">
+          <img
+            alt={value.alt || ' '}
+            loading="lazy"
+            src={urlFor(value as SanityImageSource).auto('format').url()}
+            className="rounded-lg shadow-lg max-w-full h-auto"
+          />
+        </div>
+      );
+    },
+  },
+};
+
 type ChecklistItem = {
   _id: string;
   label: string;
-  description?: string;
+  description?: PortableTextBlock[];
   order?: number;
 };
 
@@ -176,59 +220,6 @@ export default function ChecklistDetailPage() {
       passedItems: passedItems,
     };
   };
-  // Utility function to render description with code blocks
-  const renderDescriptionContent = (text: string) => {
-    if (!text) return null;
-
-    const elements = [];
-    let lastIndex = 0;
-    const regex = /```([\s\S]*?)```/g;
-
-    let match;
-    while ((match = regex.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        const preCodeText = text.substring(lastIndex, match.index);
-        preCodeText.split('\n').forEach((paragraph, pIndex) => {
-          elements.push(
-            <p
-              key={`text-${lastIndex}-${pIndex}`}
-              className="text-sm text-gray-700 leading-relaxed mb-1"
-            >
-              {paragraph}
-            </p>,
-          );
-        });
-      }
-
-      const codeContent = match[1].trim();
-      elements.push(
-        <pre
-          key={`code-${match.index}`}
-          className="bg-gray-100 p-3 rounded-md overflow-auto text-sm my-4 border border-gray-300 shadow-sm"
-        >
-          <code className="text-gray-800 font-mono">{codeContent}</code>
-        </pre>,
-      );
-
-      lastIndex = regex.lastIndex;
-    }
-
-    if (lastIndex < text.length) {
-      const postCodeText = text.substring(lastIndex);
-      postCodeText.split('\n').forEach((paragraph, pIndex) => {
-        elements.push(
-          <p
-            key={`text-end-${lastIndex}-${pIndex}`}
-            className="text-sm text-gray-700 leading-relaxed mb-1"
-          >
-            {paragraph}
-          </p>,
-        );
-      });
-    }
-
-    return elements;
-  };
 
   const handleNoteChange = (itemId: string, note: string) => {
     const newState = { ...itemStates[itemId], note };
@@ -359,7 +350,9 @@ export default function ChecklistDetailPage() {
                         {item.label}
                       </p>
                       <svg
-                        className={`w-4 h-4 text-gray-500 transform transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                        className={`w-4 h-4 text-gray-500 transform transition-transform duration-300 ${
+                          isExpanded ? 'rotate-180' : ''
+                        }`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -374,13 +367,18 @@ export default function ChecklistDetailPage() {
                     </div>
 
                     <div
-                      className={`overflow-hidden transition-max-height duration-500 ease-in-out ${isExpanded ? 'max-h-[1000px]' : 'max-h-0'}`}
+                      className={`overflow-hidden transition-max-height duration-500 ease-in-out ${
+                        isExpanded ? 'max-h-[1000px]' : 'max-h-0'
+                      }`}
                     >
                       <div className="mt-4 space-y-3">
                         {item.description && (
-                          <div>
+                          <div className="prose max-w-none">
                             <hr className="my-4 border-gray-200" />
-                            {renderDescriptionContent(item.description)}
+                            <PortableText
+                              value={item.description}
+                              components={ptComponents}
+                            />
                             <hr className="my-4 border-gray-200" />
                           </div>
                         )}
@@ -419,8 +417,8 @@ export default function ChecklistDetailPage() {
                                   {statusOption === 'OK'
                                     ? 'OK'
                                     : statusOption === 'notOK'
-                                      ? 'Not OK'
-                                      : 'N/A'}
+                                    ? 'Not OK'
+                                    : 'N/A'}
                                 </button>
                               );
                             })}
@@ -432,7 +430,9 @@ export default function ChecklistDetailPage() {
                         >
                           Lý do / Ghi chú{' '}
                           <span
-                            className={`text-red-500 ${isNoteRequired ? '' : 'hidden'}`}
+                            className={`text-red-500 ${
+                              isNoteRequired ? '' : 'hidden'
+                            }`}
                           >
                             *
                           </span>
