@@ -100,17 +100,26 @@ export async function saveUserChecklistItems(
     let checklistId: string | null = null;
     const transaction = client.transaction();
 
+    // Step 1: Update or create userChecklistItem documents
     for (const item of items) {
       const { itemId, status, note } = item;
-      if (!itemId || !status) continue;
+      if (!itemId || !status) {
+        console.warn(`Skipping item due to missing data: ${JSON.stringify(item)}`);
+        continue;
+      }
 
-      // Fetch checklist ID once
+      // Fetch checklistId from the first item
       if (!checklistId) {
         const itemDetails = await client.fetch(
           `*[_type == "checklistItem" && _id == $itemId][0]{ checklist->{_id} }`,
           { itemId }
         );
-        checklistId = itemDetails?.checklist?._id ?? null;
+        if (itemDetails?.checklist?._id) {
+          checklistId = itemDetails.checklist._id;
+        } else {
+          console.error(`Checklist not found for item ${itemId}, skipping.`);
+          continue;
+        }
       }
 
       const docId = `${userId}-${itemId}-${taskCode}`;
@@ -140,8 +149,8 @@ export async function saveUserChecklistItems(
 
     const result = await transaction.commit();
 
+    // Step 2: Create or update checklistSummary
     if (checklistId) {
-      // Đếm tổng số item và số item pass
       const totalItems = await client.fetch(
         `count(*[_type == "userChecklistItem" 
           && user._ref == $userId 
@@ -159,14 +168,13 @@ export async function saveUserChecklistItems(
         { userId, checklistId, taskCode }
       );
 
-      const summaryDocId = `${userId}-${checklistId}-summary`;
-      const summaryTransaction = client.transaction();
-
+      const summaryDocId = `${userId}-${checklistId}-${taskCode}-summary`;
       const existingSummary = await client.fetch(
-        `*[_id == $summaryDocId][0]`,
+        `*[_type == "checklistSummary" && _id == $summaryDocId][0]`,
         { summaryDocId }
       );
 
+      const summaryTransaction = client.transaction();
       const summaryData = {
         totalItems,
         passedItems,
@@ -187,6 +195,8 @@ export async function saveUserChecklistItems(
       }
 
       await summaryTransaction.commit();
+    } else {
+      console.warn('Checklist ID not found — skipping summary update.');
     }
 
     return result;
@@ -195,4 +205,3 @@ export async function saveUserChecklistItems(
     throw new Error('Failed to save user checklist items.');
   }
 }
-
