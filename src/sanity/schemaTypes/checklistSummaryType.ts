@@ -37,5 +37,11 @@ export const checklistSummaryType = defineType({
       type: 'number',
       readOnly: true, // Calculated based on userChecklistItems status
     }),
+    defineField({
+      name: 'updatedAt',
+      title: 'Last Updated At',
+      type: 'datetime',
+      readOnly: true,
+    }),
   ],
 });

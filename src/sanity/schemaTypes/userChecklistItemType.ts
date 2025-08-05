@@ -39,6 +39,12 @@ export const userChecklistItemType = defineType({
       hidden: ({ parent }) => parent?.status === 'OK',
     }),
     defineField({
+      name: 'taskCode',
+      title: 'Task Code',
+      type: 'string',
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
       name: 'updatedAt',
       title: 'Updated At',
       type: 'datetime',
