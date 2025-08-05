@@ -1,39 +1,31 @@
-import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
-import '../globals.css';
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
-
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
-
-export const metadata: Metadata = {
-  title: 'My Checklist',
-  description: 'My Checklist',
-  icons: {
-    icon: '/check.png',
-  },
-};
+import { useAuth } from '../context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function MainLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { user, logout, isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    // Sửa ở đây: điều hướng về trang chủ '/'
+    router.push('/');
+  };
+
   return (
     <>
       {/* Header Bar - Modern Design */}
       <header className="bg-white shadow-md py-3 px-4 sm:px-6 lg:px-8 sticky top-0 z-50">
         <div className="container mx-auto flex justify-between items-center">
           <div className="text-2xl font-extrabold text-blue-700">
-            <Link href="/" className="flex items-center">
+            <Link href="/admin" className="flex items-center">
               <img
                 src="/company-logo.jpg"
                 alt="Company Logo"
@@ -60,32 +52,52 @@ export default function MainLayout({
               >
                 About us
               </a>
+              {/* Show Admin link if user is admin */}
+              {isAuthenticated && user?.role === 'admin' && (
+                <Link
+                  href="/admin"
+                  className="hover:text-blue-600 transition-colors duration-200"
+                >
+                  Admin
+                </Link>
+              )}
             </nav>
 
             {/* Separator */}
             <div className="hidden md:block h-6 w-px bg-gray-200"></div>
 
-            {/* Log in Button */}
-            <Link
-              href="/login"
-              className="group inline-flex items-center justify-center whitespace-nowrap rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-px hover:shadow-lg hover:shadow-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              Log in
-              <svg
-                className="relative ml-2 h-4 w-4 transition-transform duration-300 ease-in-out group-hover:translate-x-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
+            {/* Auth Buttons */}
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={handleLogout}
+                  className="group inline-flex items-center justify-center whitespace-nowrap rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-px hover:shadow-lg hover:shadow-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="group inline-flex items-center justify-center whitespace-nowrap rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold !text-white shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-px hover:shadow-lg hover:shadow-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M17 8l4 4m0 0l-4 4m4-4H3"
-                ></path>
-              </svg>
-            </Link>
+                Log in
+                <svg
+                  className="relative ml-2 h-4 w-4 transition-transform duration-300 ease-in-out group-hover:translate-x-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  ></path>
+                </svg>
+              </Link>
+            )}
           </div>
         </div>
       </header>

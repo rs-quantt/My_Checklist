@@ -30,7 +30,11 @@ export async function deleteUser(userId: string): Promise<void> {
 
 export async function getUsers(): Promise<User[]> {
   try {
-    const users = await client.fetch<User[]>(`*[_type == "user"]`);
+    const users = await client.fetch(`*[_type == "user" && role == "user"]{
+      _id,
+      name,
+      email,
+    }`);
     return users;
   } catch (error) {
     console.error('Error fetching users:', error);

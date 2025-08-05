@@ -3,7 +3,7 @@ import type { StructureResolver } from 'sanity/structure';
 // https://www.sanity.io/docs/structure-builder-cheat-sheet
 export const structure: StructureResolver = (S) =>
   S.list()
-    .title('Genexus Checklist')
+    .title('My Checklist')
     .items([
       S.documentTypeListItem('checklist').title('Checklists'),
       S.documentTypeListItem('checklistItem').title('Check list items'),

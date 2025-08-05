@@ -40,7 +40,7 @@ export default function ChecklistsSummaryPage() {
         const data: GroupedChecklistSummary[] = await res.json();
         setGroupedSummaries(data);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : '');
+        setError(err instanceof Error ? err.message : 'Something went wrong');
         console.error('Error fetching checklist summaries:', err);
       } finally {
         setIsLoading(false);

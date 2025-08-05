@@ -23,13 +23,13 @@ const AdminSidebar: React.FC = () => {
         <Link href="/admin/checklists">
           <div className="flex items-center px-2 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md transition duration-200">
             <FaList className="mr-3" />
-            Quản lý Checklist
+            Checklist Management
           </div>
         </Link>
-        <Link href="/admin/settings">
+        <Link href="/studio">
           <div className="flex items-center px-2 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md transition duration-200">
             <FaCog className="mr-3" />
-            Settings
+            Sanity Studio
           </div>
         </Link>
       </nav>

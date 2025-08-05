@@ -11,7 +11,10 @@ interface Counts {
 }
 
 const AdminDashboard: React.FC = () => {
-  const [counts, setCounts] = useState<Counts>({ userCount: null, checklistCount: null });
+  const [counts, setCounts] = useState<Counts>({
+    userCount: null,
+    checklistCount: null,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +37,7 @@ const AdminDashboard: React.FC = () => {
         });
       } catch (err: unknown) {
         console.error('Error fetching counts for admin dashboard:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load users. Please try again later.');
+        setError(err instanceof Error ? err.message : 'Something went wrong');
         setCounts({ userCount: 0, checklistCount: 0 });
       } finally {
         setLoading(false);
@@ -81,7 +84,9 @@ const AdminDashboard: React.FC = () => {
               <h3 className="text-base font-semibold text-blue-800 mb-2">
                 Tổng số Người dùng
               </h3>
-              <p className="text-3xl font-bold text-blue-600">{counts.userCount}</p>
+              <p className="text-3xl font-bold text-blue-600">
+                {counts.userCount}
+              </p>
             </div>
             <FaUsers className="text-blue-600 text-4xl opacity-75" />
           </div>
@@ -92,7 +97,9 @@ const AdminDashboard: React.FC = () => {
               <h3 className="text-base font-semibold text-green-800 mb-2">
                 Tổng số Checklist
               </h3>
-              <p className="text-3xl font-bold text-green-600">{counts.checklistCount}</p>
+              <p className="text-3xl font-bold text-green-600">
+                {counts.checklistCount}
+              </p>
             </div>
             <FaClipboardList className="text-green-600 text-4xl opacity-75" />
           </div>
@@ -107,25 +114,33 @@ const AdminDashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Quản lý người dùng */}
           <Link
- href="/admin/users"
- className="flex items-center space-x-4 p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out"
+            href="/admin/users"
+            className="flex items-center space-x-4 p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out"
           >
             <FaUsers className="text-gray-600 text-3xl" />
             <div>
-              <h2 className="text-xl font-semibold text-gray-700 mb-1">Quản lý Người dùng</h2>
-              <p className="text-gray-600 text-sm">Xem, thêm, sửa và xóa thông tin người dùng.</p>
+              <h2 className="text-xl font-semibold text-gray-700 mb-1">
+                Quản lý Người dùng
+              </h2>
+              <p className="text-gray-600 text-sm">
+                Xem, thêm, sửa và xóa thông tin người dùng.
+              </p>
             </div>
           </Link>
 
           {/* Quản lý checklist */}
           <Link
             href="/admin/checklists"
- className="flex items-center space-x-4 p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out"
+            className="flex items-center space-x-4 p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out"
           >
             <FaClipboardList className="text-gray-600 text-3xl" />
             <div>
-              <h2 className="text-xl font-semibold text-gray-700 mb-1">Quản lý Checklist</h2>
-              <p className="text-gray-600 text-sm">Quản lý các danh sách kiểm tra và mục kiểm tra.</p>
+              <h2 className="text-xl font-semibold text-gray-700 mb-1">
+                Quản lý Checklist
+              </h2>
+              <p className="text-gray-600 text-sm">
+                Quản lý các danh sách kiểm tra và mục kiểm tra.
+              </p>
             </div>
           </Link>
         </div>

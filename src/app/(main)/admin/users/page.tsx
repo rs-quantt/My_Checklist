@@ -5,7 +5,6 @@ import { FaPlus, FaTrash, FaTimes } from 'react-icons/fa';
 import { User } from '@/types/user';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 
-
 export default function UserManagementPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [newUser, setNewUser] = useState({ name: '', email: '' });
@@ -29,7 +28,11 @@ export default function UserManagementPage() {
       setUsers(data);
     } catch (err: unknown) {
       console.error('Failed to fetch users:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load users. Please try again later.');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to load users. Please try again later.',
+      );
     } finally {
       setLoading(false);
     }
@@ -52,7 +55,7 @@ export default function UserManagementPage() {
       // Update the users state with the newly created user
       setUsers((prevUsers) => [...prevUsers, createdUser]);
       // No need to call fetchUsers() as we updated the state directly
-      // fetchUsers(); 
+      // fetchUsers();
     } catch (err: unknown) {
       console.error('Failed to create user:', err);
       // Optionally set an error state to display a message to the user
@@ -74,7 +77,7 @@ export default function UserManagementPage() {
         throw new Error(`Error deleting user: ${response.statusText}`);
       }
       // Update the users state by filtering out the deleted user
-      setUsers((prevUsers) => prevUsers.filter(user => user._id !== userId));
+      setUsers((prevUsers) => prevUsers.filter((user) => user._id !== userId));
       // No need to call fetchUsers() as we updated the state directly
     } catch (err: unknown) {
       console.error('Failed to delete user:', err);
@@ -84,7 +87,7 @@ export default function UserManagementPage() {
   };
 
   if (loading) {
-    return <LoadingSpinner text='Đang tải danh sách users ...' />;
+    return <LoadingSpinner text="Đang tải danh sách users ..." />;
   }
 
   if (error) {
@@ -104,7 +107,10 @@ export default function UserManagementPage() {
 
         <div className="mb-6 p-3 border border-gray-200 rounded-lg bg-gray-50 shadow-sm">
           <h2 className="text-lg font-bold mb-3">Add New User</h2>
-          <form onSubmit={handleCreateUser} className="flex flex-col sm:flex-row gap-3">
+          <form
+            onSubmit={handleCreateUser}
+            className="flex flex-col sm:flex-row gap-3"
+          >
             <input
               aria-label="User Name"
               type="text"
@@ -119,7 +125,9 @@ export default function UserManagementPage() {
               type="email"
               placeholder="User Email"
               value={newUser.email}
-              onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+              onChange={(e) =>
+                setNewUser({ ...newUser, email: e.target.value })
+              }
               className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out"
               required
             />
@@ -128,7 +136,8 @@ export default function UserManagementPage() {
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md flex items-center justify-center transition-colors duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isAddingUser || !newUser.name || !newUser.email}
             >
-              <FaPlus className="mr-2" /> {isAddingUser ? 'Adding...' : 'Add User'}
+              <FaPlus className="mr-2" />{' '}
+              {isAddingUser ? 'Adding...' : 'Add User'}
             </button>
           </form>
         </div>
@@ -136,7 +145,9 @@ export default function UserManagementPage() {
         <div className="space-y-3">
           <h2 className="text-lg font-bold mb-3">Existing Users</h2>
           {users.length === 0 ? (
-            <p className="text-center text-gray-500">No users found. Add a new user above!</p>
+            <p className="text-center text-gray-500">
+              No users found. Add a new user above!
+            </p>
           ) : (
             <ul className="space-y-2">
               {users.map((user) => (
@@ -145,7 +156,9 @@ export default function UserManagementPage() {
                   className="flex justify-between items-center p-2 border border-gray-200 rounded-lg bg-white shadow-sm text-sm"
                 >
                   <div>
-                    <p className="font-semibold text-lg text-gray-800">{user.name}</p>
+                    <p className="font-semibold text-lg text-gray-800">
+                      {user.name}
+                    </p>
                     <p className="text-sm text-gray-600">{user.email}</p>
                   </div>
                   <button

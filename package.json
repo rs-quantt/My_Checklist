@@ -1,17 +1,20 @@
 {
   "name": "my-checklist",
+  "type": "module",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed": "npx tsx scripts/seed.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@portabletext/react": "^3.2.1",
     "@portabletext/types": "^2.0.13",
+    "@sanity/client": "^7.8.2",
     "@sanity/code-input": "^5.2.0",
     "@sanity/icons": "^3.7.4",
     "@sanity/image-url": "^1.1.0",
@@ -31,13 +34,18 @@
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/bcrypt": "^6.0.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^17.2.1",
     "eslint": "^9",
     "eslint-config-next": "15.4.5",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.2"
   }
 }
