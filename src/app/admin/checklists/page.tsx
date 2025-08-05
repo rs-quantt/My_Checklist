@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import AdminSidebar from '../components/AdminSidebar'; // Import AdminSidebar
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 
 interface User {
@@ -29,6 +28,7 @@ export default function ChecklistsSummaryPage() {
   >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchSummaries = async () => {
@@ -50,6 +50,15 @@ export default function ChecklistsSummaryPage() {
     fetchSummaries();
   }, []); // Empty dependency array means this effect runs once on mount
 
+  const filteredSummaries = groupedSummaries
+    .map((group) => ({
+      ...group,
+      summaries: group.summaries.filter((summary) =>
+        summary.taskCode.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
+    }))
+    .filter((group) => group.summaries.length > 0);
+
   if (isLoading) {
     return <LoadingSpinner text="Đang tải dữ liệu tóm tắt checklist..." />;
   }
@@ -67,13 +76,40 @@ export default function ChecklistsSummaryPage() {
           Quản lý Checklist
         </h1>
 
-        {groupedSummaries.length === 0 ? (
+        <div className="relative mb-6">
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+            <svg
+              className="w-5 h-5 text-gray-400"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Tìm kiếm theo mã task..."
+            className="w-full py-2 pl-10 pr-4 text-gray-700 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        {filteredSummaries.length === 0 ? (
           <div className="text-center text-gray-500 text-xl py-10">
-            Không có dữ liệu tóm tắt checklist nào.
+            {searchQuery
+              ? 'Không tìm thấy checklist nào với mã task đã nhập.'
+              : 'Không có dữ liệu tóm tắt checklist nào.'}
           </div>
         ) : (
           <div className="space-y-8">
-            {groupedSummaries.map((checklistGroup) => (
+            {filteredSummaries.map((checklistGroup) => (
               <div
                 key={checklistGroup._id}
                 className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
