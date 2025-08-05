@@ -134,7 +134,6 @@ export default function ChecklistDetailPage() {
     if (!res.ok) {
       console.error('Lưu thất bại:', await res.text());
     } else {
-      console.log('Lưu thành công!');
       // The API now handles saving the summary as part of the main payload
       setShowSuccessPopup(true); // Show success popup on success
       window.scrollTo(0, 0); // Scroll to the top of the page

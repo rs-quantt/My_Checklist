@@ -97,20 +97,11 @@ export async function updateChecklist(
 
     // You might need to fetch the full updated checklist with items
     // return getChecklistById(id);
+
     return updatedChecklist as unknown as Checklist; // Or handle fetching the full checklist
   } catch (error) {
     console.error(`Error updating checklist with id ${id}:`, error); // Log original error
     throw new Error(`Failed to update checklist with id ${id}.`); // Throw a generic error
-  }
-}
-
-export async function deleteChecklist(id: string): Promise<void> {
-  try {
-    // Placeholder: Implement actual Sanity delete logic here
-    await client.delete(id);
-  } catch (error) {
-    console.error(`Error deleting checklist with id ${id}:`, error); // Log original error
-    throw new Error(`Failed to delete checklist with id ${id}.`); // Throw a generic error
   }
 }
 
@@ -128,8 +119,10 @@ export async function saveUserChecklistItems(
   userId: string,
   taskCode: string,
   items: Array<{ itemId: string; status: string; note?: string }>,
-) { // Consider refining the return type
+) {
+  // Consider refining the return type
   try {
+    let checklistId = null; // Still needed for summary update logic
     const transaction = client.transaction();
 
     for (const item of items) {
@@ -143,19 +136,115 @@ export async function saveUserChecklistItems(
         continue;
       }
 
+      // Fetch checklistId for the first item to use for summary update
+      if (!checklistId) {
+        const itemDetails = await client.fetch(
+          `*[_type == "checklistItem" && _id == $itemId][0]{ checklist->{_id} }`,
+          { itemId },
+        );
+        if (itemDetails?.checklist?._id) {
+          checklistId = itemDetails.checklist._id;
+        } else {
+          console.error(
+            `Could not find checklist ID for item ${itemId}. Skipping checklist summary update.`,
+          );
+        }
+      }
+
       const docId = `${userId}-${itemId}-${taskCode}`;
 
-      transaction.createOrReplace({
-        _id: docId,
-        _type: 'userChecklistItem',
-        user: { _type: 'reference', _ref: userId },
-        item: { _type: 'reference', _ref: itemId },
-        status,
-        note: note || '',
-        taskCode,
-        updatedAt: new Date().toISOString(),
-      });
+      // Check if the userChecklistItem document already exists
+      const existingDoc = await client.fetch(`*[_id == $docId][0]`, { docId });
+
+      if (existingDoc) {
+        // If it exists, patch the existing document
+        transaction.patch(docId, {
+          set: {
+            status,
+            note: note || '',
+            updatedAt: new Date().toISOString(),
+          },
+        });
+      } else {
+        // If it doesn't exist, create a new document
+        transaction.create({
+          _id: docId,
+          _type: 'userChecklistItem',
+          user: { _type: 'reference', _ref: userId },
+          item: { _type: 'reference', _ref: itemId },
+          status,
+          note: note || '',
+          taskCode,
+          updatedAt: new Date().toISOString(),
+        });
+      }
     }
+
+    // --- Start: Logic to update Checklist Summary ---
+    // Note: This logic is placed *before* the userChecklistItem transaction commit.
+    // This means the summary is calculated based on existing data + planned updates in the transaction.
+    // If you need the summary calculation to reflect *only* committed userChecklistItem data,
+    // move this entire block *after* `await transaction.commit();`
+
+    // Ensure we have a checklistId before attempting to update summary
+    if (checklistId) {
+      // Get total items for the checklist
+      const checklistDetails = await client.fetch(
+        `*[_type == "checklist" && _id == $checklistId][0]{ "totalItems": count(items) }`,
+        { checklistId },
+      );
+      const totalItems = checklistDetails?.totalItems || 0;
+
+      // Get all of the user's checklist items for this checklist to count passed items
+      const userPassedItems = await client.fetch(
+        `count(*[_type == "userChecklistItem" && user._ref == $userId && checklistItem->checklist._ref == $checklistId && status == "OK"])`,
+        { userId, checklistId },
+      );
+
+      const resultText = `${userPassedItems}/${totalItems}`;
+      const summaryDocId = `${userId}-${checklistId}-summary`;
+
+      // Find or create the checklist summary document
+      const summaryTransaction = client.transaction();
+
+      // Check if the summary document already exists
+      const existingSummaryDoc = await client.fetch(
+        `*[_id == $summaryDocId][0]`,
+        { summaryDocId },
+      );
+
+      if (existingSummaryDoc) {
+        summaryTransaction.patch(summaryDocId, {
+          set: {
+            totalItems: totalItems,
+            passedItems: userPassedItems,
+            resultText: resultText,
+            updatedAt: new Date().toISOString(),
+            taskCode: taskCode, // Added taskCode
+          },
+        });
+      } else {
+        summaryTransaction.create({
+          _id: summaryDocId,
+          _type: 'checklistSummary',
+          user: { _type: 'reference', _ref: userId },
+          checklist: { _type: 'reference', _ref: checklistId },
+          totalItems: totalItems,
+          passedItems: userPassedItems,
+          resultText: resultText,
+          updatedAt: new Date().toISOString(),
+          taskCode: taskCode, // Added taskCode
+        });
+      }
+
+      await summaryTransaction.commit();
+    } else {
+      console.warn(
+        'Checklist ID not determined, skipping checklist summary update.',
+      );
+    }
+
+    // --- End: Logic to update Checklist Summary ---
 
     const result = await transaction.commit();
     return result;
