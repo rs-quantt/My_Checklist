@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
   EyeIcon,
   EyeSlashIcon,
@@ -16,7 +15,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -40,15 +38,14 @@ export default function LoginPage() {
       }
 
       login(data.user);
-      
+
       if (data.user.role === 'admin') {
         window.location.href = '/admin';
       } else {
         window.location.href = '/';
       }
-
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message: 'Something went wrong');
+      setError(err instanceof Error ? err.message : 'Something went wrong');
       setLoading(false); // Reset loading on error
     }
   };
@@ -122,7 +119,7 @@ export default function LoginPage() {
               </button>
             </div>
           </div>
-          
+
           {error && (
             <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
               {error}

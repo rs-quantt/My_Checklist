@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
 // Đảm bảo biến môi trường JWT_SECRET đã được thiết lập
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET,
-);
+const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
 /**
  * Helper function để tạo một đối tượng chuyển hướng.
@@ -60,7 +58,9 @@ export async function middleware(req: NextRequest) {
       // Token hợp lệ, chuyển hướng họ về trang chủ.
       return redirect(req, '/');
     } catch (error) {
-      // Token không hợp lệ, cho phép họ ở lại trang đăng nhập để đăng nhập lại.
+      console.log(
+        error instanceof Error ? error.message : 'Something went wrong',
+      );
       return NextResponse.next();
     }
   }

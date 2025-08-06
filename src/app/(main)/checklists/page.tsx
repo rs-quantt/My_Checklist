@@ -1,7 +1,7 @@
-'use client'; // Nếu App Router
+'use client'; // If using App Router
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
-// Import thêm icon tìm kiếm và xóa
+// Import search and close icons
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 import { FaSearch, FaTimes } from 'react-icons/fa';
 
@@ -62,33 +62,32 @@ export default function ChecklistPage() {
   };
 
   if (loading) {
-    return (
-      <LoadingSpinner text="Đang tải danh sách checklist..." />
-    );
+    return <LoadingSpinner text="Loading checklist list..." />;
   }
 
   if (error) {
     return (
       <div className="flex flex-col justify-center items-center h-screen text-3xl text-red-600">
         <FaTimes className="text-red-500 mr-2 text-6xl mb-3" /> Lỗi: {error}
+        Error: {error}
       </div>
     );
   }
 
   return (
     <div className="antialiased bg-gray-50 min-h-screen">
-      <div className="bg-blue-600 text-white py-12 text-center shadow-md">
+      <div className="bg-blue-600 text-white py-12 text-center shadow-md ">
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-          Danh sách Checklist
+          Checklist List{' '}
         </h1>
         <p className="mt-3 text-lg opacity-90 max-w-2xl mx-auto">
-          Quản lý công việc và theo dõi tiến độ một cách dễ dàng.
+          Manage tasks and track progress easily.
         </p>
 
         <div className="mt-8 mx-auto w-full max-w-md px-4 sm:px-0 relative">
           <input
             type="text"
-            placeholder="Tìm kiếm checklist theo tên hoặc mô tả..."
+            placeholder="Search checklists by name or description..."
             className="
               w-full p-3 pl-10 rounded-lg border border-blue-300 shadow-md
               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
@@ -116,17 +115,17 @@ export default function ChecklistPage() {
         {filteredChecklists.length === 0 && searchQuery !== '' ? (
           <div className="text-center text-gray-500 text-xl py-10">
             <FaSearch className="mx-auto text-5xl mb-4 text-gray-400" />
-            Không tìm thấy checklist nào phù hợp với &quot;{searchQuery}&quot;.
-            Hãy thử từ khóa khác.
+            No checklists found matching &quot;{searchQuery}&quot;. Please try a
+            different keyword.
           </div>
         ) : filteredChecklists.length === 0 && searchQuery === '' ? (
           <div className="text-center text-gray-500 text-xl py-10 animate-fadeIn">
             <img
               src="/check.png"
               alt="Checkmark icon"
-              className="w-6 h-6 mr-2 mb-2"
+              className="w-6 h-6 mr-2 mb-2 inline-block"
             />
-            Bạn chưa có checklist nào. Hãy tạo một cái mới!
+            You don&apos;t have any checklists yet. Let&apos;s create a new one!
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -138,12 +137,13 @@ export default function ChecklistPage() {
                     block
                     bg-white border border-gray-200 rounded-xl shadow-md p-6
                     flex flex-col justify-between
-                    ${hasItems 
-                      ? 'cursor-pointer transform transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg hover:border-blue-300'
-                      : 'opacity-60 cursor-not-allowed bg-gray-50'
+                    ${
+                      hasItems
+                        ? 'cursor-pointer transform transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg hover:border-blue-300'
+                        : 'opacity-60 cursor-not-allowed bg-gray-50'
                     }
                   `}
-                  style={{ animationDelay: `${index * 0.05}s` }} // Giảm delay để nhanh hơn
+                  style={{ animationDelay: `${index * 0.05}s` }} // Reduce delay for faster animation
                 >
                   <div>
                     <div className="flex items-start mb-4">
@@ -165,9 +165,7 @@ export default function ChecklistPage() {
                     </div>
                   </div>
                   <div className="text-sm text-gray-500 mt-4 text-right">
-                    {hasItems
-                      ? `${checklist.items.length} mục`
-                      : 'Không có mục nào'}
+                    {hasItems ? `${checklist.items.length} items` : 'No items'}
                   </div>
                 </div>
               );
@@ -177,9 +175,7 @@ export default function ChecklistPage() {
                   {cardContent}
                 </Link>
               ) : (
-                <div key={checklist._id}>
-                  {cardContent}
-                </div>
+                <div key={checklist._id}>{cardContent}</div>
               );
             })}
           </div>

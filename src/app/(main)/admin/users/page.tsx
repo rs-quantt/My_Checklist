@@ -52,14 +52,9 @@ export default function UserManagementPage() {
       }
       setNewUser({ name: '', email: '' });
       const createdUser: User = await response.json();
-      // Update the users state with the newly created user
       setUsers((prevUsers) => [...prevUsers, createdUser]);
-      // No need to call fetchUsers() as we updated the state directly
-      // fetchUsers();
     } catch (err: unknown) {
       console.error('Failed to create user:', err);
-      // Optionally set an error state to display a message to the user
-      // setError(err instanceof Error ? err.message : 'Failed to create user. Please try again.');
     } finally {
       setIsAddingUser(false);
     }
@@ -76,18 +71,14 @@ export default function UserManagementPage() {
       if (!response.ok) {
         throw new Error(`Error deleting user: ${response.statusText}`);
       }
-      // Update the users state by filtering out the deleted user
       setUsers((prevUsers) => prevUsers.filter((user) => user._id !== userId));
-      // No need to call fetchUsers() as we updated the state directly
     } catch (err: unknown) {
       console.error('Failed to delete user:', err);
-      // Optionally set an error state to display a message to the user
-      // setError(err instanceof Error ? err.message : 'Failed to delete user. Please try again.');
     }
   };
 
   if (loading) {
-    return <LoadingSpinner text="Đang tải danh sách users ..." />;
+    return <LoadingSpinner text="Loading users..." />;
   }
 
   if (error) {
@@ -136,7 +127,7 @@ export default function UserManagementPage() {
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md flex items-center justify-center transition-colors duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isAddingUser || !newUser.name || !newUser.email}
             >
-              <FaPlus className="mr-2" />{' '}
+              <FaPlus className="mr-2" />
               {isAddingUser ? 'Adding...' : 'Add User'}
             </button>
           </form>

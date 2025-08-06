@@ -11,15 +11,17 @@ import { urlFor } from '@/sanity/lib/image';
 import { SanityImageSource } from '@sanity/image-url/lib/types/types';
 import { PortableTextBlock } from '@portabletext/types';
 
-// Client-side Sanity client removed to enforce data fetching through API routes
-
 const ptComponents: PortableTextComponents = {
   types: {
     code: ({ value }) => {
       if (!value || !value.code) return null;
       return (
         <div className="my-4 rounded-lg overflow-hidden">
-          <SyntaxHighlighter language={value.language || 'text'} style={coldarkDark} showLineNumbers>
+          <SyntaxHighlighter
+            language={value.language || 'text'}
+            style={coldarkDark}
+            showLineNumbers
+          >
             {value.code}
           </SyntaxHighlighter>
         </div>
@@ -32,7 +34,9 @@ const ptComponents: PortableTextComponents = {
           <img
             alt={value.alt || ' '}
             loading="lazy"
-            src={urlFor(value as SanityImageSource).auto('format').url()}
+            src={urlFor(value as SanityImageSource)
+              .auto('format')
+              .url()}
             className="rounded-lg shadow-lg max-w-full h-auto"
           />
         </div>
@@ -79,11 +83,12 @@ export default function ChecklistDetailPage() {
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [taskCode, setTaskCode] = useState<string>('');
   const [itemStates, setItemStates] = useState<ItemStateMap>({});
-  const [expandedItems, setExpandedItems] = useState<{ [itemId: string]: boolean }>({});
+  const [expandedItems, setExpandedItems] = useState<{
+    [itemId: string]: boolean;
+  }>({});
   const [isSaveButtonDisabled, setIsSaveButtonDisabled] = useState(true);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
 
   useEffect(() => {
     const allItemsChecked =
@@ -99,7 +104,9 @@ export default function ChecklistDetailPage() {
         setError(null);
         const response = await fetch(`/api/checklists/${id}`);
         if (!response.ok) {
-          throw new Error(`Failed to fetch checklist details: ${response.statusText}`);
+          throw new Error(
+            `Failed to fetch checklist details: ${response.statusText}`,
+          );
         }
         const data = await response.json();
         setChecklist(data.checklist);
@@ -112,16 +119,21 @@ export default function ChecklistDetailPage() {
 
     fetchData();
   }, [id]);
-  
+
   const saveChecklist = async () => {
     const validationErrors: string[] = [];
     checklist?.items.forEach((item) => {
       const state = itemStates[item._id] || { status: '', note: '' };
       if (!state.status) {
-        validationErrors.push(`Mục "${item.label}" chưa được chọn trạng thái.`);
+        validationErrors.push(
+          `Item "${item.label}" status has not been selected.`,
+        );
       }
-      if ((state.status === 'notOK' || state.status === 'na') && !state.note?.trim()) {
-        validationErrors.push(`Mục "${item.label}" yêu cầu ghi chú.`);
+      if (
+        (state.status === 'notOK' || state.status === 'na') &&
+        !state.note?.trim()
+      ) {
+        validationErrors.push(`Item "${item.label}" requires a note.`);
       }
     });
 
@@ -147,15 +159,18 @@ export default function ChecklistDetailPage() {
     });
 
     if (!res.ok) {
-      console.error('Lưu thất bại:', await res.text());
+      console.error('Save failed:', await res.text());
     } else {
       setShowSuccessPopup(true);
       window.scrollTo(0, 0);
     }
   };
-  
+
   const handleStatusChange = (itemId: string, status: Status) => {
-    setItemStates((prev) => ({ ...prev, [itemId]: { ...prev[itemId], status } }));
+    setItemStates((prev) => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], status },
+    }));
   };
 
   const toggleItem = (itemId: string) => {
@@ -170,22 +185,42 @@ export default function ChecklistDetailPage() {
     return <div className="text-red-500 text-center mt-10">{error}</div>;
   }
 
-  if (!checklist) return <LoadingSpinner text="Đang tải checklist..." />;
+  if (!checklist) return <LoadingSpinner text="Loading checklist..." />;
 
   return (
     <div className="antialiased bg-gray-50 min-h-screen">
-      <div className={`min-h-screen py-8 px-2 sm:px-4 lg:px-6`} style={showSuccessPopup ? { filter: 'blur(3px)' } : {}}>
+      <div
+        className={`min-h-screen py-8 px-2 sm:px-4 lg:px-6`}
+        style={showSuccessPopup ? { filter: 'blur(3px)' } : {}}
+      >
         <div className="container mx-auto max-w-5xl bg-white text-gray-800 rounded-lg shadow-sm p-6 md:p-8 space-y-8 border border-gray-200">
-          <button onClick={() => router.back()} className="mb-6 flex items-center bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors duration-200 text-sm font-medium border border-blue-200 py-2 px-4 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          <button
+            onClick={() => router.back()}
+            className="mb-6 flex items-center bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors duration-200 text-sm font-medium border border-blue-200 py-2 px-4 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              ></path>
             </svg>
-            Quay lại danh sách
+            Back to list
           </button>
 
           <div className="text-center mb-6">
             <div className="flex items-center justify-center">
-              <img src="/check.png" alt="Checkmark icon" className="w-6 h-6 mr-2 mb-2" />
+              <img
+                src="/check.png"
+                alt="Checkmark icon"
+                className="w-6 h-6 mr-2 mb-2"
+              />
               <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 leading-tight mb-3">
                 {checklist.title}
               </h1>
@@ -199,20 +234,24 @@ export default function ChecklistDetailPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="space-y-2">
-              <label className="block text-base font-semibold text-gray-700">Developer <span className="text-red-500">*</span></label>
+              <label className="block text-base font-semibold text-gray-700">
+                Developer <span className="text-red-500">*</span>
+              </label>
               <CommonSelect
                 options={users}
                 value={selectedUserId}
                 onChange={setSelectedUserId}
-                placeholder="-- Chọn người --"
+                placeholder="-- Select user --"
               />
             </div>
-            <div className="space-y-2">
-              <label className="block text-base font-semibold text-gray-700">Mã task <span className="text-red-500">*</span></label>
+            <div className="space-y-2 text-base">
+              <label className="block text-base font-semibold text-gray-700">
+                Task Code <span className="text-red-500">*</span>
+              </label>
               <input
                 className="appearance-none block w-full bg-white border border-gray-300 text-gray-800 py-2 px-3 rounded-md leading-tight focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm text-base"
                 type="text"
-                placeholder="Nhập mã task (VD: TASK-001)"
+                placeholder="Enter task code (e.g., TASK-001)"
                 value={taskCode}
                 onChange={(e) => setTaskCode(e.target.value)}
               />
@@ -223,59 +262,141 @@ export default function ChecklistDetailPage() {
             {checklist.items.map((item) => {
               const state = itemStates[item._id] || { status: '', note: '' };
               const isExpanded = expandedItems[item._id] || false;
-              
+
               let barColorClass = 'bg-gray-400';
               if (state.status === 'OK') barColorClass = 'bg-green-500';
               else if (state.status === 'notOK') barColorClass = 'bg-red-500';
               else if (state.status === 'na') barColorClass = 'bg-slate-400';
 
-              const isNoteRequired = state.status === 'notOK' || state.status === 'na';
+              const isNoteRequired =
+                state.status === 'notOK' || state.status === 'na';
               const isChecked = !!state.status;
               const priority = item.priority;
-              
-              const priorityText = priority === '1' ? 'High' : priority === '2' ? 'Medium' : 'Low';
-              const priorityClass = priority === '1' ? 'bg-red-200 text-red-900' :
-                                  priority === '2' ? 'bg-yellow-200 text-yellow-900' :
-                                  'bg-blue-200 text-blue-900';
+
+              const priorityText =
+                priority === '1' ? 'High' : priority === '2' ? 'Medium' : 'Low';
+              const priorityClass =
+                priority === '1'
+                  ? 'bg-red-200 text-red-900'
+                  : priority === '2'
+                    ? 'bg-yellow-200 text-yellow-900'
+                    : 'bg-blue-200 text-blue-900';
 
               return (
-                <li key={item._id} className="relative overflow-hidden rounded-lg bg-white shadow-sm hover:shadow-md transition-all duration-200 ease-in-out border border-gray-200">
-                  <div className={`absolute top-0 left-0 bottom-0 w-2 ${barColorClass} rounded-l-lg`}></div>
+                <li
+                  key={item._id}
+                  className="relative overflow-hidden rounded-lg bg-white shadow-sm hover:shadow-md transition-all duration-200 ease-in-out border border-gray-200"
+                >
+                  <div
+                    className={`absolute top-0 left-0 bottom-0 w-2 ${barColorClass} rounded-l-lg`}
+                  ></div>
                   <div className="pl-6 p-4">
-                    <div className="flex items-center cursor-pointer" onClick={() => toggleItem(item._id)}>
-                      <input type="checkbox" checked={isChecked} readOnly className="mr-2 h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"/>
-                      <p className="font-semibold text-lg text-gray-800 flex-grow">{item.label}</p>
-                      <span className={`px-3 py-1 text-xs font-bold rounded-full mr-4 ${priorityClass}`}>{priorityText}</span>
-                      <svg className={`w-4 h-4 text-gray-500 transform transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                    <div
+                      className="flex items-center cursor-pointer"
+                      onClick={() => toggleItem(item._id)}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        readOnly
+                        className="mr-2 h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <p className="font-semibold text-lg text-gray-800 flex-grow">
+                        {item.label}
+                      </p>
+                      <span
+                        className={`px-3 py-1 text-xs font-bold rounded-full mr-4 ${priorityClass}`}
+                      >
+                        {priorityText}
+                      </span>
+                      <svg
+                        className={`w-4 h-4 text-gray-500 transform transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 9l-7 7-7-7"
+                        ></path>
                       </svg>
                     </div>
 
-                    <div className={`overflow-hidden transition-max-height duration-500 ease-in-out ${isExpanded ? 'max-h-[1000px]' : 'max-h-0'}`}>
+                    <div
+                      className={`overflow-hidden transition-max-height duration-500 ease-in-out ${isExpanded ? 'max-h-[1000px]' : 'max-h-0'}`}
+                    >
                       <div className="mt-4 space-y-3">
                         {item.description && (
                           <div className="prose max-w-none">
                             <hr className="my-4 border-gray-200" />
-                            <PortableText value={item.description} components={ptComponents} />
+                            <PortableText
+                              value={item.description}
+                              components={ptComponents}
+                            />
                             <hr className="my-4 border-gray-200" />
                           </div>
                         )}
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Trạng thái</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Status
+                          </label>
                           <div className="flex flex-wrap items-center gap-2">
                             {['OK', 'notOK', 'na'].map((statusOption) => (
-                              <button key={statusOption} onClick={() => handleStatusChange(item._id, statusOption as Status)} className={`px-4 py-2 rounded-md font-medium text-xs transition-all duration-200 ease-in-out border ${
-                                  state.status === statusOption ?
-                                  (statusOption === 'OK' ? 'bg-green-600 text-white border-green-600' : statusOption === 'notOK' ? 'bg-red-600 text-white border-red-600' : 'bg-slate-600 text-white border-slate-600') :
-                                  (statusOption === 'OK' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : statusOption === 'notOK' ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200' : 'bg-slate-200 text-slate-800 border-slate-300 hover:bg-slate-300')
-                                }`}>
-                                {statusOption === 'OK' ? 'OK' : statusOption === 'notOK' ? 'Not OK' : 'N/A'}
+                              <button
+                                key={statusOption}
+                                onClick={() =>
+                                  handleStatusChange(
+                                    item._id,
+                                    statusOption as Status,
+                                  )
+                                }
+                                className={`px-4 py-2 rounded-md font-medium text-xs transition-all duration-200 ease-in-out border ${
+                                  state.status === statusOption
+                                    ? statusOption === 'OK'
+                                      ? 'bg-green-600 text-white border-green-600'
+                                      : statusOption === 'notOK'
+                                        ? 'bg-red-600 text-white border-red-600'
+                                        : 'bg-slate-600 text-white border-slate-600'
+                                    : statusOption === 'OK'
+                                      ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200'
+                                      : statusOption === 'notOK'
+                                        ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200'
+                                        : 'bg-slate-200 text-slate-800 border-slate-300 hover:bg-slate-300'
+                                }`}
+                              >
+                                {statusOption === 'OK'
+                                  ? 'OK'
+                                  : statusOption === 'notOK'
+                                    ? 'Not OK'
+                                    : 'N/A'}
                               </button>
                             ))}
                           </div>
                         </div>
-                        <label htmlFor={`note-${item._id}`} className="block text-sm font-medium text-gray-700 mt-3">Lý do / Ghi chú <span className={`text-red-500 ${isNoteRequired ? '' : 'hidden'}`}>*</span></label>
-                        <textarea id={`note-${item._id}`} value={state.note} onChange={(e) => handleNoteChange(item._id, e.target.value)} placeholder={isNoteRequired ? 'Bắt buộc' : 'Không bắt buộc'} className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm transition" rows={2} required={isNoteRequired}/>
+                        <label
+                          htmlFor={`note-${item._id}`}
+                          className="block text-sm font-medium text-gray-700 mt-3"
+                        >
+                          Reason / Note{' '}
+                          <span
+                            className={`text-red-500 ${isNoteRequired ? '' : 'hidden'}`}
+                          >
+                            *
+                          </span>
+                        </label>
+                        <textarea
+                          id={`note-${item._id}`}
+                          value={state.note}
+                          onChange={(e) =>
+                            handleNoteChange(item._id, e.target.value)
+                          }
+                          placeholder={isNoteRequired ? 'Required' : 'Optional'}
+                          className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+                          rows={2}
+                          required={isNoteRequired}
+                        />
                       </div>
                     </div>
                   </div>
@@ -284,8 +405,12 @@ export default function ChecklistDetailPage() {
             })}
           </ul>
 
-          <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-md w-full text-base tracking-wide disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 shadow-sm hover:shadow-md transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" disabled={isSaveButtonDisabled} onClick={saveChecklist}>
-            Lưu Checklist
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-md w-full text-base tracking-wide disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 shadow-sm hover:shadow-md transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            disabled={isSaveButtonDisabled}
+            onClick={saveChecklist}
+          >
+            Save Checklist
           </button>
         </div>
       </div>
@@ -293,9 +418,16 @@ export default function ChecklistDetailPage() {
       {showSuccessPopup && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm mx-auto text-center border border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Thành công!</h3>
-            <p className="text-gray-700 mb-6">Checklist của bạn đã được lưu thành công.</p>
-            <button onClick={() => setShowSuccessPopup(false)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 ease-in-out">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              Success!
+            </h3>
+            <p className="text-gray-700 mb-6">
+              Your checklist has been saved successfully.
+            </p>
+            <button
+              onClick={() => setShowSuccessPopup(false)}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 ease-in-out"
+            >
               OK
             </button>
           </div>

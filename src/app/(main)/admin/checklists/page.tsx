@@ -48,7 +48,7 @@ export default function ChecklistsSummaryPage() {
     };
 
     fetchSummaries();
-  }, []); // Empty dependency array means this effect runs once on mount
+  }, []);
 
   const filteredSummaries = groupedSummaries
     .map((group) => ({
@@ -60,12 +60,14 @@ export default function ChecklistsSummaryPage() {
     .filter((group) => group.summaries.length > 0);
 
   if (isLoading) {
-    return <LoadingSpinner text="Đang tải dữ liệu tóm tắt checklist..." />;
+    return <LoadingSpinner text="Loading checklist summary data..." />;
   }
 
   if (error) {
     return (
-      <div className="text-center text-red-500 text-xl py-10">Lỗi: {error}</div>
+      <div className="text-center text-red-500 text-xl py-10">
+        Error: {error}
+      </div>
     );
   }
 
@@ -73,7 +75,7 @@ export default function ChecklistsSummaryPage() {
     <div className="flex">
       <div className="flex-1 p-6">
         <h1 className="text-3xl font-bold mb-6 text-gray-800">
-          Quản lý Checklist
+          Checklist Summary
         </h1>
 
         <div className="relative mb-6">
@@ -96,7 +98,7 @@ export default function ChecklistsSummaryPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Tìm kiếm theo mã task..."
+            placeholder="Search by task code..."
             className="w-full py-2 pl-10 pr-4 text-gray-700 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
@@ -104,8 +106,8 @@ export default function ChecklistsSummaryPage() {
         {filteredSummaries.length === 0 ? (
           <div className="text-center text-gray-500 text-xl py-10">
             {searchQuery
-              ? 'Không tìm thấy checklist nào với mã task đã nhập.'
-              : 'Không có dữ liệu tóm tắt checklist nào.'}
+              ? 'No checklists found for the entered task code.'
+              : 'No checklist summary data available.'}
           </div>
         ) : (
           <div className="space-y-8">
@@ -131,25 +133,25 @@ export default function ChecklistsSummaryPage() {
                           scope="col"
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
-                          Mã Task
+                          Task Code
                         </th>
                         <th
                           scope="col"
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
-                          Tổng mục
+                          Total Items
                         </th>
                         <th
                           scope="col"
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
-                          Mục OK
+                          Passed Items
                         </th>
                         <th
                           scope="col"
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
-                          Tỷ lệ hoàn thành (%)
+                          Completion Rate (%)
                         </th>
                       </tr>
                     </thead>
@@ -174,7 +176,7 @@ export default function ChecklistsSummaryPage() {
                                   (summary.passedItems / summary.totalItems) *
                                   100
                                 ).toFixed(2)
-                              : 0}
+                              : '0.00'}
                           </td>
                         </tr>
                       ))}

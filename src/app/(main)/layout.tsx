@@ -25,14 +25,24 @@ export default function MainLayout({
       <header className="bg-white shadow-md py-3 px-4 sm:px-6 lg:px-8 sticky top-0 z-50">
         <div className="container mx-auto flex justify-between items-center">
           <div className="text-2xl font-extrabold text-blue-700">
-            <Link href="/admin" className="flex items-center">
+            <Link
+              href={isAuthenticated ? '/admin' : '/'}
+              className="flex items-center"
+            >
               <img
                 src="/company-logo.jpg"
                 alt="Company Logo"
                 className="h-10"
-                 />
+              />
               {/* Add ADMIN text only after successful login */}
-                 {isAuthenticated && user?.role === 'admin' && (<span className="text-base font-bold" style={{ color: '#2196F3' }}>ADMIN</span>)}
+              {isAuthenticated && user?.role === 'admin' && (
+                <span
+                  className="text-base font-bold"
+                  style={{ color: '#2196F3' }}
+                >
+                  ADMIN
+                </span>
+              )}
             </Link>
           </div>
 

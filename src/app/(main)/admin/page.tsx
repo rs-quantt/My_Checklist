@@ -49,7 +49,7 @@ const AdminDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <LoadingSpinner text="Đang tải Admin Dashboad ..." />
+        <LoadingSpinner text="Loading Admin Dashboard..." />
       </div>
     );
   }
@@ -57,7 +57,7 @@ const AdminDashboard: React.FC = () => {
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8 text-center text-red-600">
-        Lỗi khi tải dữ liệu: {error}
+        Failed to load data: {error}
       </div>
     );
   }
@@ -72,17 +72,17 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Tổng quan */}
+      {/* Overview */}
       <div className="mb-12">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">
-          Tổng quan
+          Overview
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 text-sm">
           {/* Card: Users */}
           <div className="bg-blue-50 border-l-4 border-blue-600 rounded-lg shadow p-6 flex items-center justify-between">
             <div>
               <h3 className="text-base font-semibold text-blue-800 mb-2">
-                Tổng số Người dùng
+                Total Users
               </h3>
               <p className="text-3xl font-bold text-blue-600">
                 {counts.userCount}
@@ -95,7 +95,7 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-green-50 border-l-4 border-green-600 rounded-lg shadow p-6 flex items-center justify-between">
             <div>
               <h3 className="text-base font-semibold text-green-800 mb-2">
-                Tổng số Checklist
+                Total Checklists
               </h3>
               <p className="text-3xl font-bold text-green-600">
                 {counts.checklistCount}
@@ -106,13 +106,13 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Quản lý hệ thống */}
+      {/* System Management */}
       <div className="mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">
-          Quản lý hệ thống
+          System Management
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Quản lý người dùng */}
+          {/* User Management */}
           <Link
             href="/admin/users"
             className="flex items-center space-x-4 p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out"
@@ -120,15 +120,15 @@ const AdminDashboard: React.FC = () => {
             <FaUsers className="text-gray-600 text-3xl" />
             <div>
               <h2 className="text-xl font-semibold text-gray-700 mb-1">
-                Quản lý Người dùng
+                User Management
               </h2>
               <p className="text-gray-600 text-sm">
-                Xem, thêm, sửa và xóa thông tin người dùng.
+                View, add, edit, and delete user information.
               </p>
             </div>
           </Link>
 
-          {/* Quản lý checklist */}
+          {/* Checklist Management */}
           <Link
             href="/admin/checklists"
             className="flex items-center space-x-4 p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out"
@@ -136,10 +136,10 @@ const AdminDashboard: React.FC = () => {
             <FaClipboardList className="text-gray-600 text-3xl" />
             <div>
               <h2 className="text-xl font-semibold text-gray-700 mb-1">
-                Quản lý Checklist
+                Checklist Management
               </h2>
               <p className="text-gray-600 text-sm">
-                Quản lý các danh sách kiểm tra và mục kiểm tra.
+                Manage checklists and checklist items.
               </p>
             </div>
           </Link>

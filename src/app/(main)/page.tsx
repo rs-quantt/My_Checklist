@@ -9,7 +9,7 @@ export default function Home() {
           Efficient Task Management with My Checklist
         </h1>
         <p className="mt-3 text-lg opacity-90 max-w-2xl mx-auto">
-          Organize tasks, track progress, and collaborate easily with our
+          Organize tasks, track progress, and collaborate easily with our{' '}
           comprehensive checklist system.
         </p>
         <div className="mt-6">
@@ -100,8 +100,7 @@ export default function Home() {
               Progress Tracking
             </h3>
             <p className="text-sm text-gray-600">
-              Update and track the progress of each item in your checklist so
-              you don&apos;t miss a thing.
+              Update and track the progress of each item in your checklist.
             </p>
           </div>
 
@@ -155,6 +154,7 @@ export default function Home() {
             </div>
             <div className="bg-white rounded-lg shadow-lg p-4">
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                {' '}
                 Flexible
               </h3>
               <p className="text-sm text-gray-600">

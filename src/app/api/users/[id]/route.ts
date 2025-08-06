@@ -10,6 +10,9 @@ export async function DELETE(
     await deleteUser(id);
     return new NextResponse(null, { status: 204 });
   } catch (error) {
+    console.log(
+      error instanceof Error ? error.message : 'Something went wrong',
+    );
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }

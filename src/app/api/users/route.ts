@@ -6,6 +6,9 @@ export async function GET() {
     const users = await getUsers();
     return NextResponse.json(users);
   } catch (error) {
+    console.log(
+      error instanceof Error ? error.message : 'Something went wrong',
+    );
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
@@ -22,6 +25,9 @@ export async function POST(request: Request) {
     const newUser = await createUser(userData);
     return NextResponse.json(newUser, { status: 201 });
   } catch (error) {
+    console.log(
+      error instanceof Error ? error.message : 'Something went wrong',
+    );
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
