@@ -29,8 +29,10 @@ export default function MainLayout({
               <img
                 src="/company-logo.jpg"
                 alt="Company Logo"
-                className="h-10 mr-2"
-              />
+                className="h-10"
+                 />
+              {/* Add ADMIN text only after successful login */}
+                 {isAuthenticated && user?.role === 'admin' && (<span className="text-base font-bold" style={{ color: '#2196F3' }}>ADMIN</span>)}
             </Link>
           </div>
 
