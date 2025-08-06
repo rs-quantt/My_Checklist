@@ -20,27 +20,29 @@ export async function POST(req: Request) {
     if (
       !userId ||
       !taskCode ||
-      !checklistId || // checklistId is not directly used by saveUserChecklistItems, but good for initial validation
+      !checklistId ||
       !items ||
       !Array.isArray(items)
     ) {
       return NextResponse.json(
         {
           error:
-            'Missing required parameters or invalid items format in payload',
+            'Missing required parameters: userId, taskCode, checklistId, and items are required.',
         },
         { status: 400 },
       );
     }
 
-    // Call the service function to save user checklist items and update the summary
-    await saveUserChecklistItems(userId, taskCode, items);
+    // Correctly call the service function with all required parameters
+    await saveUserChecklistItems(userId, checklistId, taskCode, items);
 
     return NextResponse.json({ message: 'Checklist saved successfully!' });
   } catch (error) {
     console.error('API error:', error);
+    // It's better to cast error to Error type to access message property safely
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Internal Server Error', details: errorMessage },
       { status: 500 },
     );
   }

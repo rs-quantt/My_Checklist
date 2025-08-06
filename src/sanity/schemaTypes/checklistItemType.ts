@@ -8,12 +8,6 @@ export const checklistItemType = defineType({
   icon: CheckmarkCircleIcon,
   fields: [
     defineField({
-      name: 'checklist',
-      title: 'Checklist',
-      type: 'reference',
-      to: [{ type: 'checklist' }],
-    }),
-    defineField({
       name: 'label',
       title: 'Item Label',
       type: 'string',
@@ -63,9 +57,18 @@ export const checklistItemType = defineType({
       ],
     }),
     defineField({
-      name: 'order',
-      title: 'Order (for sorting)',
-      type: 'number',
+      name: 'priority',
+      title: 'Priority',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'High', value: '1' },
+          { title: 'Medium', value: '2' },
+          { title: 'Low', value: '3' },
+        ],
+        layout: 'radio', // or 'dropdown'
+      },
+      initialValue: 'Low',
     }),
     defineField({
       name: 'category',
@@ -76,7 +79,13 @@ export const checklistItemType = defineType({
   preview: {
     select: {
       title: 'label',
-      subtitle: 'checklist.title',
+      subtitle: 'priority',
+    },
+     prepare({ title, subtitle }) {
+      return {
+        title: title,
+        subtitle: `Priority: ${subtitle || 'Not set'}`,
+      };
     },
   },
 });

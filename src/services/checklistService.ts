@@ -1,6 +1,7 @@
 import { client } from '@/sanity/lib/client';
 import { Checklist } from '@/types/checklist';
 
+// Updated to sort items by the new numeric priority value
 export async function getChecklists(): Promise<Checklist[]> {
   try {
     const checklists = await client.fetch(`
@@ -8,13 +9,13 @@ export async function getChecklists(): Promise<Checklist[]> {
         _id,
         title,
         description,
-        "items": *[_type == "checklistItem" && checklist._ref == ^._id] | order(order asc){
+        "items": items[]-> | order(priority asc) {
           _id,
           label,
           description,
-          order
+          priority
         }
-      }
+      } | order(_createdAt desc)
     `);
     return checklists;
   } catch (error) {
@@ -23,22 +24,23 @@ export async function getChecklists(): Promise<Checklist[]> {
   }
 }
 
+// Updated to sort items by the new numeric priority value
 export async function getChecklistById(id: string): Promise<Checklist | null> {
   try {
     const checklist = await client.fetch(
       `
-            *[_type == "checklist" && _id == $id][0]{
-              _id,
-              title,
-              description,
-              "items": *[_type == "checklistItem" && checklist._ref == ^._id] | order(order asc){
-                _id,
-                label,
-                description,
-                order
-              }
-            }
-          `,
+        *[_type == "checklist" && _id == $id][0]{
+          _id,
+          title,
+          description,
+          "items": items[]-> | order(priority asc) {
+            _id,
+            label,
+            description,
+            priority
+          }
+        }
+      `,
       { id },
     );
     return checklist;
@@ -48,6 +50,7 @@ export async function getChecklistById(id: string): Promise<Checklist | null> {
   }
 }
 
+// No changes needed for createChecklist
 export async function createChecklist(
   checklist: Omit<Checklist, '_id' | 'items'>,
 ): Promise<Checklist> {
@@ -64,6 +67,7 @@ export async function createChecklist(
   }
 }
 
+// No changes needed for updateChecklist
 export async function updateChecklist(
   id: string,
   updates: Partial<Omit<Checklist, '_id' | 'items'>>,
@@ -81,6 +85,7 @@ export async function updateChecklist(
   }
 }
 
+// No changes needed for countChecklists
 export async function countChecklists(): Promise<number> {
   try {
     const count = await client.fetch('count(*[_type == "checklist"])');
@@ -91,13 +96,20 @@ export async function countChecklists(): Promise<number> {
   }
 }
 
+/**
+ * This function remains correct as its logic for counting items does not depend on their order.
+ */
 export async function saveUserChecklistItems(
   userId: string,
+  checklistId: string,
   taskCode: string,
   items: Array<{ itemId: string; status: string; note?: string }>
 ) {
   try {
-    let checklistId: string | null = null;
+    if (!checklistId) {
+      throw new Error('Checklist ID is required to save user checklist items.');
+    }
+
     const transaction = client.transaction();
 
     // Step 1: Update or create userChecklistItem documents
@@ -106,20 +118,6 @@ export async function saveUserChecklistItems(
       if (!itemId || !status) {
         console.warn(`Skipping item due to missing data: ${JSON.stringify(item)}`);
         continue;
-      }
-
-      // Fetch checklistId from the first item
-      if (!checklistId) {
-        const itemDetails = await client.fetch(
-          `*[_type == "checklistItem" && _id == $itemId][0]{ checklist->{_id} }`,
-          { itemId }
-        );
-        if (itemDetails?.checklist?._id) {
-          checklistId = itemDetails.checklist._id;
-        } else {
-          console.error(`Checklist not found for item ${itemId}, skipping.`);
-          continue;
-        }
       }
 
       const docId = `${userId}-${itemId}-${taskCode}`;
@@ -147,59 +145,55 @@ export async function saveUserChecklistItems(
       }
     }
 
-    const result = await transaction.commit();
+    await transaction.commit();
 
     // Step 2: Create or update checklistSummary
-    if (checklistId) {
-      const totalItems = await client.fetch(
-        `count(*[_type == "userChecklistItem" 
-          && user._ref == $userId 
-          && item->checklist._ref == $checklistId 
-          && taskCode == $taskCode])`,
-        { userId, checklistId, taskCode }
-      );
+    const totalItems = await client.fetch(
+      `count(*[_type == "userChecklistItem"
+          && user._ref == $userId
+          && taskCode == $taskCode
+          && item._ref in *[_type == "checklist" && _id == $checklistId].items[]._ref])`,
+      { userId, checklistId, taskCode }
+    );
 
-      const passedItems = await client.fetch(
-        `count(*[_type == "userChecklistItem" 
-          && user._ref == $userId 
-          && item->checklist._ref == $checklistId 
-          && status == "OK" 
-          && taskCode == $taskCode])`,
-        { userId, checklistId, taskCode }
-      );
+    const passedItems = await client.fetch(
+      `count(*[_type == "userChecklistItem"
+          && user._ref == $userId
+          && taskCode == $taskCode
+          && status == "OK"
+          && item._ref in *[_type == "checklist" && _id == $checklistId].items[]._ref])`,
+      { userId, checklistId, taskCode }
+    );
 
-      const summaryDocId = `${userId}-${checklistId}-${taskCode}-summary`;
-      const existingSummary = await client.fetch(
-        `*[_type == "checklistSummary" && _id == $summaryDocId][0]`,
-        { summaryDocId }
-      );
+    const summaryDocId = `${userId}-${checklistId}-${taskCode}-summary`;
+    const existingSummary = await client.fetch(
+      `*[_type == "checklistSummary" && _id == $summaryDocId][0]`,
+      { summaryDocId }
+    );
 
-      const summaryTransaction = client.transaction();
-      const summaryData = {
-        totalItems,
-        passedItems,
-        updatedAt: new Date().toISOString(),
-        taskCode,
-      };
+    const summaryTransaction = client.transaction();
+    const summaryData = {
+      totalItems,
+      passedItems,
+      updatedAt: new Date().toISOString(),
+      taskCode,
+    };
 
-      if (existingSummary) {
-        summaryTransaction.patch(summaryDocId, { set: summaryData });
-      } else {
-        summaryTransaction.create({
-          _id: summaryDocId,
-          _type: 'checklistSummary',
-          user: { _type: 'reference', _ref: userId },
-          checklist: { _type: 'reference', _ref: checklistId },
-          ...summaryData,
-        });
-      }
-
-      await summaryTransaction.commit();
+    if (existingSummary) {
+      summaryTransaction.patch(summaryDocId, { set: summaryData });
     } else {
-      console.warn('Checklist ID not found — skipping summary update.');
+      summaryTransaction.create({
+        _id: summaryDocId,
+        _type: 'checklistSummary',
+        user: { _type: 'reference', _ref: userId },
+        checklist: { _type: 'reference', _ref: checklistId },
+        ...summaryData,
+      });
     }
 
-    return result;
+    await summaryTransaction.commit();
+
+    return;
   } catch (error) {
     console.error('Error saving user checklist items:', error);
     throw new Error('Failed to save user checklist items.');

@@ -130,18 +130,18 @@ export default function ChecklistPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredChecklists.map((checklist, index) => (
-              <Link
-                key={checklist._id}
-                href={`/checklists/${checklist._id}`}
-              >
+            {filteredChecklists.map((checklist, index) => {
+              const hasItems = checklist.items && checklist.items.length > 0;
+              const cardContent = (
                 <div
                   className={`
                     block
-                    bg-white border border-gray-200 rounded-xl shadow-md p-6 cursor-pointer
-                    transform transition-all duration-300 ease-in-out
-                    hover:scale-[1.02] hover:shadow-lg hover:border-blue-300
+                    bg-white border border-gray-200 rounded-xl shadow-md p-6
                     flex flex-col justify-between
+                    ${hasItems 
+                      ? 'cursor-pointer transform transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg hover:border-blue-300'
+                      : 'opacity-60 cursor-not-allowed bg-gray-50'
+                    }
                   `}
                   style={{ animationDelay: `${index * 0.05}s` }} // Giảm delay để nhanh hơn
                 >
@@ -165,13 +165,23 @@ export default function ChecklistPage() {
                     </div>
                   </div>
                   <div className="text-sm text-gray-500 mt-4 text-right">
-                    {checklist.items
+                    {hasItems
                       ? `${checklist.items.length} mục`
-                      : '0 mục'}
+                      : 'Không có mục nào'}
                   </div>
                 </div>
-              </Link>
-            ))}
+              );
+
+              return hasItems ? (
+                <Link key={checklist._id} href={`/checklists/${checklist._id}`}>
+                  {cardContent}
+                </Link>
+              ) : (
+                <div key={checklist._id}>
+                  {cardContent}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

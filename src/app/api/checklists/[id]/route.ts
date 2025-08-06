@@ -1,33 +1,35 @@
 import { NextResponse } from 'next/server';
-import { client } from '@/sanity/lib/client';
+import { getChecklistById } from '@/services/checklistService';
+import { getUsers } from '@/services/userService';
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  // Correctly await the params object to resolve its properties, as required by Next.js
   const { id } = await params;
 
-  const checklist = await client.fetch(
-    `
-    *[_type == "checklist" && _id == $id][0]{
-      _id,
-      title,
-      description,
-      // Đã xóa type,
-      "items": *[_type == "checklistItem" && checklist._ref == ^._id] | order(order asc){
-        _id,
-        label,
-        description,
-        order
-      }
-    }
-  `,
-    { id },
-  ); // Explicitly type the context parameter
-
-  if (!checklist) {
-    return new NextResponse('Checklist not found', { status: 404 });
+  if (!id) {
+    return new NextResponse('Checklist ID is required', { status: 400 });
   }
 
-  return NextResponse.json(checklist);
+  try {
+    // Fetch both checklist and users concurrently for better performance
+    const [checklist, users] = await Promise.all([
+      getChecklistById(id),
+      getUsers(),
+    ]);
+
+    if (!checklist) {
+      return new NextResponse(`Checklist with ID ${id} not found`, { status: 404 });
+    }
+
+    // Return a single JSON object containing both checklist and users
+    return NextResponse.json({ checklist, users });
+
+  } catch (error) {
+    console.error(`Error fetching details for checklist ${id}:`, error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    return new NextResponse(JSON.stringify({ error: 'Internal Server Error', details: errorMessage }), { status: 500 });
+  }
 }

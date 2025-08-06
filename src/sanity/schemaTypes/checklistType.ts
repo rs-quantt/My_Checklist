@@ -18,6 +18,17 @@ export const checklistType = defineType({
       type: 'text',
       description: 'A brief description of the checklist.',
     }),
+    defineField({
+      name: 'items',
+      title: 'Checklist Items',
+      type: 'array',
+      of: [
+        {
+          type: 'reference',
+          to: [{ type: 'checklistItem' }],
+        },
+      ],
+    }),
   ],
   preview: {
     select: {
