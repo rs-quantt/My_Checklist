@@ -41,7 +41,7 @@ export default function ChecklistsSummaryPage() {
         setGroupedSummaries(data);
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Something went wrong');
-        console.error('Error fetching checklist summaries:', err);
+        console.error('Error fetching checklist summary:', err);
       } finally {
         setIsLoading(false);
       }

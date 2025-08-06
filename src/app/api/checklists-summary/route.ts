@@ -70,7 +70,7 @@ export async function GET() {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Error fetching checklist summaries:', error);
+    console.error('Error fetching checklist summary:', error);
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 },

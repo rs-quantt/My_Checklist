@@ -65,7 +65,7 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-12">
         <div className="flex items-center space-x-4">
           <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
           <FaChartBar className="text-blue-600 text-4xl" />
@@ -74,27 +74,27 @@ const AdminDashboard: React.FC = () => {
 
       {/* Overview */}
       <div className="mb-12">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-8 pb-3 border-b border-gray-200">
           Overview
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
           {/* Card: Users */}
-          <div className="bg-blue-50 border-l-4 border-blue-600 rounded-lg shadow p-6 flex items-center justify-between">
+          <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-between border border-gray-200">
             <div>
-              <h3 className="text-base font-semibold text-blue-800 mb-2">
+              <h3 className="text-base font-semibold text-gray-700 mb-2">
                 Total Users
               </h3>
-              <p className="text-3xl font-bold text-blue-600">
+              <p className="text-3xl font-bold text-blue-800">
                 {counts.userCount}
               </p>
             </div>
-            <FaUsers className="text-blue-600 text-4xl opacity-75" />
+            <FaUsers className="text-blue-500 text-4xl opacity-75" />
           </div>
 
           {/* Card: Checklists */}
-          <div className="bg-green-50 border-l-4 border-green-600 rounded-lg shadow p-6 flex items-center justify-between">
+          <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-between border border-gray-200">
             <div>
-              <h3 className="text-base font-semibold text-green-800 mb-2">
+              <h3 className="text-base font-semibold text-gray-700 mb-2">
                 Total Checklists
               </h3>
               <p className="text-3xl font-bold text-green-600">
@@ -108,14 +108,14 @@ const AdminDashboard: React.FC = () => {
 
       {/* System Management */}
       <div className="mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-8 pb-3 border-b border-gray-200">
           System Management
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* User Management */}
           <Link
             href="/admin/users"
-            className="flex items-center space-x-4 p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out"
+            className="flex items-center space-x-4 p-6 bg-white rounded-lg shadow hover:shadow-xl transition duration-300 ease-in-out border border-gray-200"
           >
             <FaUsers className="text-gray-600 text-3xl" />
             <div>
@@ -131,15 +131,15 @@ const AdminDashboard: React.FC = () => {
           {/* Checklist Management */}
           <Link
             href="/admin/checklists"
-            className="flex items-center space-x-4 p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition duration-300 ease-in-out"
+            className="flex items-center space-x-4 p-6 bg-white rounded-lg shadow hover:shadow-xl transition duration-300 ease-in-out border border-gray-200"
           >
             <FaClipboardList className="text-gray-600 text-3xl" />
             <div>
               <h2 className="text-xl font-semibold text-gray-700 mb-1">
-                Checklist Management
+                Checklist Summary
               </h2>
               <p className="text-gray-600 text-sm">
-                Manage checklists and checklist items.
+                View summary of completed checklists.
               </p>
             </div>
           </Link>
