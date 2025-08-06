@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { deleteUser } from '@/services/userService';
+import { deleteUser, updateUser } from '@/services/userService';
+import { User } from '@/types/user';
 
 export async function DELETE(
   request: Request,
@@ -13,6 +14,22 @@ export async function DELETE(
     console.log(
       error instanceof Error ? error.message : 'Something went wrong',
     );
+    return new NextResponse('Internal Server Error', { status: 500 });
+  }
+}
+
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string } },
+) {
+  try {
+    const { id } = params;
+    const body: Omit<User, '_id'> = await request.json();
+
+    const updatedUser = await updateUser(id, body);
+    return NextResponse.json(updatedUser);
+  } catch (error) {
+    console.error('Failed to update user:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }

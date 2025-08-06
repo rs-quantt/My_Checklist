@@ -41,3 +41,19 @@ export async function getUsers(): Promise<User[]> {
     throw error;
   }
 }
+
+export async function updateUser(
+  userId: string,
+  userData: Partial<Omit<User, '_id'>>,
+): Promise<User> {
+  try {
+    const updatedUser = await client
+      .patch(userId)
+      .set(userData)
+      .commit<User>();
+    return updatedUser;
+  } catch (error) {
+    console.error('Error updating user:', error);
+    throw error;
+  }
+}

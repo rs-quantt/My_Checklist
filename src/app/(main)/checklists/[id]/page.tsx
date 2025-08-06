@@ -10,6 +10,7 @@ import { coldarkDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { urlFor } from '@/sanity/lib/image';
 import { SanityImageSource } from '@sanity/image-url/lib/types/types';
 import { PortableTextBlock } from '@portabletext/types';
+import LoadingOverlay from '@/app/components/LoadingOverlay';
 
 const ptComponents: PortableTextComponents = {
   types: {
@@ -87,6 +88,7 @@ export default function ChecklistDetailPage() {
     [itemId: string]: boolean;
   }>({});
   const [isSaveButtonDisabled, setIsSaveButtonDisabled] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -121,6 +123,7 @@ export default function ChecklistDetailPage() {
   }, [id]);
 
   const saveChecklist = async () => {
+    setIsSaving(true);
     const validationErrors: string[] = [];
     checklist?.items.forEach((item) => {
       const state = itemStates[item._id] || { status: '', note: '' };
@@ -139,6 +142,7 @@ export default function ChecklistDetailPage() {
 
     if (validationErrors.length > 0) {
       alert(validationErrors.join('\n'));
+      setIsSaving(false);
       return;
     }
 
@@ -152,17 +156,24 @@ export default function ChecklistDetailPage() {
       })),
     };
 
-    const res = await fetch('/api/save-checklist', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const res = await fetch('/api/save-checklist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-    if (!res.ok) {
-      console.error('Save failed:', await res.text());
-    } else {
+      if (!res.ok) {
+        throw new Error('Save failed: ' + (await res.text()));
+      }
+
       setShowSuccessPopup(true);
       window.scrollTo(0, 0);
+    } catch (error) {
+      console.error(error);
+      alert('An error occurred while saving. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -188,11 +199,9 @@ export default function ChecklistDetailPage() {
   if (!checklist) return <LoadingSpinner text="Loading checklist..." />;
 
   return (
-    <div className="antialiased bg-gray-50 min-h-screen">
-      <div
-        className={`min-h-screen py-8 px-2 sm:px-4 lg:px-6`}
-        style={showSuccessPopup ? { filter: 'blur(3px)' } : {}}
-      >
+    <div className="antialiased bg-gray-50 min-h-screen relative">
+      <LoadingOverlay isLoading={isSaving} text="Saving..." />
+      <div className={`min-h-screen py-8 px-2 sm:px-4 lg:px-6`}>
         <div className="container mx-auto max-w-5xl bg-white text-gray-800 rounded-lg shadow-sm p-6 md:p-8 space-y-8 border border-gray-200">
           <button
             onClick={() => router.back()}
@@ -407,16 +416,16 @@ export default function ChecklistDetailPage() {
 
           <button
             className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-md w-full text-base tracking-wide disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 shadow-sm hover:shadow-md transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            disabled={isSaveButtonDisabled}
+            disabled={isSaveButtonDisabled || isSaving}
             onClick={saveChecklist}
           >
-            Save Checklist
+            {isSaving ? 'Saving...' : 'Save Checklist'}
           </button>
         </div>
       </div>
 
       {showSuccessPopup && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900/50 backdrop-blur-xs">
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm mx-auto text-center border border-gray-200">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">
               Success!
