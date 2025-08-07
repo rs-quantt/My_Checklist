@@ -11,6 +11,8 @@ import { urlFor } from '@/sanity/lib/image';
 import { SanityImageSource } from '@sanity/image-url/lib/types/types';
 import { PortableTextBlock } from '@portabletext/types';
 import LoadingOverlay from '@/app/components/LoadingOverlay';
+import { ChecklistDetailTour } from '@/app/components/tour/ChecklistDetailTour'; // Import the tour
+import { FaQuestionCircle } from 'react-icons/fa';
 
 const ptComponents: PortableTextComponents = {
   types: {
@@ -200,28 +202,38 @@ export default function ChecklistDetailPage() {
 
   return (
     <div className="antialiased bg-gray-50 min-h-screen relative">
+      <ChecklistDetailTour />
       <LoadingOverlay isLoading={isSaving} text="Saving..." />
       <div className={`min-h-screen py-8 px-2 sm:px-4 lg:px-6`}>
         <div className="container mx-auto max-w-5xl bg-white text-gray-800 rounded-lg shadow-sm p-6 md:p-8 space-y-8 border border-gray-200">
-          <button
-            onClick={() => router.back()}
-            className="mb-6 flex items-center bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors duration-200 text-sm font-medium border border-blue-200 py-2 px-4 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <svg
-              className="w-5 h-5 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <div className="flex justify-between items-center mb-6">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors duration-200 text-sm font-medium border border-blue-200 py-2 px-4 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              ></path>
-            </svg>
-            Back to list
-          </button>
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                ></path>
+              </svg>
+              Back to list
+            </button>
+            <button
+              id="start-detail-tour-button"
+              className="text-blue-500 hover:text-blue-700 transition-colors"
+              aria-label="Start page tour"
+            >
+              <FaQuestionCircle size={24} />
+            </button>
+          </div>
 
           <div className="text-center mb-6">
             <div className="flex items-center justify-center">
@@ -253,7 +265,7 @@ export default function ChecklistDetailPage() {
                 placeholder="-- Select user --"
               />
             </div>
-            <div className="space-y-2 text-base">
+            <div className="space-y-2 text-base" id="task-code-input">
               <label className="block text-base font-semibold text-gray-700">
                 Task Code <span className="text-red-500">*</span>
               </label>
@@ -268,7 +280,7 @@ export default function ChecklistDetailPage() {
           </div>
 
           <ul className="space-y-6">
-            {checklist.items.map((item) => {
+            {checklist.items.map((item, index) => {
               const state = itemStates[item._id] || { status: '', note: '' };
               const isExpanded = expandedItems[item._id] || false;
 
@@ -294,7 +306,7 @@ export default function ChecklistDetailPage() {
               return (
                 <li
                   key={item._id}
-                  className="relative overflow-hidden rounded-lg bg-white shadow-sm hover:shadow-md transition-all duration-200 ease-in-out border border-gray-200"
+                  className={`relative overflow-hidden rounded-lg bg-white shadow-sm hover:shadow-md transition-all duration-200 ease-in-out border border-gray-200 ${index === 0 ? 'checklist-item-row' : ''}`}
                 >
                   <div
                     className={`absolute top-0 left-0 bottom-0 w-2 ${barColorClass} rounded-l-lg`}
@@ -351,7 +363,7 @@ export default function ChecklistDetailPage() {
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Status
                           </label>
-                          <div className="flex flex-wrap items-center gap-2">
+                          <div className={`flex flex-wrap items-center gap-2 ${index === 0 ? 'status-buttons' : ''}`}>
                             {['OK', 'notOK', 'na'].map((statusOption) => (
                               <button
                                 key={statusOption}
@@ -402,7 +414,7 @@ export default function ChecklistDetailPage() {
                             handleNoteChange(item._id, e.target.value)
                           }
                           placeholder={isNoteRequired ? 'Required' : 'Optional'}
-                          className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+                          className={`w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm transition ${index === 0 ? 'note-input' : ''}`}
                           rows={2}
                           required={isNoteRequired}
                         />
@@ -415,6 +427,7 @@ export default function ChecklistDetailPage() {
           </ul>
 
           <button
+            id="save-progress-button"
             className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-md w-full text-base tracking-wide disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 shadow-sm hover:shadow-md transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             disabled={isSaveButtonDisabled || isSaving}
             onClick={saveChecklist}

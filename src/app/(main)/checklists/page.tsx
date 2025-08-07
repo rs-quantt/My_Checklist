@@ -2,7 +2,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
-import { FaSearch, FaTimes } from 'react-icons/fa';
+import { FaSearch, FaTimes, FaQuestionCircle } from 'react-icons/fa';
+import { ChecklistTour } from '@/app/components/tour/ChecklistTour'; // Import the tour component
 
 type Checklist = {
   _id: string;
@@ -81,7 +82,15 @@ export default function ChecklistPage() {
 
   return (
     <div className="antialiased bg-gray-50 min-h-screen">
-      <div className="bg-blue-600 text-white py-12 text-center shadow-md ">
+      <ChecklistTour />
+      <div className="bg-blue-600 text-white py-12 text-center shadow-md relative">
+        <button
+          id="start-tour-button"
+          className="absolute top-4 right-4 text-white hover:text-blue-200 transition-colors"
+          aria-label="Start page tour"
+        >
+          <FaQuestionCircle size={24} />
+        </button>
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
           Checklist List
         </h1>
@@ -89,7 +98,7 @@ export default function ChecklistPage() {
           Manage tasks and track progress easily.
         </p>
 
-        <div className="mt-8 mx-auto w-full max-w-md px-4 sm:px-0 relative">
+        <div id="search-bar" className="mt-8 mx-auto w-full max-w-md px-4 sm:px-0 relative">
           <input
             type="text"
             placeholder="Search checklists by name or description..."
@@ -136,18 +145,26 @@ export default function ChecklistPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredChecklists.map((checklist, index) => {
               const hasItems = checklist.itemCount > 0;
+              const cardClasses = `
+                block
+                bg-white border border-gray-200 rounded-xl shadow-md p-6
+                flex flex-col justify-between h-full
+                ${
+                  hasItems
+                    ? 'cursor-pointer transform transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg hover:border-blue-300'
+                    : 'opacity-60 cursor-not-allowed bg-gray-50'
+                }
+                ${index === 0 ? 'checklist-card' : ''}
+              `;
+              const typeTagClasses = `
+                text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full 
+                ${getTypeColor(checklist.type)}
+                ${index === 0 ? 'checklist-type-tag' : ''}
+              `;
+
               const cardContent = (
                 <div
-                  className={`
-                    block
-                    bg-white border border-gray-200 rounded-xl shadow-md p-6
-                    flex flex-col justify-between h-full
-                    ${
-                      hasItems
-                        ? 'cursor-pointer transform transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg hover:border-blue-300'
-                        : 'opacity-60 cursor-not-allowed bg-gray-50'
-                    }
-                  `}
+                  className={cardClasses.trim()}
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   <div className="flex-grow">
@@ -170,11 +187,7 @@ export default function ChecklistPage() {
                     </div>
                   </div>
                   <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-                    <span
-                      className={`text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full ${getTypeColor(
-                        checklist.type,
-                      )}`}
-                    >
+                    <span className={typeTagClasses.trim()}>
                       {checklist.type}
                     </span>
                     <span className="text-sm text-gray-500">
