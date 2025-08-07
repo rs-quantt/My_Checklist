@@ -5,48 +5,62 @@ import { driver, DriveStep } from 'driver.js';
 import 'driver.js/dist/driver.css';
 
 /**
+ * A helper function to safely find an element and attach a listener.
+ * It uses a MutationObserver to wait for the element to appear.
+ */
+function onElementReady(elementId: string, callback: (element: HTMLElement) => void) {
+  const observer = new MutationObserver((mutationsList, observer) => {
+    const element = document.getElementById(elementId);
+    if (element) {
+      callback(element);
+      observer.disconnect();
+    }
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+
+  // Fallback in case the element is already there
+  const element = document.getElementById(elementId);
+  if (element) {
+    callback(element);
+    observer.disconnect();
+  }
+
+  // Return the observer so it can be disconnected on cleanup
+  return observer;
+}
+
+
+/**
  * Tour for the initial page controls before a template is selected.
  */
 export const InitialTour = () => {
   useEffect(() => {
     let activeDriver = driver();
-
-    const initialSteps: DriveStep[] = [
-      {
-        element: '#template-select-container',
-        popover: {
-          title: 'Select a Template',
-          description: 'First, choose a checklist template from this list.',
-        },
-      },
-      {
-        element: '#developer-select-container',
-        popover: {
-          title: 'Assign a Developer',
-          description: 'Next, select the developer responsible for this task.',
-        },
-      },
-      {
-        element: '#task-code-input-container',
-        popover: {
-          title: 'Enter Task Code',
-          description: 'Enter the unique code for the task to link your work.',
-        },
-      },
-    ];
+    let observer: MutationObserver;
 
     const startTour = () => {
       activeDriver = driver({
         showProgress: true,
-        steps: initialSteps,
+        steps: [
+          { element: '#template-select-container', popover: { title: 'Select a Template', description: 'First, choose a checklist template from this list.' } },
+          { element: '#developer-select-container', popover: { title: 'Assign a Developer', description: 'Next, select the developer responsible for this task.' } },
+          { element: '#task-code-input-container', popover: { title: 'Enter Task Code', description: 'Enter the unique code for the task to link your work.' } },
+        ],
       });
       activeDriver.drive();
     };
 
-    const tourButton = document.getElementById('start-my-checklist-tour-button');
-    tourButton?.addEventListener('click', startTour);
+    observer = onElementReady('start-my-checklist-tour-button', (tourButton) => {
+      tourButton.addEventListener('click', startTour);
+    });
 
     return () => {
+      observer.disconnect();
+      const tourButton = document.getElementById('start-my-checklist-tour-button');
       tourButton?.removeEventListener('click', startTour);
       activeDriver.destroy();
     };
@@ -61,70 +75,41 @@ export const InitialTour = () => {
 export const ChecklistItemsTour = () => {
   useEffect(() => {
     let activeDriver = driver();
+    let observer: MutationObserver;
 
     const expandChecklistItemIfNeeded = (element: Element | undefined) => {
       if (!(element instanceof HTMLElement)) return;
       
-      // The element is the `li` with `.my-checklist-item`
-      const itemRow = element; 
-      const content = itemRow.querySelector('div.overflow-hidden');
-      // Framer motion removes the content div, so we check for its existence
-      const isCollapsed = !content;
+      const itemRow = element.closest('li.relative'); 
+      const content = itemRow?.querySelector('div.overflow-hidden');
+      const isCollapsed = !content || getComputedStyle(content).height === '0px';
       
       if (isCollapsed) {
-        const trigger = itemRow.querySelector<HTMLElement>('.cursor-pointer');
+        const trigger = itemRow?.querySelector<HTMLElement>('.cursor-pointer');
         if (trigger) trigger.click();
       }
     };
 
-    const checklistSteps: DriveStep[] = [
-      {
-        element: '.my-checklist-item',
-        popover: {
-          title: 'Checklist Item',
-          description: "This is one item in the checklist. It has been expanded to show its details.",
-        },
-        onHighlightStarted: expandChecklistItemIfNeeded,
-      },
-      {
-        element: '.my-checklist-status-buttons',
-        popover: {
-          title: 'Set Status',
-          description: 'After reviewing, set its status: OK, Not OK, or N/A.',
-        },
-        onHighlightStarted: expandChecklistItemIfNeeded,
-      },
-      {
-        element: '.my-checklist-note-input',
-        popover: {
-          title: 'Add a Note',
-          description: 'For "Not OK" or "N/A" statuses, a note is required to explain why.',
-        },
-        onHighlightStarted: expandChecklistItemIfNeeded,
-      },
-      {
-        element: '#save-checklist-button',
-        popover: {
-          title: 'Save the Checklist',
-          description: 'Once all items are filled out, click here to save the entire checklist.',
-          side: 'top',
-          align: 'start',
-        },
-      },
-    ];
-
     const startTour = () => {
       activeDriver = driver({
         showProgress: true,
-        steps: checklistSteps,
+        steps: [
+          { element: '.my-checklist-item', popover: { title: 'Checklist Item', description: "This is one item in the checklist. It has been expanded to show its details." }, onHighlightStarted: expandChecklistItemIfNeeded },
+          { element: '.my-checklist-status-buttons', popover: { title: 'Set Status', description: 'After reviewing, set its status: OK, Not OK, or N/A.' }, onHighlightStarted: expandChecklistItemIfNeeded },
+          { element: '.my-checklist-note-input', popover: { title: 'Add a Note', description: 'For "Not OK" or "N/A" statuses, a note is required to explain why.' }, onHighlightStarted: expandChecklistItemIfNeeded },
+          { element: '#save-checklist-button', popover: { title: 'Save the Checklist', description: 'Once all items are filled out, click here to save the entire checklist.', side: 'top', align: 'start' } },
+        ],
       });
       activeDriver.drive();
     };
 
-    const tourButton = document.getElementById('start-checklist-items-tour-button');
-    tourButton?.addEventListener('click', startTour);
+    observer = onElementReady('start-checklist-items-tour-button', (tourButton) => {
+      tourButton.addEventListener('click', startTour);
+    });
 
     return () => {
+      observer.disconnect();
+      const tourButton = document.getElementById('start-checklist-items-tour-button');
       tourButton?.removeEventListener('click', startTour);
       activeDriver.destroy();
     };

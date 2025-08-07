@@ -169,7 +169,6 @@ export default function MyChecklistPage() {
     setSelectedTemplate(null);
 
     try {
-      // Simulate network delay for demo purposes
       await new Promise(resolve => setTimeout(resolve, 500));
       const response = await fetch(`/api/checklists/${templateId}`);
       if (!response.ok) throw new Error('Failed to fetch checklist details');
@@ -315,7 +314,6 @@ export default function MyChecklistPage() {
 
           <motion.div className="text-center mb-6" variants={itemVariants}>
             <div className="flex items-center justify-center">
-              <img src="/check.png" alt="Check Icon" className="w-8 h-8 mr-3" />
               <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 leading-tight">
                 Start a New Task
               </h1>
@@ -325,167 +323,169 @@ export default function MyChecklistPage() {
             </p>
           </motion.div>
           
-          <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 items-end" variants={containerVariants} initial="hidden" animate="visible">
-            <motion.div id="template-select-container" className="space-y-2 md:col-span-1" variants={itemVariants}>
-                <label className="block text-base font-semibold text-gray-700">Checklist Template <span className="text-red-500">*</span></label>
-                <CommonSelect
-                    options={checklistTemplates.map(t => ({ _id: t._id, name: t.title }))}
-                    value={selectedTemplate?._id || ''}
-                    onChange={handleTemplateChange}
-                    placeholder="-- Select a template --"
+          <div className="space-y-8">
+            <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end" variants={containerVariants} initial="hidden" animate="visible">
+              <motion.div id="template-select-container" className="space-y-2 md:col-span-1" variants={itemVariants}>
+                  <label className="block text-base font-semibold text-gray-700">Checklist Template <span className="text-red-500">*</span></label>
+                  <CommonSelect
+                      options={checklistTemplates.map(t => ({ _id: t._id, name: t.title }))}
+                      value={selectedTemplate?._id || ''}
+                      onChange={handleTemplateChange}
+                      placeholder="-- Select a template --"
+                  />
+              </motion.div>
+              <motion.div id="developer-select-container" className="space-y-2" variants={itemVariants}>
+                <label className="block text-base font-semibold text-gray-700">Developer <span className="text-red-500">*</span></label>
+                <CommonSelect options={users} value={selectedUserId} onChange={setSelectedUserId} placeholder="-- Select user --"/>
+              </motion.div>
+              <motion.div id="task-code-input-container" className="space-y-2 text-base" variants={itemVariants}>
+                <label className="block text-base font-semibold text-gray-700">Task Code <span className="text-red-500">*</span></label>
+                <input
+                  className="appearance-none block w-full bg-white border border-gray-300 text-gray-800 py-2 px-3 rounded-md leading-tight focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm text-base"
+                  type="text"
+                  placeholder="Enter task code (e.g., TASK-001)"
+                  value={taskCode}
+                  onChange={(e) => setTaskCode(e.target.value)}
                 />
+              </motion.div>
             </motion.div>
-             <motion.div id="developer-select-container" className="space-y-2" variants={itemVariants}>
-              <label className="block text-base font-semibold text-gray-700">Developer <span className="text-red-500">*</span></label>
-              <CommonSelect options={users} value={selectedUserId} onChange={setSelectedUserId} placeholder="-- Select user --"/>
-            </motion.div>
-             <motion.div id="task-code-input-container" className="space-y-2 text-base" variants={itemVariants}>
-              <label className="block text-base font-semibold text-gray-700">Task Code <span className="text-red-500">*</span></label>
-              <input
-                className="appearance-none block w-full bg-white border border-gray-300 text-gray-800 py-2 px-3 rounded-md leading-tight focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm text-base"
-                type="text"
-                placeholder="Enter task code (e.g., TASK-001)"
-                value={taskCode}
-                onChange={(e) => setTaskCode(e.target.value)}
-              />
-            </motion.div>
-          </motion.div>
-          
-          <div className="relative">
-            <AnimatePresence mode="wait">
-              {isTemplateLoading && (
-                <motion.div
-                  key="template-loader"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex justify-center items-center"
-                >
-                  <LoadingSpinner text="" />
-                </motion.div>
-              )}
-
-              {selectedTemplate && (
-                <motion.div
-                  key={selectedTemplate._id}
-                  className="space-y-8"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.5, ease: 'easeOut' }}
-                >
-                  <div ref={templateHeaderRef} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <img src="/check.png" alt="Check Icon" className="w-8 h-8 mr-3" />
-                        <div>
-                          <h2 className="text-2xl font-bold text-gray-900">{selectedTemplate.title}</h2>
-                          {selectedTemplate.description && <p className="text-gray-600 mt-1">{selectedTemplate.description}</p>}
-                        </div>
-                      </div>
-                      <button
-                        id="start-checklist-items-tour-button"
-                        className="text-blue-500 hover:text-blue-700 transition-colors ml-4 flex-shrink-0"
-                        aria-label="Start checklist items tour"
-                      >
-                        <FaQuestionCircle size={24} />
-                      </button>
-                    </div>
-                  </div>
-                  <motion.ul className="space-y-6" variants={containerVariants} initial="hidden" animate="visible">
-                    {selectedTemplate.items.map((item, index) => {
-                      const state = itemStates[item._id] || { status: '', note: '' };
-                      const isExpanded = expandedItems[item._id] || false;
-                      const isNoteRequired = state.status === 'notOK' || state.status === 'na';
-                      let barColorClass = 'bg-gray-400';
-                      if (state.status === 'OK') barColorClass = 'bg-green-500';
-                      else if (state.status === 'notOK') barColorClass = 'bg-red-500';
-                      else if (state.status === 'na') barColorClass = 'bg-slate-400';
-
-                      const priority = item.priority;
-                      const priorityText = priority === '1' ? 'High' : priority === '2' ? 'Medium' : 'Low';
-                      const priorityClass = priority === '1' ? 'bg-red-200 text-red-900' : priority === '2' ? 'bg-yellow-200 text-yellow-900' : 'bg-blue-200 text-blue-900';
-
-                      const itemTourClass = index === 0 ? 'my-checklist-item' : '';
-
-                      return (
-                        <motion.li key={item._id} variants={itemVariants} className={`relative overflow-hidden rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow duration-200 ease-in-out border border-gray-200 ${itemTourClass}`}>
-                          <div className={`absolute top-0 left-0 bottom-0 w-2 ${barColorClass} transition-colors`}></div>
-                          <div className="pl-6 p-4">
-                            <div className="flex items-center cursor-pointer" onClick={() => toggleItem(item._id)}>
-                              <p className="font-semibold text-lg text-gray-800 flex-grow">{item.label}</p>
-                              <span className={`px-3 py-1 text-xs font-bold rounded-full mr-4 ${priorityClass}`}>{priorityText}</span>
-                              <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
-                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                              </motion.div>
-                            </div>
-                            <AnimatePresence>
-                              {isExpanded && (
-                                <motion.div
-                                  key="content"
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{ height: 'auto', opacity: 1, marginTop: '16px' }}
-                                  exit={{ height: 0, opacity: 0, marginTop: '0px' }}
-                                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                                  className="overflow-hidden"
-                                >
-                                  <div className="space-y-3">
-                                    {item.description && (
-                                      <div className="prose max-w-none">
-                                        <hr className="my-4 border-gray-200" />
-                                        <PortableText value={item.description} components={ptComponents} />
-                                        <hr className="my-4 border-gray-200" />
-                                      </div>
-                                    )}
-                                    <div>
-                                      <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                                      <div className={`flex flex-wrap items-center gap-2 ${index === 0 ? 'my-checklist-status-buttons' : ''}`}>
-                                        {['OK', 'notOK', 'na'].map((statusOption) => (
-                                          <button
-                                            key={statusOption}
-                                            onClick={() => handleStatusChange(item._id, statusOption as Status)}
-                                            className={`px-4 py-2 rounded-md font-medium text-xs transition-all duration-200 ease-in-out border ${state.status === statusOption ? (statusOption === 'OK' ? 'bg-green-600 text-white border-green-600' : statusOption === 'notOK' ? 'bg-red-600 text-white border-red-600' : 'bg-slate-600 text-white border-slate-600') : (statusOption === 'OK' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : statusOption === 'notOK' ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200' : 'bg-slate-200 text-slate-800 border-slate-300 hover:bg-slate-300')}`}
-                                          >
-                                            {statusOption === 'OK' ? 'OK' : statusOption === 'notOK' ? 'Not OK' : 'N/A'}
-                                          </button>
-                                        ))}
-                                      </div>
-                                    </div>
-                                    <label htmlFor={`note-${item._id}`} className="block text-sm font-medium text-gray-700 mt-3">
-                                      Reason / Note <span className={`text-red-500 ${isNoteRequired ? '' : 'hidden'}`}>*</span>
-                                    </label>
-                                    <textarea
-                                      id={`note-${item._id}`}
-                                      value={state.note}
-                                      onChange={(e) => handleNoteChange(item._id, e.target.value)}
-                                      placeholder={isNoteRequired ? 'Required' : 'Optional'}
-                                      className={`w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm transition ${index === 0 ? 'my-checklist-note-input' : ''}`}
-                                      rows={2}
-                                      required={isNoteRequired}
-                                    />
-                                  </div>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        </motion.li>
-                      );
-                    })}
-                  </motion.ul>
-                  <motion.div variants={itemVariants}>
-                    <button
-                      id="save-checklist-button"
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-md w-full text-base tracking-wide disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 shadow-sm hover:shadow-md transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                      disabled={isSaveButtonDisabled || isSaving}
-                      onClick={saveChecklist}
-                    >
-                      {isSaving ? 'Saving...' : 'Save Checklist'}
-                    </button>
+            
+            <div className="relative min-h-[5rem]">
+              <AnimatePresence mode="wait">
+                {isTemplateLoading && (
+                  <motion.div
+                    key="template-loader"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute inset-15 flex justify-center items-center"
+                  >
+                    <LoadingSpinner text="" />
                   </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                )}
+
+                {selectedTemplate && (
+                  <motion.div
+                    key={selectedTemplate._id}
+                    className="space-y-8"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                  >
+                    <div ref={templateHeaderRef} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center min-w-0">
+                          <img src="/check.png" alt="Check Icon" className="w-6 h-6 mr-3 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <h2 className="text-2xl font-bold text-gray-900 truncate">{selectedTemplate.title}</h2>
+                            {selectedTemplate.description && <p className="text-gray-600 mt-1 truncate">{selectedTemplate.description}</p>}
+                          </div>
+                        </div>
+                        <button
+                          id="start-checklist-items-tour-button"
+                          className="text-blue-500 hover:text-blue-700 transition-colors ml-4 flex-shrink-0"
+                          aria-label="Start checklist items tour"
+                        >
+                          <FaQuestionCircle size={24} />
+                        </button>
+                      </div>
+                    </div>
+                    <motion.ul className="space-y-6" variants={containerVariants} initial="hidden" animate="visible">
+                      {selectedTemplate.items.map((item, index) => {
+                        const state = itemStates[item._id] || { status: '', note: '' };
+                        const isExpanded = expandedItems[item._id] || false;
+                        const isNoteRequired = state.status === 'notOK' || state.status === 'na';
+                        let barColorClass = 'bg-gray-400';
+                        if (state.status === 'OK') barColorClass = 'bg-green-500';
+                        else if (state.status === 'notOK') barColorClass = 'bg-red-500';
+                        else if (state.status === 'na') barColorClass = 'bg-slate-400';
+
+                        const priority = item.priority;
+                        const priorityText = priority === '1' ? 'High' : priority === '2' ? 'Medium' : 'Low';
+                        const priorityClass = priority === '1' ? 'bg-red-200 text-red-900' : priority === '2' ? 'bg-yellow-200 text-yellow-900' : 'bg-blue-200 text-blue-900';
+
+                        const itemTourClass = index === 0 ? 'my-checklist-item' : '';
+
+                        return (
+                          <motion.li key={item._id} variants={itemVariants} className={`relative overflow-hidden rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow duration-200 ease-in-out border border-gray-200 ${itemTourClass}`}>
+                            <div className={`absolute top-0 left-0 bottom-0 w-2 ${barColorClass} transition-colors`}></div>
+                            <div className="pl-6 p-4">
+                              <div className="flex items-center cursor-pointer" onClick={() => toggleItem(item._id)}>
+                                <p className="font-semibold text-lg text-gray-800 flex-grow">{item.label}</p>
+                                <span className={`px-3 py-1 text-xs font-bold rounded-full mr-4 ${priorityClass}`}>{priorityText}</span>
+                                <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+                                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </motion.div>
+                              </div>
+                              <AnimatePresence>
+                                {isExpanded && (
+                                  <motion.div
+                                    key="content"
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1, marginTop: '16px' }}
+                                    exit={{ height: 0, opacity: 0, marginTop: '0px' }}
+                                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                                    className="overflow-hidden"
+                                  >
+                                    <div className="space-y-3">
+                                      {item.description && (
+                                        <div className="prose max-w-none">
+                                          <hr className="my-4 border-gray-200" />
+                                          <PortableText value={item.description} components={ptComponents} />
+                                          <hr className="my-4 border-gray-200" />
+                                        </div>
+                                      )}
+                                      <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                                        <div className={`flex flex-wrap items-center gap-2 ${index === 0 ? 'my-checklist-status-buttons' : ''}`}>
+                                          {['OK', 'notOK', 'na'].map((statusOption) => (
+                                            <button
+                                              key={statusOption}
+                                              onClick={() => handleStatusChange(item._id, statusOption as Status)}
+                                              className={`px-4 py-2 rounded-md font-medium text-xs transition-all duration-200 ease-in-out border ${state.status === statusOption ? (statusOption === 'OK' ? 'bg-green-600 text-white border-green-600' : statusOption === 'notOK' ? 'bg-red-600 text-white border-red-600' : 'bg-slate-600 text-white border-slate-600') : (statusOption === 'OK' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : statusOption === 'notOK' ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200' : 'bg-slate-200 text-slate-800 border-slate-300 hover:bg-slate-300')}`}
+                                            >
+                                              {statusOption === 'OK' ? 'OK' : statusOption === 'notOK' ? 'Not OK' : 'N/A'}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                      <label htmlFor={`note-${item._id}`} className="block text-sm font-medium text-gray-700 mt-3">
+                                        Reason / Note <span className={`text-red-500 ${isNoteRequired ? '' : 'hidden'}`}>*</span>
+                                      </label>
+                                      <textarea
+                                        id={`note-${item._id}`}
+                                        value={state.note}
+                                        onChange={(e) => handleNoteChange(item._id, e.target.value)}
+                                        placeholder={isNoteRequired ? 'Required' : 'Optional'}
+                                        className={`w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm transition ${index === 0 ? 'my-checklist-note-input' : ''}`}
+                                        rows={2}
+                                        required={isNoteRequired}
+                                      />
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          </motion.li>
+                        );
+                      })}
+                    </motion.ul>
+                    <motion.div variants={itemVariants}>
+                      <button
+                        id="save-checklist-button"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-md w-full text-base tracking-wide disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 shadow-sm hover:shadow-md transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        disabled={isSaveButtonDisabled || isSaving}
+                        onClick={saveChecklist}
+                      >
+                        {isSaving ? 'Saving...' : 'Save Checklist'}
+                      </button>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </motion.div>
       </div>
