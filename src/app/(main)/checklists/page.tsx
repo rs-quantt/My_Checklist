@@ -1,9 +1,10 @@
 'use client';
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
+import { motion, Variants } from 'framer-motion';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
-import { FaSearch, FaTimes, FaQuestionCircle } from 'react-icons/fa';
-import { ChecklistTour } from '@/app/components/tour/ChecklistTour'; // Import the tour component
+import { FaSearch, FaTimes, FaQuestionCircle, FaPlus } from 'react-icons/fa';
+import { ChecklistTour } from '@/app/components/tour/ChecklistTour';
 
 type Checklist = {
   _id: string;
@@ -24,6 +25,31 @@ const getTypeColor = (type: Checklist['type']) => {
     default:
       return 'bg-gray-100 text-gray-800';
   }
+};
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: (isEvenRow: boolean) => ({
+    opacity: 0,
+    x: isEvenRow ? -100 : 100,
+  }),
+  visible: () => ({
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.5,
+      ease: 'easeOut',
+    },
+  }),
 };
 
 export default function ChecklistPage() {
@@ -91,9 +117,12 @@ export default function ChecklistPage() {
         >
           <FaQuestionCircle size={24} />
         </button>
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-          Checklist List
-        </h1>
+        <div className="flex items-center justify-center">
+            <img src="/check.png" alt="Check Icon" className="mr-3 h-8 w-8" />
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+                My Checklist
+            </h1>
+        </div>
         <p className="mt-3 text-lg opacity-90 max-w-2xl mx-auto">
           Manage tasks and track progress easily.
         </p>
@@ -123,6 +152,17 @@ export default function ChecklistPage() {
             </button>
           )}
         </div>
+        
+        <div className="mt-6 text-center">
+            <Link href="/my-checklist" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300 ease-in-out !text-blue-700">
+                <FaPlus className="mr-2 -ml-1" />
+                Start a New Task
+            </Link>
+            <p className="mt-3 text-sm text-blue-100 opacity-80 max-w-md mx-auto">
+              Select a checklist template, enter your task code, and start your review.
+            </p>
+        </div>
+
       </div>
 
       <div className="container mx-auto px-4 py-10">
@@ -142,8 +182,14 @@ export default function ChecklistPage() {
             You don&apos;t have any checklists yet. Let&apos;s create a new one!
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
             {filteredChecklists.map((checklist, index) => {
+              const isEvenRow = Math.floor(index / 3) % 2 === 0;
               const hasItems = checklist.itemCount > 0;
               const cardClasses = `
                 block
@@ -165,21 +211,20 @@ export default function ChecklistPage() {
               const cardContent = (
                 <div
                   className={cardClasses.trim()}
-                  style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   <div className="flex-grow">
-                    <div className="flex items-start mb-4">
+                    <div className="flex items-center mb-4">
                       <img
                         src="/check.png"
                         alt="Checkmark icon"
-                        className="w-6 h-6 mr-2 mt-0.5"
+                        className="w-6 h-6 mr-3"
                       />
                       <div>
-                        <h2 className="text-xl font-bold text-gray-800 leading-tight mb-1">
+                        <h2 className="text-xl font-bold text-gray-800 leading-tight">
                           {checklist.title}
                         </h2>
                         {checklist.description && (
-                          <p className="text-gray-600 text-base line-clamp-3">
+                          <p className="text-gray-600 text-base line-clamp-3 mt-1">
                             {checklist.description}
                           </p>
                         )}
@@ -197,15 +242,23 @@ export default function ChecklistPage() {
                 </div>
               );
 
-              return hasItems ? (
-                <Link key={checklist._id} href={`/checklists/${checklist._id}`}>
-                  {cardContent}
-                </Link>
-              ) : (
-                <div key={checklist._id}>{cardContent}</div>
+              return (
+                <motion.div
+                  key={checklist._id}
+                  variants={itemVariants}
+                  custom={isEvenRow}
+                >
+                  {hasItems ? (
+                    <Link href={`/checklists/${checklist._id}`}>
+                      {cardContent}
+                    </Link>
+                  ) : (
+                    <div>{cardContent}</div>
+                  )}
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         )}
       </div>
     </div>
