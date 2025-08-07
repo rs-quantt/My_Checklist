@@ -1,22 +1,28 @@
-'use client'; // If using App Router
+'use client';
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
-// Import search and close icons
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 import { FaSearch, FaTimes } from 'react-icons/fa';
-
-type ChecklistItem = {
-  _id: string;
-  label: string;
-  description?: string;
-  order?: number;
-};
 
 type Checklist = {
   _id: string;
   title: string;
   description?: string;
-  items: ChecklistItem[];
+  type: 'Coding Rule' | 'Test Case' | 'Experience';
+  itemCount: number;
+};
+
+const getTypeColor = (type: Checklist['type']) => {
+  switch (type) {
+    case 'Coding Rule':
+      return 'bg-blue-100 text-blue-800';
+    case 'Test Case':
+      return 'bg-green-100 text-green-800';
+    case 'Experience':
+      return 'bg-yellow-100 text-yellow-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
 };
 
 export default function ChecklistPage() {
@@ -69,7 +75,6 @@ export default function ChecklistPage() {
     return (
       <div className="flex flex-col justify-center items-center h-screen text-3xl text-red-600">
         <FaTimes className="text-red-500 mr-2 text-6xl mb-3" /> Lỗi: {error}
-        Error: {error}
       </div>
     );
   }
@@ -78,7 +83,7 @@ export default function ChecklistPage() {
     <div className="antialiased bg-gray-50 min-h-screen">
       <div className="bg-blue-600 text-white py-12 text-center shadow-md ">
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-          Checklist List{' '}
+          Checklist List
         </h1>
         <p className="mt-3 text-lg opacity-90 max-w-2xl mx-auto">
           Manage tasks and track progress easily.
@@ -130,22 +135,22 @@ export default function ChecklistPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredChecklists.map((checklist, index) => {
-              const hasItems = checklist.items && checklist.items.length > 0;
+              const hasItems = checklist.itemCount > 0;
               const cardContent = (
                 <div
                   className={`
                     block
                     bg-white border border-gray-200 rounded-xl shadow-md p-6
-                    flex flex-col justify-between
+                    flex flex-col justify-between h-full
                     ${
                       hasItems
                         ? 'cursor-pointer transform transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg hover:border-blue-300'
                         : 'opacity-60 cursor-not-allowed bg-gray-50'
                     }
                   `}
-                  style={{ animationDelay: `${index * 0.05}s` }} // Reduce delay for faster animation
+                  style={{ animationDelay: `${index * 0.05}s` }}
                 >
-                  <div>
+                  <div className="flex-grow">
                     <div className="flex items-start mb-4">
                       <img
                         src="/check.png"
@@ -164,8 +169,17 @@ export default function ChecklistPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="text-sm text-gray-500 mt-4 text-right">
-                    {hasItems ? `${checklist.items.length} items` : 'No items'}
+                  <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
+                    <span
+                      className={`text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full ${getTypeColor(
+                        checklist.type,
+                      )}`}
+                    >
+                      {checklist.type}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      {checklist.itemCount} item{checklist.itemCount !== 1 ? 's' : ''}
+                    </span>
                   </div>
                 </div>
               );

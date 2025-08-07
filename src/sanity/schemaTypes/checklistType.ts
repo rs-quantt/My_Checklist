@@ -19,6 +19,16 @@ export const checklistType = defineType({
       description: 'A brief description of the checklist.',
     }),
     defineField({
+      name: 'type',
+      title: 'Type',
+      type: 'string',
+      options: {
+        list: ['Coding Rule', 'Test Case', 'Experience'],
+        layout: 'radio'
+      },
+      initialValue: 'Coding Rule'
+    }),
+    defineField({
       name: 'items',
       title: 'Checklist Items',
       type: 'array',

@@ -1,7 +1,7 @@
 import { client } from '@/sanity/lib/client';
 import { Checklist } from '@/types/checklist';
 
-// Updated to sort items by the new numeric priority value
+// Updated to fetch 'type' and 'itemCount'
 export async function getChecklists(): Promise<Checklist[]> {
   try {
     const checklists = await client.fetch(`
@@ -9,12 +9,8 @@ export async function getChecklists(): Promise<Checklist[]> {
         _id,
         title,
         description,
-        "items": items[]-> | order(priority asc) {
-          _id,
-          label,
-          description,
-          priority
-        }
+        type,
+        "itemCount": count(items)
       } | order(_createdAt desc)
     `);
     return checklists;
@@ -24,7 +20,7 @@ export async function getChecklists(): Promise<Checklist[]> {
   }
 }
 
-// Updated to sort items by the new numeric priority value
+// Updated to sort items by the new numeric priority value and fetch type
 export async function getChecklistById(id: string): Promise<Checklist | null> {
   try {
     const checklist = await client.fetch(
@@ -33,6 +29,7 @@ export async function getChecklistById(id: string): Promise<Checklist | null> {
           _id,
           title,
           description,
+          type,
           "items": items[]-> | order(priority asc) {
             _id,
             label,
