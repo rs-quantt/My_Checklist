@@ -1,5 +1,5 @@
 import { client } from '@/sanity/lib/client';
-import { Checklist } from '@/types/checklist';
+import { Checklist, ChecklistItem } from '@/types/checklist';
 
 // Updated to fetch 'type' and 'itemCount'
 export async function getChecklists(): Promise<Checklist[]> {
@@ -157,7 +157,7 @@ export async function saveUserChecklistItems(
       `count(*[_type == "userChecklistItem"
           && user._ref == $userId
           && taskCode == $taskCode
-          && status == "OK"
+          && status == "done"
           && item._ref in *[_type == "checklist" && _id == $checklistId].items[]._ref])`,
       { userId, checklistId, taskCode }
     );
@@ -194,5 +194,66 @@ export async function saveUserChecklistItems(
   } catch (error) {
     console.error('Error saving user checklist items:', error);
     throw new Error('Failed to save user checklist items.');
+  }
+}
+
+export async function getChecklistSummaryById(id: string) {
+  try {
+    const userChecklist = await client.fetch(
+      `*[_type == "checklistSummary" && _id == $id][0]{
+        _id,
+        taskCode,
+        "userId": user->_id,
+        "templateId": checklist->_id,
+        user->{_id, name},
+        checklist->{
+          _id,
+          title,
+          "items": items[]->{
+            _id,
+            "title": label,
+            "status": coalesce(
+              *[
+                _type == "userChecklistItem" &&
+                user._ref == $userRef &&
+                item._ref == ^._id &&
+                taskCode == $taskCode
+              ][0].status,
+              "incomplete"
+            ),
+            "note": *[
+              _type == "userChecklistItem" &&
+              user._ref == $userRef &&
+              item._ref == ^._id &&
+              taskCode == $taskCode
+            ][0].note
+          }
+        }
+      }`,
+      { 
+        id,
+        userRef: (await client.fetch(`*[_type=="checklistSummary" && _id==$id][0].user._ref`, { id })),
+        taskCode: (await client.fetch(`*[_type=="checklistSummary" && _id==$id][0].taskCode`, { id }))
+      }
+    );
+
+    if (!userChecklist) {
+      console.warn(`No checklist summary found for ID: ${id}`);
+      return null;
+    }
+
+    if (userChecklist.checklist?.items) {
+      userChecklist.checklist.items = userChecklist.checklist.items.map(
+        (item: ChecklistItem & { status: string }) => ({
+          ...item,
+          isCompleted: item.status === "done",
+        })
+      );
+    }
+
+    return userChecklist;
+  } catch (error) {
+    console.error(`Error fetching user checklist with summary id ${id}:`, error);
+    throw new Error(`Failed to fetch user checklist with summary id ${id}.`);
   }
 }

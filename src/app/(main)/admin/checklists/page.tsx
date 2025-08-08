@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
+import CompletionCircle from '@/app/components/CompletionCircle';
 
 interface User {
   _id: string;
@@ -127,7 +129,7 @@ export default function ChecklistsSummaryPage() {
                           scope="col"
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
-                          Developer
+                          User
                         </th>
                         <th
                           scope="col"
@@ -151,18 +153,31 @@ export default function ChecklistsSummaryPage() {
                           scope="col"
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
-                          Completion Rate (%)
+                          Completion Rate
                         </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {checklistGroup.summaries.map((summary) => (
-                        <tr key={summary._id}>
+                        <tr
+                          key={summary._id}
+                          className="cursor-pointer hover:bg-gray-50"
+                        >
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {summary.user.name}
+                            <Link
+                              href={`/admin/checklists/${summary._id}`}
+                              className="text-blue-600 hover:underline"
+                            >
+                              {summary.user.name}
+                            </Link>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {summary.taskCode}
+                            <Link
+                              href={`/admin/checklists/${summary._id}`}
+                              className="text-blue-600 hover:underline"
+                            >
+                              {summary.taskCode}
+                            </Link>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {summary.totalItems}
@@ -171,12 +186,15 @@ export default function ChecklistsSummaryPage() {
                             {summary.passedItems}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {summary.totalItems > 0
-                              ? (
-                                  (summary.passedItems / summary.totalItems) *
-                                  100
-                                ).toFixed(2)
-                              : '0.00'}
+                            <CompletionCircle
+                              percentage={
+                                summary.totalItems > 0
+                                  ? (summary.passedItems /
+                                      summary.totalItems) *
+                                    100
+                                  : 0
+                              }
+                            />
                           </td>
                         </tr>
                       ))}

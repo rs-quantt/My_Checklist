@@ -118,16 +118,18 @@ export default function ChecklistPage() {
           <FaQuestionCircle size={24} />
         </button>
         <div className="flex items-center justify-center">
-            <img src="/check.png" alt="Check Icon" className="mr-3 h-8 w-8" />
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-                My Checklist
-            </h1>
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+            My Checklist
+          </h1>
         </div>
         <p className="mt-3 text-lg opacity-90 max-w-2xl mx-auto">
           Manage tasks and track progress easily.
         </p>
 
-        <div id="search-bar" className="mt-8 mx-auto w-full max-w-md px-4 sm:px-0 relative">
+        <div
+          id="search-bar"
+          className="mt-8 mx-auto w-full max-w-md px-4 sm:px-0 relative"
+        >
           <input
             type="text"
             placeholder="Search checklists by name or description..."
@@ -152,25 +154,36 @@ export default function ChecklistPage() {
             </button>
           )}
         </div>
-        
-        <div className="mt-6 text-center">
-            <Link href="/my-checklist" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300 ease-in-out !text-blue-700">
-                <FaPlus className="mr-2 -ml-1" />
-                Start a New Task
-            </Link>
-            <p className="mt-3 text-sm text-blue-100 opacity-80 max-w-md mx-auto">
-              Select a checklist template, enter your task code, and start your review.
-            </p>
-        </div>
 
+        <div className="mt-6 text-center">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+            className="inline-block"
+          >
+            <Link
+              id="start-new-task-button"
+              href="/my-checklist"
+              className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300 ease-in-out !text-blue-700"
+            >
+              <FaPlus className="mr-2 -ml-1" />
+              Start a New Task
+            </Link>
+          </motion.div>
+          <p className="mt-3 text-sm text-blue-100 opacity-80 max-w-md mx-auto">
+            Select a checklist template, enter your task code, and start your
+            review.
+          </p>
+        </div>
       </div>
 
       <div className="container mx-auto px-4 py-10">
         {filteredChecklists.length === 0 && searchQuery !== '' ? (
           <div className="text-center text-gray-500 text-xl py-10">
             <FaSearch className="mx-auto text-5xl mb-4 text-gray-400" />
-            No checklists found matching &quot;{searchQuery}&quot;. Please try a
-            different keyword.
+            No checklists found matching &quot;{searchQuery}&quot;. Please try
+            a different keyword.
           </div>
         ) : filteredChecklists.length === 0 && searchQuery === '' ? (
           <div className="text-center text-gray-500 text-xl py-10 animate-fadeIn">
@@ -179,10 +192,11 @@ export default function ChecklistPage() {
               alt="Checkmark icon"
               className="w-6 h-6 mr-2 mb-2 inline-block"
             />
-            You don&apos;t have any checklists yet. Let&apos;s create a new one!
+            You don&apos;t have any checklists yet. Let&apos;s create a new
+            one!
           </div>
         ) : (
-          <motion.div 
+          <motion.div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             variants={containerVariants}
             initial="hidden"
@@ -209,9 +223,7 @@ export default function ChecklistPage() {
               `;
 
               const cardContent = (
-                <div
-                  className={cardClasses.trim()}
-                >
+                <div className={cardClasses.trim()}>
                   <div className="flex-grow">
                     <div className="flex items-center mb-4">
                       <img
@@ -236,7 +248,8 @@ export default function ChecklistPage() {
                       {checklist.type}
                     </span>
                     <span className="text-sm text-gray-500">
-                      {checklist.itemCount} item{checklist.itemCount !== 1 ? 's' : ''}
+                      {checklist.itemCount} item
+                      {checklist.itemCount !== 1 ? 's' : ''}
                     </span>
                   </div>
                 </div>

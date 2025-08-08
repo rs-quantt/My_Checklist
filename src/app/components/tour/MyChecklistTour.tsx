@@ -40,46 +40,45 @@ function onElementReady(
  * Tour for the initial page controls before a template is selected.
  */
 export const InitialTour = () => {
+  const startTour = () => {
+    driver({
+      showProgress: true,
+      steps: [
+        {
+          element: '#template-select-container',
+          popover: {
+            title: 'Select a Template',
+            description: 'First, choose a checklist template from this list.',
+          },
+        },
+        {
+          element: '#developer-select-container',
+          popover: {
+            title: 'Assign a Developer',
+            description:
+              'Next, select the developer responsible for this task.',
+          },
+        },
+        {
+          element: '#task-code-input-container',
+          popover: {
+            title: 'Enter Task Code',
+            description:
+              'Enter the unique code for the task to link your work.',
+          },
+        },
+      ],
+    }).drive();
+  };
+
   useEffect(() => {
-    let activeDriver = driver();
+    const activeDriver = driver();
     const observer: MutationObserver = onElementReady(
       'start-my-checklist-tour-button',
       (tourButton) => {
         tourButton.addEventListener('click', startTour);
       },
     );
-
-    const startTour = () => {
-      activeDriver = driver({
-        showProgress: true,
-        steps: [
-          {
-            element: '#template-select-container',
-            popover: {
-              title: 'Select a Template',
-              description: 'First, choose a checklist template from this list.',
-            },
-          },
-          {
-            element: '#developer-select-container',
-            popover: {
-              title: 'Assign a Developer',
-              description:
-                'Next, select the developer responsible for this task.',
-            },
-          },
-          {
-            element: '#task-code-input-container',
-            popover: {
-              title: 'Enter Task Code',
-              description:
-                'Enter the unique code for the task to link your work.',
-            },
-          },
-        ],
-      });
-      activeDriver.drive();
-    };
 
     return () => {
       observer.disconnect();
@@ -98,8 +97,21 @@ export const InitialTour = () => {
  * Tour for the checklist items that appear after a template is selected.
  */
 export const ChecklistItemsTour = () => {
+  const expandChecklistItemIfNeeded = (element: Element | undefined) => {
+    if (!(element instanceof HTMLElement)) return;
+
+    const itemRow = element.closest('li.relative');
+    const content = itemRow?.querySelector('div.overflow-hidden');
+    const isCollapsed = !content || getComputedStyle(content).height === '0px';
+
+    if (isCollapsed) {
+      const trigger = itemRow?.querySelector<HTMLElement>('.cursor-pointer');
+      if (trigger) trigger.click();
+    }
+  };
+
   useEffect(() => {
-    let activeDriver = driver();
+    const activeDriver = driver();
     const observer: MutationObserver = onElementReady(
       'start-checklist-items-tour-button',
       (tourButton) => {
@@ -107,22 +119,8 @@ export const ChecklistItemsTour = () => {
       },
     );
 
-    const expandChecklistItemIfNeeded = (element: Element | undefined) => {
-      if (!(element instanceof HTMLElement)) return;
-
-      const itemRow = element.closest('li.relative');
-      const content = itemRow?.querySelector('div.overflow-hidden');
-      const isCollapsed =
-        !content || getComputedStyle(content).height === '0px';
-
-      if (isCollapsed) {
-        const trigger = itemRow?.querySelector<HTMLElement>('.cursor-pointer');
-        if (trigger) trigger.click();
-      }
-    };
-
     const startTour = () => {
-      activeDriver = driver({
+      driver({
         showProgress: true,
         steps: [
           {
@@ -139,7 +137,7 @@ export const ChecklistItemsTour = () => {
             popover: {
               title: 'Set Status',
               description:
-                'After reviewing, set its status: OK, Not OK, or N/A.',
+                'After reviewing, set its status: Done, Incomplete, or N/A.',
             },
             onHighlightStarted: expandChecklistItemIfNeeded,
           },
@@ -148,7 +146,7 @@ export const ChecklistItemsTour = () => {
             popover: {
               title: 'Add a Note',
               description:
-                'For "Not OK" or "N/A" statuses, a note is required to explain why.',
+                'For "Incomplete" or "N/A" statuses, a note is required to explain why.',
             },
             onHighlightStarted: expandChecklistItemIfNeeded,
           },

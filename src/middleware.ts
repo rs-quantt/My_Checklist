@@ -28,7 +28,7 @@ export async function middleware(req: NextRequest) {
 
   const isLoginPath = pathname.startsWith('/login');
   const isAdminPath = pathname.startsWith('/admin');
-  const isSanityPath = pathname.startsWith('/sanity');
+  const isSanityPath = pathname.startsWith('/studio');
 
   // --- Logic chỉ áp dụng cho các trang /admin và /sanity ---
   if (isAdminPath || isSanityPath) {

@@ -25,8 +25,8 @@ export const userChecklistItemType = defineType({
       type: 'string',
       options: {
         list: [
-          { title: 'OK', value: 'OK' },
-          { title: 'Not OK', value: 'notOK' },
+          { title: 'Done', value: 'done' },
+          { title: 'Incomplete', value: 'incomplete' },
           { title: 'N/A', value: 'na' },
         ],
         layout: 'radio',
@@ -36,7 +36,7 @@ export const userChecklistItemType = defineType({
       name: 'note',
       title: 'Reason / Note',
       type: 'text',
-      hidden: ({ parent }) => parent?.status === 'OK',
+      hidden: ({ parent }) => parent?.status === 'done',
     }),
     defineField({
       name: 'taskCode',
