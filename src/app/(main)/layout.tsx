@@ -29,12 +29,7 @@ export default function MainLayout({
 
   return (
     <>
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ type: 'spring', stiffness: 120 }}
-        className="bg-white shadow-md py-3 px-4 sm:px-6 lg:px-8 sticky top-0 z-50"
-      >
+      <header className="bg-white shadow-md py-3 px-4 sm:px-6 lg:px-8 sticky top-0 z-50">
         <div className="container mx-auto flex justify-between items-center">
           <motion.div
             whileHover={{ scale: 1.05 }}
@@ -134,7 +129,7 @@ export default function MainLayout({
             )}
           </div>
         </div>
-      </motion.header>
+      </header>
       <main>{children}</main>
     </>
   );
