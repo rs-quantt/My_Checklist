@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 
 export default function MainLayout({
   children,
@@ -63,7 +63,7 @@ export default function MainLayout({
           </motion.div>
 
           <div className="flex items-center space-x-4">
-            <nav className="hidden md:flex items-center space-x-6 text-sm font-medium text-gray-500">
+            <nav className="hidden md:flex items-center space-x-6 text-base font-medium text-gray-500">
               <motion.div variants={linkVariants} whileHover="hover">
                 <Link
                   href="/"
@@ -100,7 +100,7 @@ export default function MainLayout({
               <motion.div whileHover={{ scale: 1.05 }}>
                 <button
                   onClick={handleLogout}
-                  className="group inline-flex items-center justify-center whitespace-nowrap rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-px hover:shadow-lg hover:shadow-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 cursor-pointer"
+                  className="group inline-flex items-center justify-center whitespace-nowrap rounded-full bg-red-600 px-5 py-2.5 text-base font-semibold text-white shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-px hover:shadow-lg hover:shadow-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 cursor-pointer"
                 >
                   Logout
                 </button>
@@ -109,7 +109,7 @@ export default function MainLayout({
               <motion.div whileHover={{ scale: 1.05 }}>
                 <Link
                   href="/login"
-                  className="group inline-flex items-center justify-center whitespace-nowrap rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold !text-white shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-px hover:shadow-lg hover:shadow-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
+                  className="group inline-flex items-center justify-center whitespace-nowrap rounded-full bg-blue-600 px-5 py-2.5 text-base font-semibold !text-white shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-px hover:shadow-lg hover:shadow-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
                 >
                   Log in
                   <motion.svg
@@ -135,17 +135,7 @@ export default function MainLayout({
           </div>
         </div>
       </motion.header>
-      <AnimatePresence mode="wait">
-        <motion.main
-          key={pathname}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.5 }}
-        >
-          {children}
-        </motion.main>
-      </AnimatePresence>
+      <main>{children}</main>
     </>
   );
 }
