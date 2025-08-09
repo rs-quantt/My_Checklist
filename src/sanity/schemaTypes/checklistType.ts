@@ -29,6 +29,13 @@ export const checklistType = defineType({
       initialValue: 'Coding Rule'
     }),
     defineField({
+      name: 'isCommon',
+      title: 'Is Common',
+      type: 'boolean',
+      description: 'Is this a common checklist for all users?',
+      initialValue: false,
+    }),
+    defineField({
       name: 'items',
       title: 'Checklist Items',
       type: 'array',

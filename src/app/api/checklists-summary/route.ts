@@ -1,6 +1,6 @@
 import { createClient } from 'next-sanity';
 import { apiVersion, dataset, projectId } from '@/sanity/env.client';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 // Define interfaces for the expected data structure
 interface SummaryItem {
@@ -12,6 +12,11 @@ interface SummaryItem {
     _id: string;
     name: string;
   };
+  checklist: {
+      _id: string;
+      title: string;
+  }
+  _updatedAt: string;
 }
 
 interface GroupedChecklistSummary {
@@ -24,11 +29,15 @@ const client = createClient({
   projectId, dataset, apiVersion, useCdn: true,
 });
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    // Query để lấy tất cả checklistSummary cùng với thông tin user và checklist
+    const { searchParams } = new URL(req.url);
+    const groupBy = searchParams.get('groupBy') || 'checklist';
+
+    // Query to get all checklistSummary with user and checklist info
     const query = `*[_type == "checklistSummary"]{
       _id,
+      _updatedAt,
       taskCode,
       totalItems,
       passedItems,
@@ -42,31 +51,45 @@ export async function GET() {
       }
     }`;
 
-    const summaries = await client.fetch(query);
+    const summaries: SummaryItem[] = await client.fetch(query);
 
-    // Grouping data by checklist
-    const groupedSummaries: { [checklistId: string]: GroupedChecklistSummary } = {};
+    let result: GroupedChecklistSummary[] = [];
 
- summaries.forEach((summary: SummaryItem & { checklist: { _id: string, title: string } }) => {
- const checklistId = summary.checklist._id;
-      if (!groupedSummaries[checklistId]) {
-        groupedSummaries[checklistId] = {
-          _id: checklistId,
-          title: summary.checklist.title,
-          summaries: [],
-        };
-      }
-      groupedSummaries[checklistId].summaries.push({
-        _id: summary._id,
-        taskCode: summary.taskCode,
-        totalItems: summary.totalItems,
-        passedItems: summary.passedItems,
-        user: summary.user,
+    if (groupBy === 'updatedAt') {
+      const groupedByDate: { [date: string]: GroupedChecklistSummary } = {};
+
+      summaries.forEach((summary) => {
+        const date = new Date(summary._updatedAt).toLocaleDateString('en-CA'); // YYYY-MM-DD
+        if (!groupedByDate[date]) {
+          groupedByDate[date] = {
+            _id: date,
+            title: date,
+            summaries: [],
+          };
+        }
+        groupedByDate[date].summaries.push(summary);
       });
-    });
+      result = Object.values(groupedByDate).sort((a, b) => b.title.localeCompare(a.title)); // Sort by date descending
+    } else {
+      // Grouping data by checklist
+      const groupedByChecklist: { [checklistId: string]: GroupedChecklistSummary } = {};
 
-    // Convert groupedSummaries object to an array
-    const result = Object.values(groupedSummaries);
+      summaries.forEach((summary) => {
+        const checklistId = summary.checklist?._id || 'unassigned';
+        const checklistTitle = summary.checklist?.title || 'Unassigned';
+
+        if (!groupedByChecklist[checklistId]) {
+          groupedByChecklist[checklistId] = {
+            _id: checklistId,
+            title: checklistTitle,
+            summaries: [],
+          };
+        }
+        groupedByChecklist[checklistId].summaries.push(summary);
+      });
+
+      result = Object.values(groupedByChecklist);
+    }
 
     return NextResponse.json(result);
   } catch (error) {

@@ -8,7 +8,7 @@ const checklistSummaryCountQuery = groq`
 export async function getChecklistSummaryCount(): Promise<number> {
   try {
     const count = await client.fetch(checklistSummaryCountQuery);
-    return count;
+    return count || 0;
   } catch (error) {
     console.error('Error fetching checklist summary count:', error);
     throw new Error('Failed to fetch checklist summary count');
@@ -26,6 +26,10 @@ export async function getChecklistSummaryDistribution() {
     const summaries: { checklistTitle: string }[] = await client.fetch(
       checklistSummaryDistributionQuery,
     );
+
+    if (!summaries || summaries.length === 0) {
+      return [];
+    }
 
     const distribution = summaries.reduce(
       (acc, summary) => {

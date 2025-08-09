@@ -3,8 +3,15 @@
 import React from 'react';
 import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { motion, Variants } from 'framer-motion';
+import {
+  HomeIcon,
+  InformationCircleIcon,
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon,
+  ArrowLeftOnRectangleIcon,
+} from '@heroicons/react/24/outline';
 
 export default function MainLayout({
   children,
@@ -13,7 +20,6 @@ export default function MainLayout({
 }>) {
   const { user, logout, isAuthenticated } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
 
   const handleLogout = async () => {
     await logout();
@@ -36,7 +42,7 @@ export default function MainLayout({
             className="text-2xl font-extrabold text-blue-700 cursor-pointer"
           >
             <Link
-              href={isAuthenticated ? '/admin' : '/'}
+              href={isAuthenticated && user?.role === 'admin' ? '/admin' : '/'}
               className="flex items-center"
             >
               <motion.img
@@ -62,8 +68,9 @@ export default function MainLayout({
               <motion.div variants={linkVariants} whileHover="hover">
                 <Link
                   href="/"
-                  className="hover:text-blue-600 transition-colors duration-200 cursor-pointer"
+                  className="flex items-center hover:text-blue-600 transition-colors duration-200 cursor-pointer"
                 >
+                  <HomeIcon className="h-5 w-5 mr-1" />
                   Home
                 </Link>
               </motion.div>
@@ -72,8 +79,9 @@ export default function MainLayout({
                   href="https://runsystem.net/vi"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-blue-600 transition-colors duration-200 cursor-pointer"
+                  className="flex items-center hover:text-blue-600 transition-colors duration-200 cursor-pointer"
                 >
+                  <InformationCircleIcon className="h-5 w-5 mr-1" />
                   About us
                 </a>
               </motion.div>
@@ -81,8 +89,9 @@ export default function MainLayout({
                 <motion.div variants={linkVariants} whileHover="hover">
                   <Link
                     href="/admin"
-                    className="hover:text-blue-600 transition-colors duration-200 cursor-pointer"
+                    className="flex items-center hover:text-blue-600 transition-colors duration-200 cursor-pointer"
                   >
+                    <Cog6ToothIcon className="h-5 w-5 mr-1" />
                     Admin
                   </Link>
                 </motion.div>
@@ -97,6 +106,7 @@ export default function MainLayout({
                   onClick={handleLogout}
                   className="group inline-flex items-center justify-center whitespace-nowrap rounded-full bg-red-600 px-5 py-2.5 text-base font-semibold text-white shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-px hover:shadow-lg hover:shadow-red-500/30 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 cursor-pointer"
                 >
+                  <ArrowRightOnRectangleIcon className="h-5 w-5 mr-1" />
                   Logout
                 </button>
               </motion.div>
@@ -106,24 +116,8 @@ export default function MainLayout({
                   href="/login"
                   className="group inline-flex items-center justify-center whitespace-nowrap rounded-full bg-blue-600 px-5 py-2.5 text-base font-semibold !text-white shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-px hover:shadow-lg hover:shadow-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
                 >
+                  <ArrowLeftOnRectangleIcon className="h-5 w-5 mr-1" />
                   Log in
-                  <motion.svg
-                    initial={{ x: 0 }}
-                    whileHover={{ x: 5 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 10 }}
-                    className="relative ml-2 h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M17 8l4 4m0 0l-4 4m4-4H3"
-                    ></path>
-                  </motion.svg>
                 </Link>
               </motion.div>
             )}

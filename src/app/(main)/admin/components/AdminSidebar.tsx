@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FaHome, FaUsers, FaClipboardList } from 'react-icons/fa';
+import { FaHome, FaUsers, FaClipboardList, FaExchangeAlt } from 'react-icons/fa';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 
@@ -63,6 +63,21 @@ const AdminSidebar: React.FC = () => {
             <div className="flex items-center">
               <FaClipboardList className="mr-3" />
               Checklist Summary
+            </div>
+          </Link>
+        </motion.div>
+        <motion.div
+          whileHover={{ scale: 1.02, x: 5 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+        >
+          <Link
+            href="/admin/transfer"
+            className={`flex items-center px-2 py-2 rounded-md transition duration-200 ${isActive('/admin/transfer') ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+          >
+            <div className="flex items-center">
+              <FaExchangeAlt className="mr-3" />
+              Transfer Items
             </div>
           </Link>
         </motion.div>

@@ -17,7 +17,7 @@ export async function createUser(user: Omit<User, '_id'>): Promise<User> {
 export async function countUsers(): Promise<number> {
   try {
     const count = await client.fetch<number>(`count(*[_type == "user"])`);
-    return count;
+    return count || 0;
   } catch (error) {
     console.error('Error counting users:', error);
     throw error;
@@ -35,7 +35,7 @@ export async function getUsers(): Promise<User[]> {
       name,
       email,
     }`);
-    return users;
+    return users || [];
   } catch (error) {
     console.error('Error fetching users:', error);
     throw error;

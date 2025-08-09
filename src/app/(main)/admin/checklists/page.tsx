@@ -16,6 +16,7 @@ interface Summary {
   totalItems: number;
   passedItems: number;
   user: User;
+  _updatedAt: string;
 }
 
 interface GroupedChecklistSummary {
@@ -24,6 +25,8 @@ interface GroupedChecklistSummary {
   summaries: Summary[];
 }
 
+type GroupByOption = 'checklist' | 'updatedAt';
+
 export default function ChecklistsSummaryPage() {
   const [groupedSummaries, setGroupedSummaries] = useState<
     GroupedChecklistSummary[]
@@ -31,11 +34,13 @@ export default function ChecklistsSummaryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [groupBy, setGroupBy] = useState<GroupByOption>('checklist');
 
   useEffect(() => {
     const fetchSummaries = async () => {
+      setIsLoading(true);
       try {
-        const res = await fetch('/api/checklists-summary');
+        const res = await fetch(`/api/checklists-summary?groupBy=${groupBy}`);
         if (!res.ok) {
           throw new Error(`Error fetching data: ${res.statusText}`);
         }
@@ -50,7 +55,7 @@ export default function ChecklistsSummaryPage() {
     };
 
     fetchSummaries();
-  }, []);
+  }, [groupBy]);
 
   const filteredSummaries = groupedSummaries
     .map((group) => ({
@@ -73,12 +78,47 @@ export default function ChecklistsSummaryPage() {
     );
   }
 
+  const getGroupTitle = (group: GroupedChecklistSummary) => {
+    if (groupBy === 'updatedAt') {
+      return `Date: ${new Date(group.title).toLocaleDateString()}`;
+    }
+    return `Checklist: ${group.title}`;
+  };
+
   return (
     <div className="flex">
       <div className="flex-1 p-6">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800">
-          Checklist Summary
-        </h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">
+            Checklist Summary
+          </h1>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium text-gray-600">Group by:</span>
+            <div className="flex rounded-md shadow-sm">
+              <button
+                onClick={() => setGroupBy('checklist')}
+                className={`px-4 py-2 text-sm font-medium rounded-l-lg border
+                  ${groupBy === 'checklist'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  }`}
+              >
+                Checklist
+              </button>
+              <button
+                onClick={() => setGroupBy('updatedAt')}
+                className={`px-4 py-2 text-sm font-medium rounded-r-lg border
+                  ${groupBy === 'updatedAt'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  }`}
+              >
+                Date
+              </button>
+            </div>
+          </div>
+        </div>
+
 
         <div className="relative mb-6">
           <span className="absolute inset-y-0 left-0 flex items-center pl-3">
@@ -119,10 +159,17 @@ export default function ChecklistsSummaryPage() {
                 className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
               >
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4 border-b pb-2">
-                  Checklist: {checklistGroup.title}
+                  {getGroupTitle(checklistGroup)}
                 </h2>
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
+                  <table className="min-w-full divide-y divide-gray-200 table-fixed">
+                    <colgroup>
+                      <col style={{ width: '25%' }} />
+                      <col style={{ width: '25%' }} />
+                      <col style={{ width: '15%' }} />
+                      <col style={{ width: '15%' }} />
+                      <col style={{ width: '20%' }} />
+                    </colgroup>
                     <thead className="bg-gray-50">
                       <tr>
                         <th

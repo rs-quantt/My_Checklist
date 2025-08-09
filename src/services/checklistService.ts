@@ -10,10 +10,11 @@ export async function getChecklists(): Promise<Checklist[]> {
         title,
         description,
         type,
+        isCommon,
         "itemCount": count(items)
       } | order(_createdAt desc)
     `);
-    return checklists;
+    return checklists || [];
   } catch (error) {
     console.error('Error fetching checklists:', error);
     throw new Error('Failed to fetch checklists.');
@@ -86,7 +87,7 @@ export async function updateChecklist(
 export async function countChecklists(): Promise<number> {
   try {
     const count = await client.fetch('count(*[_type == "checklist"])');
-    return count;
+    return count || 0;
   } catch (error) {
     console.error('Error counting checklists:', error);
     throw new Error('Failed to count checklists.');
@@ -199,6 +200,21 @@ export async function saveUserChecklistItems(
 
 export async function getChecklistSummaryById(id: string) {
   try {
+    const summary = await client.fetch(`*[_type == "checklistSummary" && _id == $id][0]`, { id });
+
+    if (!summary) {
+      console.warn(`No checklist summary found for ID: ${id}`);
+      return null;
+    }
+
+    const userRef = summary.user?._ref;
+    const taskCode = summary.taskCode;
+
+    if (!userRef || !taskCode) {
+      console.error('User reference or task code is missing in the summary');
+      return null;
+    }
+
     const userChecklist = await client.fetch(
       `*[_type == "checklistSummary" && _id == $id][0]{
         _id,
@@ -230,11 +246,7 @@ export async function getChecklistSummaryById(id: string) {
           }
         }
       }`,
-      { 
-        id,
-        userRef: (await client.fetch(`*[_type=="checklistSummary" && _id==$id][0].user._ref`, { id })),
-        taskCode: (await client.fetch(`*[_type=="checklistSummary" && _id==$id][0].taskCode`, { id }))
-      }
+      { id, userRef, taskCode }
     );
 
     if (!userChecklist) {
