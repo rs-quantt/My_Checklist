@@ -41,8 +41,12 @@ export default function TransferChecklistItemsPage() {
         const allChecklists: Checklist[] = await res.json();
         setCommonChecklists(allChecklists.filter((c) => c.isCommon));
         setNonCommonChecklists(allChecklists.filter((c) => !c.isCommon));
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unknown error occurred');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -85,8 +89,12 @@ export default function TransferChecklistItemsPage() {
       setSuccessMessage('Items transferred successfully!');
       setSelectedSource('');
       setSelectedDestinations([]);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unknown error occurred during transfer');
+      }
     } finally {
       setIsTransferring(false);
     }
