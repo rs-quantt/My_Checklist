@@ -41,7 +41,7 @@ async function seedAdminUser() {
     }
 
     const createdUser = await client.create(adminUser);
-    console.log('Admin user created:', createdUser);
+    console.log('Admin user created');
   } catch (error) {
     console.error('Error creating admin user:', error);
   }
