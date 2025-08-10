@@ -1,20 +1,15 @@
-import { NextResponse } from 'next/server';
 import { getChecklistSummaryCount } from '@/services/checklistSummaryService';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
     const count = await getChecklistSummaryCount();
     return NextResponse.json({ count });
   } catch (error) {
-    console.error('Error in GET /api/checklists-summary/count:', error);
-    return new NextResponse(
-      JSON.stringify({ error: 'Failed to fetch checklist summary count' }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
+    console.error('Error fetching checklist summary count:', error);
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 },
     );
   }
 }

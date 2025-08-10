@@ -11,7 +11,6 @@ import { coldarkDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { urlFor } from '@/sanity/lib/image';
 import { SanityImageSource } from '@sanity/image-url/lib/types/types';
 import { PortableTextBlock } from '@portabletext/types';
-import LoadingOverlay from '@/app/components/LoadingOverlay';
 import {
   InitialTour,
   ChecklistItemsTour,
@@ -296,7 +295,6 @@ export default function MyChecklistPage() {
   return (
     <div className="antialiased bg-gray-50 min-h-screen relative">
       {!selectedTemplate ? <InitialTour /> : <ChecklistItemsTour />}
-      <LoadingOverlay isLoading={isSaving} text="Saving..." />
       <AnimatePresence>
         {isStickyHeaderVisible && selectedTemplate && (
           <motion.div
@@ -672,26 +670,68 @@ export default function MyChecklistPage() {
                         );
                       })}
                     </motion.ul>
-                    
                     <div className="border-t border-gray-200 pt-6 mt-6">
                       <div className="flex justify-end">
                         <motion.button
                           id="save-checklist-button"
                           onClick={saveChecklist}
                           disabled={isSaveButtonDisabled || isSaving}
-                          className="relative overflow-hidden group flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white font-bold shadow-md transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                          whileTap={!isSaveButtonDisabled && !isSaving ? { scale: 0.97 } : {}}
+                          className="relative flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-blue-600 text-white font-bold shadow-md transition-all duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed w-48 h-10"
+                          whileTap={
+                            !isSaveButtonDisabled && !isSaving
+                              ? { scale: 0.97 }
+                              : {}
+                          }
                         >
-                          <div className="absolute inset-0 w-full h-full bg-white opacity-0 transition-opacity duration-300 group-hover:opacity-10" />
-                          
-                          <FaSave className={`transition-transform duration-300 ${isSaving ? 'animate-spin' : ''}`} />
-                          <span className="relative">
-                            {isSaving ? 'Saving...' : 'Save Checklist'}
-                          </span>
+                          <AnimatePresence mode="wait" initial={false}>
+                            {isSaving ? (
+                              <motion.div
+                                key="saving"
+                                initial={{ y: 10, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -10, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="absolute flex items-center justify-center"
+                              >
+                                <svg
+                                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  ></circle>
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                  ></path>
+                                </svg>
+                                <span>Saving...</span>
+                              </motion.div>
+                            ) : (
+                              <motion.span
+                                key="save"
+                                initial={{ y: 10, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -10, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="absolute flex items-center justify-center"
+                              >
+                                <FaSave className="mr-2" />
+                                Save Checklist
+                              </motion.span>
+                            )}
+                          </AnimatePresence>
                         </motion.button>
                       </div>
                     </div>
-
                   </motion.div>
                 )}
               </AnimatePresence>
