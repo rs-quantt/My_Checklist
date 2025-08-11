@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 import PaginationControls from '@/app/components/PaginationControls';
-import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import ButtonLoadingSpinner from '@/app/components/ButtonLoadingSpinner';
 import Avatar from '@/app/components/Avatar';
 
@@ -14,6 +13,7 @@ interface User {
   _id: string;
   name: string;
   email: string;
+  image?: string;
   _createdAt: string;
 }
 
@@ -113,11 +113,6 @@ export default function UsersPage() {
       <div className="flex-1 p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800">User Management</h1>
-          <Link href="/admin/users/new">
-            <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-              <PlusIcon className="mr-2 h-5 w-5" /> Add New User
-            </button>
-          </Link>
         </div>
 
         <div className="flex items-center space-x-2 mb-8 max-w-lg">
@@ -195,7 +190,11 @@ export default function UsersPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-10 w-10">
-                              <Avatar name={user.name} />
+                              <Avatar
+                                src={user.image}
+                                name={user.name}
+                                alt={user.name}
+                              />
                             </div>
                             <div className="ml-4">{user.name}</div>
                           </div>

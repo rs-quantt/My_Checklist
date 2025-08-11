@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import CommonSelect from '@/app/components/CommonSelect';
@@ -68,11 +69,6 @@ type ChecklistTemplate = {
   isCommon: boolean;
 };
 
-type User = {
-  _id: string;
-  name: string;
-};
-
 type Status = 'done' | 'incomplete' | 'na' | '';
 
 type ItemState = {
@@ -102,6 +98,7 @@ const itemVariants: Variants = {
 };
 
 export default function MyChecklistPage() {
+  const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
   const [checklistTemplates, setChecklistTemplates] = useState<
     ChecklistTemplate[]
@@ -109,8 +106,6 @@ export default function MyChecklistPage() {
   const [selectedTemplate, setSelectedTemplate] =
     useState<ChecklistTemplate | null>(null);
   const [isTemplateLoading, setIsTemplateLoading] = useState(false);
-  const [users, setUsers] = useState<User[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [taskCode, setTaskCode] = useState<string>('');
   const [itemStates, setItemStates] = useState<ItemStateMap>({});
   const [expandedItems, setExpandedItems] = useState<{
@@ -124,6 +119,8 @@ export default function MyChecklistPage() {
 
   const [isStickyHeaderVisible, setIsStickyHeaderVisible] = useState(false);
   const templateHeaderRef = useRef<HTMLDivElement>(null);
+
+  const loggedInUserId = session?.user?.id;
 
   useEffect(() => {
     const headerEl = templateHeaderRef.current;
@@ -151,23 +148,17 @@ export default function MyChecklistPage() {
     const fetchInitialData = async () => {
       try {
         setError(null);
-        const [checklistRes, usersRes] = await Promise.all([
-          fetch('/api/checklists'),
-          fetch('/api/users'),
-        ]);
+        const checklistRes = await fetch('/api/checklists');
 
         if (!checklistRes.ok)
           throw new Error('Failed to fetch checklist templates');
-        if (!usersRes.ok) throw new Error('Failed to fetch users');
 
         const checklistData = await checklistRes.json();
-        const usersData = await usersRes.json();
 
         const filteredChecklists = checklistData.filter(
           (template: ChecklistTemplate) => !template.isCommon,
         );
         setChecklistTemplates(filteredChecklists);
-        setUsers(usersData);
       } catch (err) {
         console.error(err);
         setError('Could not load initial data. Please try again later.');
@@ -208,20 +199,19 @@ export default function MyChecklistPage() {
       selectedTemplate?.items.every((item) => itemStates[item._id]?.status) ??
       false;
     setIsSaveButtonDisabled(
-      !selectedUserId || !taskCode || !selectedTemplate || !allItemsChecked,
+      !loggedInUserId || !taskCode || !selectedTemplate || !allItemsChecked,
     );
-  }, [selectedUserId, taskCode, itemStates, selectedTemplate]);
+  }, [loggedInUserId, taskCode, itemStates, selectedTemplate]);
 
   const resetForm = () => {
     setSelectedTemplate(null);
-    setSelectedUserId('');
     setTaskCode('');
     setItemStates({});
     setExpandedItems({});
   };
 
   const saveChecklist = async () => {
-    if (!selectedTemplate) return;
+    if (!selectedTemplate || !loggedInUserId) return;
 
     setIsSaving(true);
     const validationErrors: string[] = [];
@@ -246,8 +236,10 @@ export default function MyChecklistPage() {
       return;
     }
 
+    console.log('aaaaa', loggedInUserId);
+
     const payload = {
-      userId: selectedUserId,
+      userId: loggedInUserId,
       taskCode,
       checklistId: selectedTemplate._id,
       items: Object.entries(itemStates).map(([itemId, state]) => ({
@@ -293,9 +285,14 @@ export default function MyChecklistPage() {
     }));
   };
 
-  if (initialLoading) return <LoadingSpinner text="Loading page..." />;
+  if (initialLoading || sessionStatus === 'loading')
+    return <LoadingSpinner text="Loading page..." />;
   if (error)
     return <div className="text-red-500 text-center mt-10">{error}</div>;
+  if (sessionStatus === 'unauthenticated') {
+    router.push('/login');
+    return null;
+  }
 
   return (
     <div className="antialiased bg-gray-50 min-h-screen relative">
@@ -359,14 +356,14 @@ export default function MyChecklistPage() {
 
           <div className="space-y-8">
             <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end"
+              className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
             >
               <motion.div
                 id="template-select-container"
-                className="space-y-2 md:col-span-1"
+                className="space-y-2"
                 variants={itemVariants}
               >
                 <label className="block text-base font-semibold text-gray-700">
@@ -380,21 +377,6 @@ export default function MyChecklistPage() {
                   value={selectedTemplate?._id || ''}
                   onChange={handleTemplateChange}
                   placeholder="-- Select a template --"
-                />
-              </motion.div>
-              <motion.div
-                id="developer-select-container"
-                className="space-y-2"
-                variants={itemVariants}
-              >
-                <label className="block text-base font-semibold text-gray-700">
-                  Developer <span className="text-red-500">*</span>
-                </label>
-                <CommonSelect
-                  options={users}
-                  value={selectedUserId}
-                  onChange={setSelectedUserId}
-                  placeholder="-- Select user --"
                 />
               </motion.div>
               <motion.div
@@ -497,14 +479,14 @@ export default function MyChecklistPage() {
                           priority === '1'
                             ? 'High'
                             : priority === '2'
-                            ? 'Medium'
-                            : 'Low';
+                              ? 'Medium'
+                              : 'Low';
                         const priorityClass =
                           priority === '1'
                             ? 'bg-red-200 text-red-900'
                             : priority === '2'
-                            ? 'bg-yellow-200 text-yellow-900'
-                            : 'bg-blue-200 text-blue-900';
+                              ? 'bg-yellow-200 text-yellow-900'
+                              : 'bg-blue-200 text-blue-900';
 
                         const itemTourClass =
                           index === 0 ? 'my-checklist-item' : '';
@@ -582,16 +564,18 @@ export default function MyChecklistPage() {
                                           <hr className="my-4 border-gray-200" />
                                         </div>
                                       )}
-                                      <div>
+                                      <div
+                                        className={
+                                          index === 0
+                                            ? 'my-checklist-status-buttons'
+                                            : ''
+                                        }
+                                      >
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                           Status
                                         </label>
                                         <div
-                                          className={`flex flex-wrap items-center gap-2 ${
-                                            index === 0
-                                              ? 'my-checklist-status-buttons'
-                                              : ''
-                                          }`}
+                                          className={`flex flex-wrap items-center gap-2`}
                                         >
                                           {['done', 'incomplete', 'na'].map(
                                             (statusOption) => (
@@ -630,41 +614,45 @@ export default function MyChecklistPage() {
                                           )}
                                         </div>
                                       </div>
-                                      <label
-                                        htmlFor={`note-${item._id}`}
-                                        className="block text-sm font-medium text-gray-700 mt-3"
-                                      >
-                                        Reason / Note{' '}
-                                        <span
-                                          className={`text-red-500 ${
-                                            isNoteRequired ? '' : 'hidden'
-                                          }`}
-                                        >
-                                          *
-                                        </span>
-                                      </label>
-                                      <textarea
-                                        id={`note-${item._id}`}
-                                        value={state.note}
-                                        onChange={(e) =>
-                                          handleNoteChange(
-                                            item._id,
-                                            e.target.value,
-                                          )
-                                        }
-                                        placeholder={
-                                          isNoteRequired
-                                            ? 'Required'
-                                            : 'Optional'
-                                        }
-                                        className={`w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm transition ${
+                                      <div
+                                        className={
                                           index === 0
                                             ? 'my-checklist-note-input'
                                             : ''
-                                        }`}
-                                        rows={2}
-                                        required={isNoteRequired}
-                                      />
+                                        }
+                                      >
+                                        <label
+                                          htmlFor={`note-${item._id}`}
+                                          className="block text-sm font-medium text-gray-700 mt-3"
+                                        >
+                                          Reason / Note{' '}
+                                          <span
+                                            className={`text-red-500 ${
+                                              isNoteRequired ? '' : 'hidden'
+                                            }`}
+                                          >
+                                            *
+                                          </span>
+                                        </label>
+                                        <textarea
+                                          id={`note-${item._id}`}
+                                          value={state.note}
+                                          onChange={(e) =>
+                                            handleNoteChange(
+                                              item._id,
+                                              e.target.value,
+                                            )
+                                          }
+                                          placeholder={
+                                            isNoteRequired
+                                              ? 'Required'
+                                              : 'Optional'
+                                          }
+                                          className={`w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm transition`}
+                                          rows={2}
+                                          required={isNoteRequired}
+                                        />
+                                      </div>
                                     </div>
                                   </motion.div>
                                 )}

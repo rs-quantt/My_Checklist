@@ -1,186 +1,144 @@
 'use client';
 
-import { useState } from 'react';
-import { useAuth } from '@/app/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import {
-  ExclamationCircleIcon,
-  ArrowLeftIcon,
-  EnvelopeIcon,
-  LockClosedIcon,
-} from '@heroicons/react/24/outline';
+import React, { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import ButtonLoadingSpinner from '@/app/components/ButtonLoadingSpinner';
+import { signIn } from 'next-auth/react';
+import Link from 'next/link';
+import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 
-export default function LoginPage() {
+const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/';
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+    const result = await signIn('credentials', {
+      redirect: false,
+      email,
+      password,
+    });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || 'Something went wrong');
-      }
-
-      login(data.user);
-
-      if (data.user.role === 'admin') {
-        router.push('/admin');
-      } else {
-        router.push('/');
-      }
-    } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-    } finally {
+    if (result?.error) {
+      setError('Invalid email or password');
       setLoading(false);
+    } else if (result?.ok) {
+        // We need to get the user's role to redirect correctly.
+        // A simple way is to push to a generic page and let the middleware or another component handle role-based redirect.
+        // Or, we can do a quick fetch to our own API to get user data after sign-in.
+        // For now, let's just redirect to the callbackUrl, which is often the intended destination.
+        router.push(callbackUrl);
+    } else {
+        setLoading(false);
     }
   };
 
+  const handleGoogleSignIn = () => {
+    // Let next-auth handle the redirect after sign-in
+    signIn('google', { callbackUrl });
+  };
+
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md">
-        <div className="bg-white p-8 shadow-2xl rounded-2xl">
-          <motion.div
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+    <div className="flex justify-center items-center min-h-screen bg-gray-100 px-4">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-md"
+      >
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900">Sign In</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            to access your account
+          </p>
+        </div>
+        {error && (
+          <div
+            className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md"
+            role="alert"
           >
-            <div className="flex justify-center items-center space-x-3 mb-6">
-              <img
-                src="/company-logo.jpg"
-                alt="Company Logo"
-                className="h-8 w-auto rounded-lg shadow-sm"
-              />
-              <img
-                src="/check.png"
-                alt="Checkmark Logo"
-                className="h-6 w-auto"
-              />
-            </div>
-            <div className="text-center">
-              <h2 className="text-2xl font-extrabold tracking-tight text-gray-900">
-                Sign in admin
-              </h2>
-              <p className="mt-2 text-sm text-gray-600">
-                Please enter your credentials to access your account.
-              </p>
-            </div>
-          </motion.div>
-          <div className="mt-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="relative">
-                <EnvelopeIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                <input
-                  id="email-address"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full rounded-lg border border-gray-300 py-3 pl-10 pr-3 text-gray-900 placeholder-gray-500 shadow-sm focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                  placeholder="Email address"
-                />
-              </div>
+            <p>{error}</p>
+          </div>
+        )}
 
-              <div className="relative">
-                <LockClosedIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                <input
-                  id="password-sr"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full rounded-lg border border-gray-300 py-3 pl-10 pr-3 text-gray-900 placeholder-gray-500 shadow-sm focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                  placeholder="Password"
-                />
-              </div>
-
-              {error && (
-                <div className="flex items-center text-sm text-red-600 bg-red-50 p-3 rounded-lg">
-                  <ExclamationCircleIcon className="h-5 w-5 mr-2" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <label
-                    htmlFor="remember-me"
-                    className="ml-2 block text-sm text-gray-900"
-                  >
-                    Remember me
-                  </label>
-                </div>
-
-                <div className="text-sm">
-                  <a
-                    href="#"
-                    className="font-medium text-blue-600 hover:text-blue-500"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
-              </div>
-
-              <div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="group relative flex w-full justify-center rounded-lg bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-300 ease-in-out hover:shadow-lg hover:from-blue-700 hover:to-indigo-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed h-10"
-                >
-                  {loading ? (
-                    <div className="flex items-center justify-center">
-                      <ButtonLoadingSpinner />
-                      <span className="ml-2">Logging in...</span>
-                    </div>
-                  ) : (
-                    'Sign in'
-                  )}
-                </button>
-              </div>
-            </form>
-            <div className="mt-6 text-center">
-              <Link
-                href="/"
-                className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600"
-              >
-                <ArrowLeftIcon className="mr-1 h-4 w-4" />
-                Back to Home
-              </Link>
-            </div>
+        <div className="space-y-4">
+            <button
+                onClick={handleGoogleSignIn}
+                className="w-full flex justify-center items-center py-2.5 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+                <img src="/google-logo.svg" alt="Google" className="h-5 w-5 mr-2" />
+                Sign in with Google
+            </button>
+        </div>
+        
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">Or sign in with email</span>
           </div>
         </div>
-      </div>
+
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <input
+                id="email-address"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+          </div>
+          <div>
+            <button
+              type="submit"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={loading}
+            >
+              {loading ? <ButtonLoadingSpinner /> : 'Sign in'}
+            </button>
+          </div>
+        </form>
+        <div className="text-center pt-4 border-t border-gray-200">
+          <Link href="/" className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-500">
+            <ArrowLeftIcon className="h-5 w-5 mr-1" />
+            Back to Home
+          </Link>
+        </div>
+      </motion.div>
     </div>
   );
-}
+};
+
+export default LoginPage;

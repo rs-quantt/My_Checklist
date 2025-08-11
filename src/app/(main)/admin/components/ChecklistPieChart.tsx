@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Sector } from 'recharts';
-import { FaClipboardList } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { useCallback, useState } from 'react';
+import { FaClipboardList } from 'react-icons/fa';
+import { Cell, Pie, PieChart, ResponsiveContainer, Sector } from 'recharts';
 
 type ChartDataItem = {
   name: string;

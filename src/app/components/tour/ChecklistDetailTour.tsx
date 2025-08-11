@@ -79,7 +79,15 @@ export const ChecklistDetailTour = () => {
     });
 
     const startTour = () => {
-      const allElementsPresent = steps.every(step => document.querySelector(step.element as string));
+      const allElementsPresent = steps.every((step) => {
+        if (!step.element) {
+          return true;
+        }
+        if (typeof step.element === 'string') {
+          return !!document.querySelector(step.element);
+        }
+        return true;
+      });
       if (allElementsPresent) {
         driverObj.drive();
       } else {

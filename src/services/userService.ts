@@ -14,6 +14,17 @@ export async function createUser(user: Omit<User, '_id'>): Promise<User> {
   }
 }
 
+export async function getUserByEmail(email: string): Promise<User | null> {
+  try {
+    const query = `*[_type == "user" && email == $email][0]{..., "hashedPassword": hashedPassword}`;
+    const user = await client.fetch<User>(query, { email });
+    return user || null;
+  } catch (error) {
+    console.error('Error fetching user by email:', error);
+    return null;
+  }
+}
+
 export async function countUsers(searchQuery?: string): Promise<number> {
   try {
     let query = `count(*[_type == "user" && role == "user"`;
@@ -48,6 +59,7 @@ export async function getUsers(
       _id,
       name,
       email,
+      image,
       _createdAt
     }`;
     const params = { searchQuery: `*${searchQuery}*` };

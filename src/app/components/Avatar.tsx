@@ -2,10 +2,31 @@ import React from 'react';
 
 interface AvatarProps {
   name: string;
+  src?: string;
+  alt?: string;
+  width?: number;
+  height?: number;
 }
 
-const Avatar: React.FC<AvatarProps> = ({ name }) => {
-  // Function to get the first character of the last word in a name
+const Avatar: React.FC<AvatarProps> = ({
+  name,
+  src,
+  alt,
+  width = 40,
+  height = 40,
+}) => {
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={alt || name}
+        width={width}
+        height={height}
+        className="rounded-full"
+      />
+    );
+  }
+
   const getInitials = (name: string) => {
     if (!name) return '?';
     const nameParts = name.trim().split(' ');
@@ -13,7 +34,6 @@ const Avatar: React.FC<AvatarProps> = ({ name }) => {
     return lastName.charAt(0).toUpperCase();
   };
 
-  // Hash function to generate a unique, consistent color from a string (the full name)
   const getRandomColor = (str: string) => {
     const colors = [
       'bg-red-500',
@@ -34,17 +54,17 @@ const Avatar: React.FC<AvatarProps> = ({ name }) => {
     for (let i = 0; i < str.length; i++) {
       hash = str.charCodeAt(i) + ((hash << 5) - hash);
     }
-    hash = Math.abs(hash); // Ensure the hash is non-negative
+    hash = Math.abs(hash);
     return colors[hash % colors.length];
   };
 
   const initial = getInitials(name);
-  // Use the full name to generate a more unique color
   const colorClass = getRandomColor(name);
 
   return (
     <div
       className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md ${colorClass}`}
+      style={{ width: `${width}px`, height: `${height}px` }}
     >
       {initial}
     </div>

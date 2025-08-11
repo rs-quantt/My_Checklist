@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
-import Link from 'next/link';
-import LoadingSpinner from '@/app/components/LoadingSpinner';
+import ButtonLoadingSpinner from '@/app/components/ButtonLoadingSpinner';
 import CompletionCircle from '@/app/components/CompletionCircle';
+import LoadingSpinner from '@/app/components/LoadingSpinner';
 import PaginationControls from '@/app/components/PaginationControls';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import ButtonLoadingSpinner from '@/app/components/ButtonLoadingSpinner';
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -28,11 +28,6 @@ interface Summary {
   user: User;
   checklist: Checklist;
   _updatedAt: string;
-}
-
-interface GroupedChecklistSummary {
-  date: string;
-  summaries: Summary[];
 }
 
 export default function ChecklistsSummaryPage() {

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { motion, Variants } from 'framer-motion';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 import {
@@ -205,6 +206,7 @@ const ChecklistListItem = ({ checklist }: { checklist: Checklist }) => {
 };
 
 export default function ChecklistPage() {
+  const { data: session } = useSession();
   const [checklists, setChecklists] = useState<Checklist[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -344,27 +346,29 @@ export default function ChecklistPage() {
           )}
         </div>
 
-        <div className="mt-6 text-center">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-            className="inline-block"
-          >
-            <Link
-              id="start-new-task-button"
-              href="/my-checklist"
-              className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300 ease-in-out !text-blue-700"
+        {(session?.user)?.role !== 'admin' && (
+          <div className="mt-6 text-center">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+              className="inline-block"
             >
-              <FaPlus className="mr-2 -ml-1" />
-              Start a New Task
-            </Link>
-          </motion.div>
-          <p className="mt-3 text-sm text-blue-100 opacity-80 max-w-md mx-auto">
-            Select a checklist template, enter your task code, and start your
-            review.
-          </p>
-        </div>
+              <Link
+                id="start-new-task-button"
+                href="/my-checklist"
+                className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300 ease-in-out !text-blue-700"
+              >
+                <FaPlus className="mr-2 -ml-1" />
+                Start a New Task
+              </Link>
+            </motion.div>
+            <p className="mt-3 text-sm text-blue-100 opacity-80 max-w-md mx-auto">
+              Select a checklist template, enter your task code, and start your
+              review.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -426,7 +430,7 @@ export default function ChecklistPage() {
         ) : (
           <>
             {commonChecklists.length > 0 && (
-              <section className="mb-12">
+              <section className="mb-12 common-templates">
                 <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2.5">
                   <FaStar className="text-yellow-400" /> Common Templates
                 </h2>
@@ -446,7 +450,7 @@ export default function ChecklistPage() {
             )}
 
             {otherChecklists.length > 0 && (
-              <section>
+              <section className="all-templates">
                 <h2 className="text-xl font-semibold text-gray-800 mb-6 pb-3 border-b border-gray-200">
                   All Templates
                 </h2>

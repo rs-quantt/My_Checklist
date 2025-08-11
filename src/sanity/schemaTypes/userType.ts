@@ -24,6 +24,11 @@ export const userType = defineType({
       hidden: true,
     }),
     defineField({
+      name: 'image',
+      title: 'Image',
+      type: 'string',
+    }),
+    defineField({
       name: 'role',
       title: 'Role',
       type: 'string',
@@ -34,7 +39,7 @@ export const userType = defineType({
         ],
         layout: 'dropdown',
       },
-      initialValue: 'user',
+      readOnly: true
     }),
   ],
   preview: {
