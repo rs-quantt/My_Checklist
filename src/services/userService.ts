@@ -14,9 +14,15 @@ export async function createUser(user: Omit<User, '_id'>): Promise<User> {
   }
 }
 
-export async function countUsers(): Promise<number> {
+export async function countUsers(searchQuery?: string): Promise<number> {
   try {
-    const count = await client.fetch<number>(`count(*[_type == "user"])`);
+    let query = `count(*[_type == "user" && role == "user"`;
+    if (searchQuery) {
+      query += ` && (name match $searchQuery || email match $searchQuery)`;
+    }
+    query += `])`;
+    const params = { searchQuery: `*${searchQuery}*` };
+    const count = await client.fetch<number>(query, params);
     return count || 0;
   } catch (error) {
     console.error('Error counting users:', error);
@@ -28,13 +34,24 @@ export async function deleteUser(userId: string): Promise<void> {
   await client.delete(userId);
 }
 
-export async function getUsers(): Promise<User[]> {
+export async function getUsers(
+  offset: number = 0,
+  limit: number = 10,
+  searchQuery?: string,
+): Promise<User[]> {
   try {
-    const users = await client.fetch(`*[_type == "user" && role == "user"]{
+    let query = `*[_type == "user" && role == "user"`;
+    if (searchQuery) {
+      query += ` && (name match $searchQuery || email match $searchQuery)`;
+    }
+    query += `] | order(_createdAt desc) [${offset}...${offset + limit}] {
       _id,
       name,
       email,
-    }`);
+      _createdAt
+    }`;
+    const params = { searchQuery: `*${searchQuery}*` };
+    const users = await client.fetch(query, params);
     return users || [];
   } catch (error) {
     console.error('Error fetching users:', error);

@@ -1,358 +1,225 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import {
-  FaPlus,
-  FaTimes,
-  FaUser,
-  FaEnvelope,
-  FaPaperPlane,
-  FaTrash,
-  FaPencilAlt,
-} from 'react-icons/fa';
-import { User } from '@/types/user';
+import { useEffect, useState, useMemo } from 'react';
+import Link from 'next/link';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
-import LoadingOverlay from '@/app/components/LoadingOverlay';
+import PaginationControls from '@/app/components/PaginationControls';
+import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
+import ButtonLoadingSpinner from '@/app/components/ButtonLoadingSpinner';
 import Avatar from '@/app/components/Avatar';
 
-interface UserModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (user: { name: string; email: string }) => Promise<void>;
-  isProcessing: boolean;
-  userToEdit?: User | null;
+const ITEMS_PER_PAGE = 10;
+
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  _createdAt: string;
 }
 
-const UserModal: React.FC<UserModalProps> = ({
-  isOpen,
-  onClose,
-  onSubmit,
-  isProcessing,
-  userToEdit,
-}) => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-
-  useEffect(() => {
-    if (isOpen && userToEdit) {
-      setName(userToEdit.name);
-      setEmail(userToEdit.email);
-    } else if (!isOpen) {
-      setName('');
-      setEmail('');
-    }
-  }, [isOpen, userToEdit]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await onSubmit({ name, email });
-  };
-
-  if (!isOpen) return null;
-
-  const isEditMode = !!userToEdit;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg p-8 bg-white rounded-2xl shadow-xl transform transition-all -translate-y-10">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          <FaTimes size={22} />
-        </button>
-        <div className="text-center mb-6">
-          <div className="inline-block bg-blue-100 p-3 rounded-full mb-4">
-            <FaUser className="text-blue-600" size={24} />
-          </div>
-          <h3 className="text-2xl font-bold text-gray-800">
-            {isEditMode ? 'Edit User' : 'Add a New User'}
-          </h3>
-          <p className="text-gray-500 mt-1">
-            {isEditMode
-              ? 'Update the details for the user.'
-              : 'Enter the details below to create a new user profile.'}
-          </p>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="relative">
-            <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              type="text"
-              placeholder="Full Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-          <div className="relative">
-            <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition read-only:bg-gray-100 read-only:cursor-not-allowed"
-              type="email"
-              placeholder="Email Address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              readOnly={isEditMode}
-              required
-            />
-          </div>
-          <div className="flex justify-end gap-4 pt-4">
-            <button
-              type="button"
-              className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition"
-              onClick={onClose}
-              disabled={isProcessing}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition flex items-center gap-2"
-              disabled={isProcessing || !name || !email}
-            >
-              {isProcessing ? (
-                isEditMode ? 'Saving...' : 'Adding...'
-              ) : (
-                <>
-                  <FaPaperPlane />
-                  {isEditMode ? 'Save Changes' : 'Add User'}
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-export default function UserManagementPage() {
+export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [submittedSearchQuery, setSubmittedSearchQuery] = useState('');
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/users');
-      if (!response.ok) {
-        throw new Error(`Error fetching users: ${response.statusText}`);
+    const fetchUserData = async () => {
+      if (submittedSearchQuery) {
+        setIsSearching(true);
+      } else {
+        setIsLoading(true);
       }
-      const data = await response.json();
-      setUsers(data);
-    } catch (err: unknown) {
-      console.error('Failed to fetch users:', err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to load users. Please try again later.',
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+      setError(null);
 
-  const handleCreateUser = async (userData: {
-    name: string;
-    email: string;
-  }) => {
-    setIsProcessing(true);
-    try {
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
-      });
-      if (!response.ok) {
-        throw new Error(`Error creating user: ${response.statusText}`);
+      try {
+        const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+        const params = new URLSearchParams({
+          offset: String(offset),
+          limit: String(ITEMS_PER_PAGE),
+        });
+        if (submittedSearchQuery) {
+          params.append('search', submittedSearchQuery);
+        }
+
+        const [usersResponse, countResponse] = await Promise.all([
+          fetch(`/api/users?${params.toString()}`),
+          fetch(`/api/users/count?${params.toString()}`),
+        ]);
+
+        if (!usersResponse.ok || !countResponse.ok) {
+          throw new Error('Failed to fetch user data');
+        }
+
+        const usersData = await usersResponse.json();
+        const countData = await countResponse.json();
+
+        setUsers(usersData);
+        setTotalCount(countData.count);
+      } catch (err: unknown) {
+        console.error('Error fetching user data:', err);
+        setError(err instanceof Error ? err.message : 'Something went wrong');
+      } finally {
+        setIsLoading(false);
+        setIsSearching(false);
       }
-      const createdUser: User = await response.json();
-      setUsers((prevUsers) => [...prevUsers, createdUser]);
-      closeModal();
-    } catch (err: unknown) {
-      console.error('Failed to create user:', err);
-    } finally {
-      setIsProcessing(false);
+    };
+
+    fetchUserData();
+  }, [currentPage, submittedSearchQuery]);
+
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+
+  const getLocalDate = (utcDate: string) => {
+    const date = new Date(utcDate);
+    const clientTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: clientTimeZone,
+    });
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setCurrentPage(newPage);
     }
   };
 
-  const handleUpdateUser = async (userData: {
-    name: string;
-    email: string;
-  }) => {
-    if (!editingUser) return;
-    setIsProcessing(true);
-    try {
-      const response = await fetch(`/api/users/${editingUser._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
-      });
-      if (!response.ok) {
-        throw new Error(`Error updating user: ${response.statusText}`);
-      }
-      const updatedUser: User = await response.json();
-      setUsers((prevUsers) =>
-        prevUsers.map((user) =>
-          user._id === updatedUser._id ? updatedUser : user,
-        ),
-      );
-      closeModal();
-    } catch (err: unknown) {
-      console.error('Failed to update user:', err);
-    } finally {
-      setIsProcessing(false);
-    }
+  const handleSearch = () => {
+    setCurrentPage(1);
+    setSubmittedSearchQuery(searchQuery);
   };
 
-  const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) {
-      return;
-    }
-    try {
-      const response = await fetch(`/api/users/${userId}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error(`Error deleting user: ${response.statusText}`);
-      }
-      setUsers((prevUsers) => prevUsers.filter((user) => user._id !== userId));
-    } catch (err: unknown) {
-      console.error('Failed to delete user:', err);
-    }
-  };
-
-  const openModalToAdd = () => {
-    setEditingUser(null);
-    setIsModalOpen(true);
-  };
-
-  const openModalToEdit = (user: User) => {
-    setEditingUser(user);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setEditingUser(null);
-  };
-
-  if (loading) {
-    return <LoadingSpinner text="Loading users..." />;
+  if (isLoading) {
+    return <LoadingSpinner text="Loading user data..." />;
   }
 
   if (error) {
     return (
       <div className="text-center text-red-500 text-xl py-10">
-        <FaTimes className="text-red-500 mr-2 text-6xl mb-3" /> Error: {error}
+        Error: {error}
       </div>
     );
   }
-  return (
-    <div className="relative min-h-screen">
-      <LoadingOverlay isLoading={isProcessing} text="Processing..." />
-      <div className="flex">
-        <div className="flex-1 p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-800">
-              User Management
-            </h1>
-            <button
-              onClick={openModalToAdd}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <FaPlus className="mr-2" /> Add New User
-            </button>
-          </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4 border-b pb-2">
-              Existing Users
-            </h2>
-            {users.length === 0 ? (
-              <div className="text-center text-gray-500 text-xl py-10">
-                No users found.
-              </div>
+  return (
+    <div className="flex">
+      <div className="flex-1 p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">User Management</h1>
+          <Link href="/admin/users/new">
+            <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+              <PlusIcon className="mr-2 h-5 w-5" /> Add New User
+            </button>
+          </Link>
+        </div>
+
+        <div className="flex items-center space-x-2 mb-8 max-w-lg">
+          <div className="relative flex-grow">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <MagnifyingGlassIcon
+                className="h-5 w-5 text-gray-400"
+                aria-hidden="true"
+              />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              placeholder="Search by name or email..."
+              className="block w-full h-10 rounded-md border-gray-300 bg-white pl-10 pr-3 text-base shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          <button
+            onClick={handleSearch}
+            disabled={isSearching}
+            className="inline-flex h-10 w-32 items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {isSearching ? (
+              <ButtonLoadingSpinner />
             ) : (
-              <div className="overflow-x-auto rounded-lg border border-gray-200">
-                <table className="min-w-full divide-y divide-gray-200">
+              <>
+                <MagnifyingGlassIcon className="h-5 w-5 mr-2" />
+                <span>Search</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {users.length === 0 ? (
+          <div className="text-center text-gray-500 text-xl py-10">
+            {submittedSearchQuery
+              ? 'No users found for your search.'
+              : 'No user data available.'}
+          </div>
+        ) : (
+          <>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4 border-b pb-2">
+                All Users
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 table-fixed">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5"
+                      >
                         User
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-2/5"
+                      >
                         Email
                       </th>
                       <th
                         scope="col"
-                        className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
                       >
-                        Actions
+                        Date Added
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {users.map((user) => (
-                      <tr key={user._id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                      <tr key={user._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-10 w-10">
                               <Avatar name={user.name} />
                             </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">
-                                {user.name}
-                              </div>
-                            </div>
+                            <div className="ml-4">{user.name}</div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {user.email}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end">
-                            <button
-                              onClick={() => openModalToEdit(user)}
-                              className="text-blue-400 hover:text-blue-500 p-3 rounded-full hover:bg-blue-100 transition-all"
-                              aria-label={`Edit ${user.name}`}
-                            >
-                              <FaPencilAlt size={18} />
-                            </button>
-                            <div className="w-px h-5 bg-gray-200 mx-2"></div>
-                            <button
-                              onClick={() => handleDeleteUser(user._id)}
-                              className="text-red-400 hover:text-red-500 p-3 rounded-full hover:bg-red-100 transition-all"
-                              aria-label={`Delete ${user.name}`}
-                            >
-                              <FaTrash size={17} />
-                            </button>
-                          </div>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {getLocalDate(user._createdAt)}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            )}
-          </div>
-          <UserModal
-            isOpen={isModalOpen}
-            onClose={closeModal}
-            onSubmit={editingUser ? handleUpdateUser : handleCreateUser}
-            isProcessing={isProcessing}
-            userToEdit={editingUser}
-          />
-        </div>
+            </div>
+
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </>
+        )}
       </div>
     </div>
   );

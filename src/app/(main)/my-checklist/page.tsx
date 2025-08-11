@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import CommonSelect from '@/app/components/CommonSelect';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
+import InlineLoadingSpinner from '@/app/components/InlineLoadingSpinner';
 import { PortableText, PortableTextComponents } from '@portabletext/react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { coldarkDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
@@ -64,6 +65,7 @@ type ChecklistTemplate = {
   title: string;
   description?: string;
   items: ChecklistItem[];
+  isCommon: boolean;
 };
 
 type User = {
@@ -161,7 +163,10 @@ export default function MyChecklistPage() {
         const checklistData = await checklistRes.json();
         const usersData = await usersRes.json();
 
-        setChecklistTemplates(checklistData);
+        const filteredChecklists = checklistData.filter(
+          (template: ChecklistTemplate) => !template.isCommon,
+        );
+        setChecklistTemplates(filteredChecklists);
         setUsers(usersData);
       } catch (err) {
         console.error(err);
@@ -419,9 +424,8 @@ export default function MyChecklistPage() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute inset-15 flex justify-center items-center"
                   >
-                    <LoadingSpinner text="" />
+                    <InlineLoadingSpinner text="Loading template..." />
                   </motion.div>
                 )}
 
