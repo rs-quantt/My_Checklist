@@ -18,13 +18,22 @@ interface ChecklistSummary {
   };
 }
 
-const checklistSummaryCountQuery = groq`
-  count(*[_type == "checklistSummary"])
-`;
-
-export async function getChecklistSummaryCount(): Promise<number> {
+export async function getChecklistSummaryCount(options?: {
+  search?: string;
+}): Promise<number> {
   try {
-    const count = await client.fetch(checklistSummaryCountQuery);
+    const { search = '' } = options || {};
+    let query = `count(*[_type == "checklistSummary"`;
+    const params: { search?: string } = {};
+
+    if (search) {
+      query += ` && taskCode match $search`;
+      params.search = `*${search}*`;
+    }
+
+    query += `])`;
+
+    const count = await client.fetch(query, params);
     return count || 0;
   } catch (error) {
     console.error('Error fetching checklist summary count:', error);
@@ -75,10 +84,22 @@ export async function getChecklistSummaryDistribution(checklistId?: string) {
 export async function getChecklistSummaries(options?: {
   offset: number;
   limit: number;
+  search?: string;
 }): Promise<ChecklistSummary[]> {
   try {
-    const { offset = 0, limit = 10 } = options || {};
-    const query = groq`*[_type == "checklistSummary"] {
+    const { offset = 0, limit = 10, search = '' } = options || {};
+    let query = `*[_type == "checklistSummary"`;
+    const params: { offset: number; limit: number; search?: string } = {
+      offset,
+      limit,
+    };
+
+    if (search) {
+      query += ` && taskCode match $search`;
+      params.search = `*${search}*`;
+    }
+
+    query += `] {
       _id,
       _updatedAt,
       taskCode,
@@ -94,7 +115,6 @@ export async function getChecklistSummaries(options?: {
       }
     } | order(_updatedAt desc) [$offset...$offset + $limit]`;
 
-    const params = { offset, limit };
     const summaries = await client.fetch(query, params);
     return summaries;
   } catch (error) {

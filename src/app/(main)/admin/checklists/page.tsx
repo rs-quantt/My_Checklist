@@ -5,6 +5,8 @@ import Link from 'next/link';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 import CompletionCircle from '@/app/components/CompletionCircle';
 import PaginationControls from '@/app/components/PaginationControls';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import ButtonLoadingSpinner from '@/app/components/ButtonLoadingSpinner';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -38,22 +40,33 @@ export default function ChecklistsSummaryPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [submittedSearchQuery, setSubmittedSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchChecklistData = async () => {
-      setIsLoading(true);
+      if (submittedSearchQuery) {
+        setIsSearching(true);
+      } else {
+        setIsLoading(true);
+      }
       setError(null);
 
       try {
         const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+        const params = new URLSearchParams({
+          offset: String(offset),
+          limit: String(ITEMS_PER_PAGE),
+        });
+        if (submittedSearchQuery) {
+          params.append('search', submittedSearchQuery);
+        }
 
         const [summariesResponse, countResponse] = await Promise.all([
-          fetch(
-            `/api/checklists-summary?offset=${offset}&limit=${ITEMS_PER_PAGE}`,
-          ),
-          fetch('/api/checklists-summary/count'),
+          fetch(`/api/checklists-summary?${params.toString()}`),
+          fetch(`/api/checklists-summary/count?${params.toString()}`),
         ]);
 
         if (!summariesResponse.ok || !countResponse.ok) {
@@ -70,22 +83,19 @@ export default function ChecklistsSummaryPage() {
         setError(err instanceof Error ? err.message : 'Something went wrong');
       } finally {
         setIsLoading(false);
+        setIsSearching(false);
       }
     };
 
     fetchChecklistData();
-  }, [currentPage]);
+  }, [currentPage, submittedSearchQuery]);
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
-  const groupedAndFilteredSummaries = useMemo(() => {
+  const groupedSummaries = useMemo(() => {
     const clientTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    const filtered = summaries.filter((summary) =>
-      summary.taskCode.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-
-    const grouped = filtered.reduce(
+    const grouped = summaries.reduce(
       (acc: Record<string, Summary[]>, summary: Summary) => {
         const localDate = new Date(summary._updatedAt).toLocaleDateString(
           'en-CA',
@@ -107,7 +117,7 @@ export default function ChecklistsSummaryPage() {
         summaries,
       }))
       .sort((a, b) => b.date.localeCompare(a.date));
-  }, [summaries, searchQuery]);
+  }, [summaries]);
 
   if (isLoading) {
     return <LoadingSpinner text="Loading checklist summary data..." />;
@@ -144,6 +154,11 @@ export default function ChecklistsSummaryPage() {
     }
   };
 
+  const handleSearch = () => {
+    setCurrentPage(1);
+    setSubmittedSearchQuery(searchQuery);
+  };
+
   return (
     <div className="flex">
       <div className="flex-1 p-6">
@@ -153,41 +168,49 @@ export default function ChecklistsSummaryPage() {
           </h1>
         </div>
 
-        <div className="relative mb-6">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-            <svg
-              className="w-5 h-5 text-gray-400"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
-              <path
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+        <div className="flex items-center space-x-2 mb-8 max-w-lg">
+          <div className="relative flex-grow">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <MagnifyingGlassIcon
+                className="h-5 w-5 text-gray-400"
+                aria-hidden="true"
               />
-            </svg>
-          </span>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by task code..."
-            className="w-full py-2 pl-10 pr-4 text-gray-700 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              placeholder="Search by task code..."
+              className="block w-full h-10 rounded-md border-gray-300 bg-white pl-10 pr-3 text-base shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          <button
+            onClick={handleSearch}
+            disabled={isSearching}
+            className="inline-flex h-10 w-32 items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {isSearching ? (
+              <ButtonLoadingSpinner />
+            ) : (
+              <>
+                <MagnifyingGlassIcon className="h-5 w-5 mr-2" />
+                <span>Search</span>
+              </>
+            )}
+          </button>
         </div>
 
-        {groupedAndFilteredSummaries.length === 0 ? (
+        {groupedSummaries.length === 0 ? (
           <div className="text-center text-gray-500 text-xl py-10">
-            {searchQuery
+            {submittedSearchQuery
               ? 'No checklists found for the entered task code.'
               : 'No checklist summary data available.'}
           </div>
         ) : (
           <>
             <div className="space-y-8">
-              {groupedAndFilteredSummaries.map((checklistGroup) => (
+              {groupedSummaries.map((checklistGroup) => (
                 <div
                   key={checklistGroup.date}
                   className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"

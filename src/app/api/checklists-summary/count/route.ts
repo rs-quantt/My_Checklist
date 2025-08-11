@@ -1,9 +1,11 @@
 import { getChecklistSummaryCount } from '@/services/checklistSummaryService';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const count = await getChecklistSummaryCount();
+    const { searchParams } = new URL(req.url);
+    const search = searchParams.get('search') || '';
+    const count = await getChecklistSummaryCount({ search });
     return NextResponse.json({ count });
   } catch (error) {
     console.error('Error fetching checklist summary count:', error);
