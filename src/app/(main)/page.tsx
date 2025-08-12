@@ -9,7 +9,7 @@ export default function Home() {
           Efficient Task Management with My Checklist
         </h1>
         <p className="mt-4 text-lg opacity-90 max-w-2xl mx-auto">
-          Organize tasks, track progress, and collaborate easily with our{' '}
+          Organize tasks, track progress, and collaborate easily with our
           comprehensive checklist system.
         </p>
         <div className="mt-8">
@@ -39,6 +39,27 @@ export default function Home() {
           </Link>
         </div>
       </div>
+
+      {/* Rules Navigation Section */}
+      <section className="bg-white py-16 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto text-center">
+          <h2 className="text-3xl font-extrabold text-gray-900">
+            Explore Our Rules
+          </h2>
+          <p className="mt-4 text-base text-gray-600 max-w-2xl mx-auto">
+            Our platform is governed by a set of comprehensive rules to ensure a
+            fair and orderly environment. Click the button below to view them.
+          </p>
+          <div className="mt-8">
+            <Link
+              href="/rules"
+              className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm !text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300 ease-in-out"
+            >
+              View All Rules
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* Main Content - Features Section */}
       <main className="container mx-auto py-16 px-4 sm:px-6 lg:px-8">
@@ -118,7 +139,7 @@ export default function Home() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.596.14-1.166.395-1.678l-.348-.348A6.002 6002 0 0116 11.39V7.61a6.002 6.002 0 00-7.394-5.816l-.014.002c-3.18 0-5.786 2.593-5.786 5.773v.01"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.596.14-1.166.395-1.678l-.348-.348A6.002 6.002 0 0116 11.39V7.61a6.002 6.002 0 00-7.394-5.816l-.014.002c-3.18 0-5.786 2.593-5.786 5.773v.01"
                 ></path>
               </svg>
             </div>
@@ -202,11 +223,17 @@ export default function Home() {
             &copy; {new Date().getFullYear()} My Checklist. All rights reserved.
           </p>
           <div className="mt-4">
-            <a href="#" className="text-gray-400 hover:text-white mx-3 text-base">
+            <a
+              href="#"
+              className="text-gray-400 hover:text-white mx-3 text-base"
+            >
               Privacy Policy
             </a>
             <span className="text-gray-400">|</span>
-            <a href="#" className="text-gray-400 hover:text-white mx-3 text-base">
+            <a
+              href="#"
+              className="text-gray-400 hover:text-white mx-3 text-base"
+            >
               Terms of Service
             </a>
           </div>

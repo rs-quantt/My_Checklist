@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import ButtonLoadingSpinner from '@/app/components/ButtonLoadingSpinner';
@@ -16,6 +16,13 @@ const LoginPage: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
+
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    if (errorParam === 'InvalidEmailDomain') {
+      setError('Please log in with your company account');
+    }
+  }, [searchParams]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {

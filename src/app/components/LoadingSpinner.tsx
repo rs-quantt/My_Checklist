@@ -5,7 +5,7 @@ const LoadingSpinner: React.FC<{text?: string}> = ({ text = "Loading..." }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-sm">
         <div className="text-center">
             <svg
-                className="animate-spin h-12 w-12 text-blue-600 mx-auto"
+                className="animate-spin h-12 w-12 text-blue-600 mx-auto flex-shrink-0"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"

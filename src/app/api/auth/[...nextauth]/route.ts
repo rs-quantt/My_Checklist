@@ -56,23 +56,29 @@ const authOptions: AuthOptions = {
       user: NextAuthUser;
       account: Account | null;
     }) {
-      if (account?.provider === 'google' && user.email) {
-        const existingUser = await getUserByEmail(user.email);
-        if (!existingUser) {
-          const { CLIENT_PASSWORD } = process.env;
-          if (!CLIENT_PASSWORD) {
-            console.error(
-              'CLIENT_PASSWORD is not set in environment variables.',
-            );
-            return false;
+      if (account?.provider === 'google') {
+        if (user.email && user.email.endsWith('@runsystem.net')) {
+          const existingUser = await getUserByEmail(user.email);
+          if (!existingUser) {
+            const { CLIENT_PASSWORD } = process.env;
+            if (!CLIENT_PASSWORD) {
+              console.error(
+                'CLIENT_PASSWORD is not set in environment variables.',
+              );
+              return false;
+            }
+            const hashedPassword = await bcrypt.hash(CLIENT_PASSWORD, 10);
+            await createUser({
+              name: user.name || '',
+              email: user.email,
+              role: 'user',
+              hashedPassword,
+              image: user.image || '',
+            });
           }
-          const hashedPassword = await bcrypt.hash(CLIENT_PASSWORD, 10);
-          await createUser({
-            name: user.name || '',
-            email: user.email,
-            role: 'user',
-            hashedPassword,
-          });
+          return true;
+        } else {
+          return '/login?error=InvalidEmailDomain';
         }
       }
       return true;

@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
 import { motion, Variants } from 'framer-motion';
@@ -10,10 +10,13 @@ import {
   ArrowRightOnRectangleIcon,
   ArrowLeftOnRectangleIcon,
   Bars3Icon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 import { Popover, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import Avatar from '../components/Avatar';
+import { clearUserChecklistItems } from '@/services/adminService';
+import ButtonLoadingSpinner from '../components/ButtonLoadingSpinner';
 
 export default function MainLayout({
   children,
@@ -21,9 +24,35 @@ export default function MainLayout({
   children: React.ReactNode;
 }>) {
   const { user, logout, isAuthenticated } = useAuth();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleLogout = () => {
     logout();
+  };
+
+  const handleDeleteUserChecklistData = async () => {
+    if (
+      !window.confirm(
+        'Are you sure you want to delete all data? This action cannot be undone.',
+      )
+    ) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await clearUserChecklistItems();
+      alert('Successfully deleted all item data.');
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'An unknown error occurred';
+      setDeleteError(errorMessage);
+      alert(`Error: ${errorMessage}`);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const linkVariants: Variants = {
@@ -125,7 +154,7 @@ export default function MainLayout({
                     leaveFrom="transform opacity-100 scale-100"
                     leaveTo="transform opacity-0 scale-95"
                   >
-                    <Popover.Panel className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
+                    <Popover.Panel className="absolute right-0 z-10 mt-2 w-64 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
                       <div className="p-2">
                         <div className="px-4 py-2 border-b border-gray-200 mb-2">
                           <p className="text-sm font-semibold text-gray-900 truncate">
@@ -137,7 +166,7 @@ export default function MainLayout({
                         </div>
                         <button
                           onClick={handleLogout}
-                          className="group flex w-full items-center rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-red-500 hover:text-white"
+                          className="group flex w-full items-center rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-blue-500 hover:text-white"
                         >
                           <ArrowRightOnRectangleIcon
                             className="mr-3 h-5 w-5 text-gray-400 group-hover:text-white"
@@ -146,6 +175,39 @@ export default function MainLayout({
                           Logout
                         </button>
                       </div>
+                      {user.email === 'quantt@runsystem.net' && (
+                        <div className="border-t border-red-200 my-2">
+                          <div className="p-2">
+                            <div className="px-4 pt-2">
+                              <h3 className="text-xs font-semibold uppercase text-red-800">
+                                Danger Zone
+                              </h3>
+                            </div>
+                            {deleteError && (
+                              <p className="px-4 text-xs text-red-500 mt-1">
+                                Error: {deleteError}
+                              </p>
+                            )}
+                            <button
+                              onClick={handleDeleteUserChecklistData}
+                              disabled={isDeleting}
+                              className="group flex w-full items-center rounded-md px-4 py-2 text-sm text-red-700 hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isDeleting ? (
+                                <ButtonLoadingSpinner />
+                              ) : (
+                                <TrashIcon
+                                  className="mr-3 h-5 w-5 text-red-400 group-hover:text-white"
+                                  aria-hidden="true"
+                                />
+                              )}
+                              {isDeleting
+                                ? 'Deleting Data...'
+                                : 'Delete Data'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </Popover.Panel>
                   </Transition>
                 </Popover>

@@ -38,8 +38,6 @@ const AdminDashboard: React.FC = () => {
             fetch('/api/checklists-summary/count'),
           ]);
 
-        console.log(userResponse, distributionResponse, checklistCountResponse)
-
         if (
           !userResponse.ok ||
           !distributionResponse.ok ||
