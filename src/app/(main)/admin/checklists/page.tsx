@@ -5,7 +5,7 @@ import CompletionCircle from '@/app/components/CompletionCircle';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 import PaginationControls from '@/app/components/PaginationControls';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 const ITEMS_PER_PAGE = 5;
@@ -31,6 +31,7 @@ interface Summary {
 }
 
 export default function ChecklistsSummaryPage() {
+  const router = useRouter();
   const [summaries, setSummaries] = useState<Summary[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -268,25 +269,18 @@ export default function ChecklistsSummaryPage() {
                           <tr
                             key={summary._id}
                             className="cursor-pointer hover:bg-gray-50"
+                            onClick={() =>
+                              router.push(`/admin/checklists/${summary._id}`)
+                            }
                           >
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              <Link
-                                href={`/admin/checklists/${summary._id}`}
-                                className="text-blue-600 hover:underline"
-                              >
-                                {summary.user.name}
-                              </Link>
+                              {summary.user.name}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {summary.checklist.title}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <Link
-                                href={`/admin/checklists/${summary._id}`}
-                                className="text-blue-600 hover:underline"
-                              >
-                                {summary.taskCode}
-                              </Link>
+                              {summary.taskCode}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {summary.totalItems}
