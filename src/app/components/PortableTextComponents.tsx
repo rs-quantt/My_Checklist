@@ -3,6 +3,7 @@ import { client } from '@/sanity/lib/client';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { coldarkDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { SanityImageSource } from '@sanity/image-url/lib/types/types';
+import React from 'react';
 
 const builder = urlBuilder(client);
 
@@ -15,6 +16,10 @@ interface TableBlock {
   rows: {
     cells: string[];
   }[];
+}
+
+interface BlockProps {
+    children?: React.ReactNode;
 }
 
 export const portableTextComponents = {
@@ -91,5 +96,18 @@ export const portableTextComponents = {
         </div>
       );
     },
+  },
+  block: {
+    h1: ({ children }: BlockProps) => <h1 className="text-4xl font-bold my-4">{children}</h1>,
+    h2: ({ children }: BlockProps) => <h2 className="text-3xl font-bold my-4">{children}</h2>,
+    h3: ({ children }: BlockProps) => <h3 className="text-2xl font-bold my-4">{children}</h3>,
+    h4: ({ children }: BlockProps) => <h4 className="text-xl font-bold my-4">{children}</h4>,
+    h5: ({ children }: BlockProps) => <h5 className="text-lg font-bold my-4">{children}</h5>,
+    h6: ({ children }: BlockProps) => <h6 className="text-base font-bold my-4">{children}</h6>,
+    blockquote: ({ children }: BlockProps) => (
+      <blockquote className="border-l-4 border-gray-300 pl-4 my-4 italic">
+        {children}
+      </blockquote>
+    ),
   },
 };

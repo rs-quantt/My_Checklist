@@ -26,6 +26,11 @@ export const checklistSummaryType = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'commitMessage',
+      title: 'Commit Message',
+      type: 'string',
+    }),
+    defineField({
       name: 'totalItems',
       title: 'Total Items',
       type: 'number',

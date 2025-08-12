@@ -101,7 +101,8 @@ export async function saveUserChecklistItems(
   userId: string,
   checklistId: string,
   taskCode: string,
-  items: Array<{ itemId: string; status: string; note?: string }>
+  commitMessage: string,
+  items: Array<{ itemId: string; status: string; note?: string }>,
 ) {
   try {
     if (!checklistId) {
@@ -114,7 +115,9 @@ export async function saveUserChecklistItems(
     for (const item of items) {
       const { itemId, status, note } = item;
       if (!itemId || !status) {
-        console.warn(`Skipping item due to missing data: ${JSON.stringify(item)}`);
+        console.warn(
+          `Skipping item due to missing data: ${JSON.stringify(item)}`,
+        );
         continue;
       }
 
@@ -151,7 +154,7 @@ export async function saveUserChecklistItems(
           && user._ref == $userId
           && taskCode == $taskCode
           && item._ref in *[_type == "checklist" && _id == $checklistId].items[]._ref])`,
-      { userId, checklistId, taskCode }
+      { userId, checklistId, taskCode },
     );
 
     const passedItems = await client.fetch(
@@ -160,13 +163,13 @@ export async function saveUserChecklistItems(
           && taskCode == $taskCode
           && status == "done"
           && item._ref in *[_type == "checklist" && _id == $checklistId].items[]._ref])`,
-      { userId, checklistId, taskCode }
+      { userId, checklistId, taskCode },
     );
 
     const summaryDocId = `${userId}-${checklistId}-${taskCode}-summary`;
     const existingSummary = await client.fetch(
       `*[_type == "checklistSummary" && _id == $summaryDocId][0]`,
-      { summaryDocId }
+      { summaryDocId },
     );
 
     const summaryTransaction = client.transaction();
@@ -175,6 +178,7 @@ export async function saveUserChecklistItems(
       passedItems,
       updatedAt: new Date().toISOString(),
       taskCode,
+      commitMessage,
     };
 
     if (existingSummary) {
@@ -191,7 +195,7 @@ export async function saveUserChecklistItems(
 
     await summaryTransaction.commit();
 
-    return;
+    return summaryDocId;
   } catch (error) {
     console.error('Error saving user checklist items:', error);
     throw new Error('Failed to save user checklist items.');
@@ -200,7 +204,10 @@ export async function saveUserChecklistItems(
 
 export async function getChecklistSummaryById(id: string) {
   try {
-    const summary = await client.fetch(`*[_type == "checklistSummary" && _id == $id][0]`, { id });
+    const summary = await client.fetch(
+      `*[_type == "checklistSummary" && _id == $id][0]`,
+      { id },
+    );
 
     if (!summary) {
       console.warn(`No checklist summary found for ID: ${id}`);
@@ -219,6 +226,7 @@ export async function getChecklistSummaryById(id: string) {
       `*[_type == "checklistSummary" && _id == $id][0]{
         _id,
         taskCode,
+        commitMessage,
         "userId": user->_id,
         "templateId": checklist->_id,
         user->{_id, name},
@@ -246,7 +254,7 @@ export async function getChecklistSummaryById(id: string) {
           }
         }
       }`,
-      { id, userRef, taskCode }
+      { id, userRef, taskCode },
     );
 
     if (!userChecklist) {
@@ -258,14 +266,17 @@ export async function getChecklistSummaryById(id: string) {
       userChecklist.checklist.items = userChecklist.checklist.items.map(
         (item: ChecklistItem & { status: string }) => ({
           ...item,
-          isCompleted: item.status === "done",
-        })
+          isCompleted: item.status === 'done',
+        }),
       );
     }
 
     return userChecklist;
   } catch (error) {
-    console.error(`Error fetching user checklist with summary id ${id}:`, error);
+    console.error(
+      `Error fetching user checklist with summary id ${id}:`,
+      error,
+    );
     throw new Error(`Failed to fetch user checklist with summary id ${id}.`);
   }
 }

@@ -43,7 +43,7 @@ const getStatusBadgeColor = (status: 'done' | 'incomplete' | 'na') => {
   }
 };
 
-export default function ChecklistDetailPage() {
+export default function PublicChecklistDetailPage() {
   const [checklist, setChecklist] = useState<UserChecklist | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +56,7 @@ export default function ChecklistDetailPage() {
     const fetchChecklist = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/admin/checklists/${id}`);
+        const response = await fetch(`/api/public-checklists/${id}`);
         if (!response.ok) {
           if (response.status === 404) {
             notFound();
