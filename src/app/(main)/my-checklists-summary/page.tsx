@@ -86,13 +86,13 @@ export default function MyChecklistsSummaryPage() {
               My Saved Checklists
             </h1>
             <p className="mt-2 text-base text-gray-600 max-w-xl mx-auto leading-relaxed">
-              Here are all the checklists you've saved.
+              Here are all the checklists you&apos;ve saved.
             </p>
           </div>
 
           {summaries.length === 0 ? (
             <div className="text-center text-gray-600 py-10">
-              <p className="text-lg">You haven't saved any checklists yet.</p>
+              <p className="text-lg">You haven&apos;t saved any checklists yet.</p>
               <p className="mt-4">
                 <Link
                   href="/my-checklist"
