@@ -1,23 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import Avatar from '@/app/components/Avatar';
+import ButtonLoadingSpinner from '@/app/components/ButtonLoadingSpinner';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 import PaginationControls from '@/app/components/PaginationControls';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import ButtonLoadingSpinner from '@/app/components/ButtonLoadingSpinner';
-import Avatar from '@/app/components/Avatar';
+import { User } from '@/types/user'; // Import the User type
+import {
+  AcademicCapIcon,
+  MagnifyingGlassIcon,
+} from '@heroicons/react/24/outline';
+import { useEffect, useState, useRef } from 'react';
+import { useSession } from 'next-auth/react';
 
-const ITEMS_PER_PAGE = 10;
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  image?: string;
-  _createdAt: string;
-}
+const ITEMS_PER_PAGE = 5; // Changed to 5
 
 export default function UsersPage() {
+  const { data: session, status } = useSession();
   const [users, setUsers] = useState<User[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -26,6 +24,13 @@ export default function UsersPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [submittedSearchQuery, setSubmittedSearchQuery] = useState('');
+  const [showCodeModal, setShowCodeModal] = useState(false);
+  const [adminCode, setAdminCode] = useState<string[]>(Array(6).fill(''));
+  const [selectedUser, setSelectedUser] = useState<{
+    id: string;
+    currentRole: 'admin' | 'user';
+  } | null>(null);
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -55,7 +60,7 @@ export default function UsersPage() {
           throw new Error('Failed to fetch user data');
         }
 
-        const usersData = await usersResponse.json();
+        const usersData: User[] = await usersResponse.json();
         const countData = await countResponse.json();
 
         setUsers(usersData);
@@ -71,6 +76,80 @@ export default function UsersPage() {
 
     fetchUserData();
   }, [currentPage, submittedSearchQuery]);
+
+  const handleToggleClick = (userId: string, currentRole: 'admin' | 'user') => {
+    setSelectedUser({ id: userId, currentRole: currentRole });
+    setShowCodeModal(true);
+    setAdminCode(Array(6).fill('')); // Reset code when opening modal
+    // Focus on the first input when the modal opens
+    setTimeout(() => inputRefs.current[0]?.focus(), 100);
+  };
+
+  const handleAdminCodeChange = (index: number, value: string) => {
+    const newAdminCode = [...adminCode];
+    // Only allow single digit and numbers
+    const digit = value.replace(/[^0-9]/g, '');
+    newAdminCode[index] = digit.slice(-1); // Take only the last entered digit
+    setAdminCode(newAdminCode);
+
+    // Auto-focus to the next input
+    if (digit && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    } else if (value === '' && index > 0) {
+      // Allow backspace to clear and move to previous input
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const confirmToggleAdminStatus = async () => {
+    if (!selectedUser) return;
+
+    const fullAdminCode = adminCode.join('');
+    if (fullAdminCode.length !== 6) {
+      alert('Please enter a 6-digit code.');
+      return;
+    }
+
+    const { id: userId, currentRole } = selectedUser;
+    const newIsAdmin = currentRole === 'user'; // If current role is user, new will be admin
+
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          isAdmin: newIsAdmin,
+          adminCode: fullAdminCode,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update admin status');
+      }
+
+      setUsers(
+        users.map((user) =>
+          user._id === userId
+            ? {
+                ...user,
+                role: newIsAdmin ? 'admin' : 'user',
+              }
+            : user,
+        ),
+      );
+      setShowCodeModal(false);
+      setAdminCode(Array(6).fill(''));
+      setSelectedUser(null);
+    } catch (err: unknown) {
+      console.error('Error toggling admin status:', err);
+      alert(
+        err instanceof Error ? err.message : 'Failed to update admin status.',
+      );
+    }
+  };
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
@@ -182,6 +261,10 @@ export default function UsersPage() {
                       >
                         Date Added
                       </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5"
+                      ></th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -196,14 +279,41 @@ export default function UsersPage() {
                                 alt={user.name}
                               />
                             </div>
-                            <div className="ml-4">{user.name}</div>
+                            <div className="ml-4 flex items-center">
+                              {user.name}
+                              {user.role === 'admin' && (
+                                <AcademicCapIcon className="ml-2 h-5 w-5 text-yellow-500" />
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {user.email}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {getLocalDate(user._createdAt)}
+                          {getLocalDate(user._createdAt ?? '')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <div className="flex items-center space-x-2">
+                            {status === 'authenticated' &&
+                            session?.user?.id !== user._id && (
+                              <button
+                                onClick={() =>
+                                  handleToggleClick(user._id, user.role)
+                                }
+                                className={`px-3 py-1 text-xs font-medium rounded-full ${
+                                  user.role === 'admin'
+                                    ? 'bg-red-100 text-red-800 hover:bg-red-200'
+                                    : 'bg-green-100 text-green-800 hover:bg-green-200'
+                                }`}
+                                type="button"
+                              >
+                                {user.role === 'admin'
+                                  ? 'Revoke Authority'
+                                  : 'Grant Authority'}
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -220,6 +330,53 @@ export default function UsersPage() {
           </>
         )}
       </div>
+
+      {showCodeModal && selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-96">
+            <h3 className="text-lg font-bold mb-4">Enter Authorization Code</h3>
+            <p className="mb-4">
+              Please enter the 6-digit code to{' '}
+              {selectedUser.currentRole === 'admin' ? 'revoke' : 'grant'} authority.
+            </p>
+            <div className="flex justify-center space-x-2 mb-4">
+              {adminCode.map((digit, index) => (
+                <input
+                  key={index}
+                  type="text"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleAdminCodeChange(index, e.target.value)}
+                  onFocus={(e) => e.target.select()} // Select text on focus
+                  className="w-10 h-10 text-xl font-bold text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  ref={(el) => {
+                    inputRefs.current[index] = el;
+                  }}
+                />
+              ))}
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => {
+                  setShowCodeModal(false);
+                  setAdminCode(Array(6).fill(''));
+                  setSelectedUser(null);
+                }}
+                className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmToggleAdminStatus}
+                className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={adminCode.join('').length !== 6}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -6,4 +6,5 @@ export type User = {
   email: string;
   image?: string;
   checklistCompletion?: Record<string, boolean>;
+  _createdAt?: string;
 };
