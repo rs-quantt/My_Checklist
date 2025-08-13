@@ -1,65 +1,22 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import BackButton from '@/app/components/BackButton';
+import CommonSelect from '@/app/components/CommonSelect';
+import InlineLoadingSpinner from '@/app/components/InlineLoadingSpinner';
+import LoadingSpinner from '@/app/components/LoadingSpinner';
+import {
+  ChecklistItemsTour,
+  InitialTour,
+} from '@/app/components/tour/MyChecklistTour';
+import { PortableText } from '@portabletext/react';
+import { PortableTextBlock } from '@portabletext/types';
+import { AnimatePresence, motion, Variants } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
-import CommonSelect from '@/app/components/CommonSelect';
-import LoadingSpinner from '@/app/components/LoadingSpinner';
-import InlineLoadingSpinner from '@/app/components/InlineLoadingSpinner';
-import { PortableText, PortableTextComponents } from '@portabletext/react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { coldarkDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
-import { urlFor } from '@/sanity/lib/image';
-import { SanityImageSource } from '@sanity/image-url/lib/types/types';
-import { PortableTextBlock } from '@portabletext/types';
-import {
-  InitialTour,
-  ChecklistItemsTour,
-} from '@/app/components/tour/MyChecklistTour';
+import { useEffect, useRef, useState } from 'react';
 import { FaQuestionCircle, FaSave } from 'react-icons/fa';
-import BackButton from '@/app/components/BackButton';
-
-const ptComponents: PortableTextComponents = {
-  types: {
-    code: ({ value }) => {
-      if (!value || !value.code) return null;
-      return (
-        <div className="my-4 rounded-lg overflow-hidden">
-          <SyntaxHighlighter
-            language={value.language || 'text'}
-            style={coldarkDark}
-            showLineNumbers
-          >
-            {value.code}
-          </SyntaxHighlighter>
-        </div>
-      );
-    },
-    image: ({ value }) => {
-      if (!value?.asset?._ref) return null;
-      return (
-        <div className="flex justify-center my-6">
-          <img
-            alt={value.alt || ' '}
-            loading="lazy"
-            src={urlFor(value as SanityImageSource)
-              .auto('format')
-              .url()}
-            className="rounded-lg shadow-lg max-w-full h-auto"
-          />
-        </div>
-      );
-    },
-  },
-};
-
-type ChecklistItem = {
-  _id: string;
-  label: string;
-  description?: PortableTextBlock[];
-  priority?: '1' | '2' | '3';
-};
+import ptComponents from '../../components/ptComponents';
+import { Checklist, ChecklistItem } from '@/types/checklist';
 
 type ChecklistTemplate = {
   _id: string;
@@ -118,7 +75,6 @@ export default function MyChecklistPage() {
   const [error, setError] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [savedChecklistId, setSavedChecklistId] = useState<string | null>(null);
-
 
   const [isStickyHeaderVisible, setIsStickyHeaderVisible] = useState(false);
   const templateHeaderRef = useRef<HTMLDivElement>(null);
@@ -202,10 +158,7 @@ export default function MyChecklistPage() {
       selectedTemplate?.items.every((item) => itemStates[item._id]?.status) ??
       false;
     setIsSaveButtonDisabled(
-      !loggedInUserId ||
-        !taskCode ||
-        !selectedTemplate ||
-        !allItemsChecked,
+      !loggedInUserId || !taskCode || !selectedTemplate || !allItemsChecked,
     );
   }, [loggedInUserId, taskCode, itemStates, selectedTemplate]);
 
@@ -290,6 +243,10 @@ export default function MyChecklistPage() {
       ...prev,
       [itemId]: { ...prev[itemId], note },
     }));
+  };
+
+  const handleTaskCodeBlur = () => {
+    setTaskCode((prev) => prev.toUpperCase());
   };
 
   if (initialLoading || sessionStatus === 'loading')
@@ -400,6 +357,7 @@ export default function MyChecklistPage() {
                   placeholder="Enter task code (e.g., TASK-001)"
                   value={taskCode}
                   onChange={(e) => setTaskCode(e.target.value)}
+                  onBlur={handleTaskCodeBlur}
                 />
               </motion.div>
               <motion.div
@@ -756,7 +714,7 @@ export default function MyChecklistPage() {
             </div>
           </div>
         </motion.div>
-      </div>
+      </div >
       <AnimatePresence>
         {showSuccessPopup && (
           <motion.div
@@ -791,9 +749,7 @@ export default function MyChecklistPage() {
                 <button
                   onClick={() => {
                     if (savedChecklistId) {
-                      router.push(
-                        `/public-checklists/${savedChecklistId}`,
-                      );
+                      router.push(`/public-checklists/${savedChecklistId}`);
                     }
                   }}
                   className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200 ease-in-out"
@@ -805,6 +761,6 @@ export default function MyChecklistPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </div >
   );
 }

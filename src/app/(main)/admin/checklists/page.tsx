@@ -27,7 +27,7 @@ interface Summary {
   passedItems: number;
   user: User;
   checklist: Checklist;
-  _updatedAt: string;
+  updatedAt: string;
 }
 
 export default function ChecklistsSummaryPage() {
@@ -93,7 +93,7 @@ export default function ChecklistsSummaryPage() {
 
     const grouped = summaries.reduce(
       (acc: Record<string, Summary[]>, summary: Summary) => {
-        const localDate = new Date(summary._updatedAt).toLocaleDateString(
+        const localDate = new Date(summary.updatedAt).toLocaleDateString(
           'en-CA',
           { timeZone: clientTimeZone },
         );

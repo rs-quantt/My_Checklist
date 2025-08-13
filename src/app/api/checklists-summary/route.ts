@@ -7,6 +7,7 @@ export async function GET(req: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0', 10);
     const limit = parseInt(searchParams.get('limit') || '5', 10);
     const search = searchParams.get('search') || '';
+    const userId = searchParams.get('userId') || undefined; // Convert null to undefined
 
     if (isNaN(offset) || isNaN(limit) || offset < 0 || limit <= 0) {
       return NextResponse.json(
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const summaries = await getChecklistSummaries({ offset, limit, search });
+    const summaries = await getChecklistSummaries({ offset, limit, search, userId });
     return NextResponse.json(summaries);
   } catch (error) {
     console.error('Error fetching checklist summary:', error);

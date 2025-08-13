@@ -4,12 +4,11 @@ import { useEffect, useState } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 import BackButton from '@/app/components/BackButton';
+import { ChecklistItem } from '@/types/checklist'; // Import the shared interface
 
 // Define the types directly in the file
-interface ChecklistItem {
+interface UserChecklistItem extends ChecklistItem {
   _key: string;
-  title: string;
-  isCompleted: boolean;
   status: 'done' | 'incomplete' | 'na'; // status is non-optional
   note?: string;
 }
@@ -25,7 +24,7 @@ interface UserChecklist {
   checklist: {
     _id: string;
     title: string;
-    items: ChecklistItem[];
+    items: UserChecklistItem[];
   };
 }
 
@@ -192,7 +191,7 @@ export default function ChecklistDetailPage() {
               >
                 <div className="flex items-center justify-between">
                   <span className="flex-grow text-gray-800 font-medium">
-                    {item.title}
+                    {item.label}
                   </span>
                   <span
                     className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(

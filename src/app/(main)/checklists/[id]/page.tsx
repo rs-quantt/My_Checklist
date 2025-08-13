@@ -1,55 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import LoadingSpinner from '@/app/components/LoadingSpinner';
-import { PortableText, PortableTextComponents } from '@portabletext/react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { coldarkDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
-import { urlFor } from '@/sanity/lib/image';
-import { SanityImageSource } from '@sanity/image-url/lib/types/types';
-import { PortableTextBlock } from '@portabletext/types';
 import BackButton from '@/app/components/BackButton';
-
-const ptComponents: PortableTextComponents = {
-  types: {
-    code: ({ value }) => {
-      if (!value || !value.code) return null;
-      return (
-        <div className="my-4 rounded-lg overflow-hidden">
-          <SyntaxHighlighter
-            language={value.language || 'text'}
-            style={coldarkDark}
-            showLineNumbers
-          >
-            {value.code}
-          </SyntaxHighlighter>
-        </div>
-      );
-    },
-    image: ({ value }) => {
-      if (!value?.asset?._ref) return null;
-      return (
-        <div className="flex justify-center my-6">
-          <img
-            alt={value.alt || ' '}
-            loading="lazy"
-            src={urlFor(value as SanityImageSource).auto('format').url()}
-            className="rounded-lg shadow-lg max-w-full h-auto"
-          />
-        </div>
-      );
-    },
-  },
-};
-
-type ChecklistItem = {
-  _id: string;
-  label: string;
-  description?: PortableTextBlock[];
-  priority?: '1' | '2' | '3';
-};
+import LoadingSpinner from '@/app/components/LoadingSpinner';
+import ptComponents from '@/app/components/ptComponents';
+import { ChecklistItem } from '@/types/checklist';
+import { PortableText } from '@portabletext/react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 type Checklist = {
   _id: string;
@@ -130,17 +88,13 @@ export default function ChecklistDetailPage() {
               const isExpanded = expandedItems[item._id] || false;
               const priority = item.priority;
               const priorityText =
-                priority === '1'
-                  ? 'High'
-                  : priority === '2'
-                  ? 'Medium'
-                  : 'Low';
+                priority === '1' ? 'High' : priority === '2' ? 'Medium' : 'Low';
               const priorityClass =
                 priority === '1'
                   ? 'bg-red-200 text-red-900'
                   : priority === '2'
-                  ? 'bg-yellow-200 text-yellow-900'
-                  : 'bg-blue-200 text-blue-900';
+                    ? 'bg-yellow-200 text-yellow-900'
+                    : 'bg-blue-200 text-blue-900';
 
               return (
                 <li

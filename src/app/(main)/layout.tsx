@@ -11,6 +11,7 @@ import {
   ArrowLeftOnRectangleIcon,
   Bars3Icon,
   TrashIcon,
+  DocumentCheckIcon, // Used for My Checklists
 } from '@heroicons/react/24/outline';
 import { Popover, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
@@ -164,6 +165,18 @@ export default function MainLayout({
                             {user.email}
                           </p>
                         </div>
+                        {isAuthenticated && (
+                          <Link
+                            href="/my-checklists-summary"
+                            className="group flex w-full items-center rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-blue-500 hover:text-white"
+                          >
+                            <DocumentCheckIcon
+                              className="mr-3 h-5 w-5 text-gray-400 group-hover:text-white"
+                              aria-hidden="true"
+                            />
+                            My Checklists
+                          </Link>
+                        )}
                         <button
                           onClick={handleLogout}
                           className="group flex w-full items-center rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-blue-500 hover:text-white"

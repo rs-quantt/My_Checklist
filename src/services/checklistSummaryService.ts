@@ -4,10 +4,10 @@ import { client } from '@/sanity/lib/client';
 // Define a type for the summary object to ensure type safety
 interface ChecklistSummary {
   _id: string;
-  _updatedAt: string;
+  updatedAt: string; // Changed from _updatedAt
   taskCode: string;
-  totalItems: number;
   passedItems: number;
+  totalItems: number;
   user: {
     _id: string;
     name: string;
@@ -16,6 +16,12 @@ interface ChecklistSummary {
     _id: string;
     title: string;
   };
+  items: {
+    _key: string;
+    itemId: string;
+    status: 'done' | 'incomplete' | 'na';
+    note?: string;
+  }[];
 }
 
 export async function getChecklistSummaryCount(options?: {
@@ -82,14 +88,15 @@ export async function getChecklistSummaryDistribution(checklistId?: string) {
 }
 
 export async function getChecklistSummaries(options?: {
-  offset: number;
-  limit: number;
+  offset?: number;
+  limit?: number;
   search?: string;
+  userId?: string;
 }): Promise<ChecklistSummary[]> {
   try {
-    const { offset = 0, limit = 10, search = '' } = options || {};
+    const { offset = 0, limit = 10, search = '', userId } = options || {};
     let query = `*[_type == "checklistSummary"`;
-    const params: { offset: number; limit: number; search?: string } = {
+    const params: { offset: number; limit: number; search?: string; userId?: string } = {
       offset,
       limit,
     };
@@ -99,9 +106,14 @@ export async function getChecklistSummaries(options?: {
       params.search = `*${search}*`;
     }
 
+    if (userId) {
+      query += ` && user._ref == $userId`;
+      params.userId = userId;
+    }
+
     query += `] {
       _id,
-      _updatedAt,
+      updatedAt,
       taskCode,
       totalItems,
       passedItems,
@@ -111,9 +123,23 @@ export async function getChecklistSummaries(options?: {
       },
       checklist->{
         _id,
-        title
+        title,
+        description,
+        'items': items[]{
+          _key,
+          _id,
+          label,
+          description,
+          priority
+        }
+      },
+      items[]{
+        _key,
+        itemId,
+        status,
+        note
       }
-    } | order(_updatedAt desc) [$offset...$offset + $limit]`;
+    } | order(updatedAt desc) [$offset...$offset + $limit]`; // Changed from _updatedAt
 
     const summaries = await client.fetch(query, params);
     return summaries;

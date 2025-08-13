@@ -121,7 +121,7 @@ export async function saveUserChecklistItems(
         continue;
       }
 
-      const docId = `${userId}-${itemId}-${taskCode}`;
+      const docId = `${userId}-${itemId}-${taskCode.toLowerCase()}`;
       const existingDoc = await client.fetch(`*[_id == $docId][0]`, { docId });
 
       if (existingDoc) {
@@ -166,7 +166,7 @@ export async function saveUserChecklistItems(
       { userId, checklistId, taskCode },
     );
 
-    const summaryDocId = `${userId}-${checklistId}-${taskCode}-summary`;
+    const summaryDocId = `${userId}-${checklistId}-${taskCode.toLowerCase()}-summary`;
     const existingSummary = await client.fetch(
       `*[_type == "checklistSummary" && _id == $summaryDocId][0]`,
       { summaryDocId },
@@ -174,6 +174,8 @@ export async function saveUserChecklistItems(
 
     const summaryTransaction = client.transaction();
     const summaryData = {
+      user: { _type: 'reference', _ref: userId },
+      checklist: { _type: 'reference', _ref: checklistId },
       totalItems,
       passedItems,
       updatedAt: new Date().toISOString(),
@@ -187,8 +189,6 @@ export async function saveUserChecklistItems(
       summaryTransaction.create({
         _id: summaryDocId,
         _type: 'checklistSummary',
-        user: { _type: 'reference', _ref: userId },
-        checklist: { _type: 'reference', _ref: checklistId },
         ...summaryData,
       });
     }
