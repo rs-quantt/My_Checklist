@@ -346,8 +346,7 @@ export default function ChecklistPage() {
           )}
         </div>
 
-        {(session?.user)?.role !== 'admin' && (
-          <div className="mt-6 text-center">
+        <div className="mt-6 text-center">
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -368,7 +367,6 @@ export default function ChecklistPage() {
               review.
             </p>
           </div>
-        )}
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">

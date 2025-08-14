@@ -66,21 +66,6 @@ const AdminSidebar: React.FC = () => {
             </div>
           </Link>
         </motion.div>
-        <motion.div
-          whileHover={{ scale: 1.02, x: 5 }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-        >
-          <Link
-            href="/admin/transfer"
-            className={`flex items-center px-2 py-2 rounded-md transition duration-200 ${isActive('/admin/transfer') ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
-          >
-            <div className="flex items-center">
-              <FaExchangeAlt className="mr-3" />
-              Transfer Items
-            </div>
-          </Link>
-        </motion.div>
       </nav>
     </div>
   );
