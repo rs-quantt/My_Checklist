@@ -7,6 +7,7 @@ import { checklistItemType } from './checklistItemType';
 import { checklistSummaryType } from './checklistSummaryType';
 import { ruleType } from './ruleType';
 import { categoryType } from './categoryType';
+import { categorySummaryType } from './categorySummaryType';
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
@@ -17,5 +18,6 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     userType,
     ruleType,
     categoryType,
+    categorySummaryType,
   ],
 };

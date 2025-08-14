@@ -1,29 +1,50 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import LoadingSpinner from '@/app/components/LoadingSpinner';
-import { motion, AnimatePresence } from 'framer-motion';
 import BackButton from '@/app/components/BackButton';
-import { FaExternalLinkAlt } from 'react-icons/fa';
-import Link from 'next/link'; // Import Link
+import LoadingSpinner from '@/app/components/LoadingSpinner';
+import { motion } from 'framer-motion';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-type ChecklistSummary = {
+// Define types based on checklistSummaryService.ts
+interface User {
   _id: string;
-  userId: string;
-  checklistId: string;
-  checklistTitle: string;
+  name: string;
+}
+
+interface Checklist {
+  _id: string;
+  title: string;
+  description?: string;
+  category?: {
+    // Category info is now nested
+    _id: string;
+    title: string;
+  };
+}
+
+interface Summary {
+  _id: string;
   taskCode: string;
-  commitMessage?: string;
-  createdAt: string;
+  totalItems: number;
+  passedItems: number;
+  user: User;
+  checklist: Checklist;
   updatedAt: string;
-  items: Array<{
-    itemId: string;
-    status: 'done' | 'incomplete' | 'na' | '';
-    note?: string;
-  }>;
-};
+}
+
+interface TaskCodeGroup {
+  taskCode: string;
+  summaries: Summary[];
+}
+
+interface GroupedChecklistSummary {
+  categoryId: string;
+  categoryTitle: string;
+  taskCodeGroups: TaskCodeGroup[];
+}
 
 const itemVariants = {
   hidden: { y: 20, opacity: 0 },
@@ -33,7 +54,9 @@ const itemVariants = {
 export default function MyChecklistsSummaryPage() {
   const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
-  const [summaries, setSummaries] = useState<ChecklistSummary[]>([]);
+  const [groupedSummaries, setGroupedSummaries] = useState<
+    GroupedChecklistSummary[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,15 +64,17 @@ export default function MyChecklistsSummaryPage() {
     if (sessionStatus === 'authenticated') {
       const fetchSummaries = async () => {
         try {
-          const res = await fetch(`/api/checklists-summary?userId=${session.user?.id}`);
+          const res = await fetch(`/api/my-grouped-checklists-summary`); // Call the new grouped API route
           if (!res.ok) {
-            throw new Error('Failed to fetch checklist summaries');
+            throw new Error(
+              `Failed to fetch grouped checklist summaries: ${res.status} ${res.statusText}`,
+            );
           }
-          const data = await res.json();
-          setSummaries(data);
-        } catch (err) {
-          console.error(err);
-          setError('Could not load your saved checklists. Please try again.');
+          const data: GroupedChecklistSummary[] = await res.json();
+          setGroupedSummaries(data);
+        } catch (err: unknown) {
+          console.error('Error fetching grouped checklist summaries:', err);
+          setError(err instanceof Error ? err.message : 'Something went wrong');
         } finally {
           setLoading(false);
         }
@@ -58,7 +83,7 @@ export default function MyChecklistsSummaryPage() {
     } else if (sessionStatus === 'unauthenticated') {
       router.push('/login');
     }
-  }, [sessionStatus, session?.user?.id, router]);
+  }, [sessionStatus, session?.user?.id, router]); // Depend on sessionStatus to re-fetch when authenticated
 
   if (loading || sessionStatus === 'loading') {
     return <LoadingSpinner text="Loading your checklists..." />;
@@ -86,13 +111,16 @@ export default function MyChecklistsSummaryPage() {
               My Saved Checklists
             </h1>
             <p className="mt-2 text-base text-gray-600 max-w-xl mx-auto leading-relaxed">
-              Here are all the checklists you&apos;ve saved.
+              Here are all the checklists you&apos;ve saved, grouped by category
+              and task code.
             </p>
           </div>
 
-          {summaries.length === 0 ? (
+          {groupedSummaries.length === 0 ? (
             <div className="text-center text-gray-600 py-10">
-              <p className="text-lg">You haven&apos;t saved any checklists yet.</p>
+              <p className="text-lg">
+                You haven&apos;t saved any checklists yet.
+              </p>
               <p className="mt-4">
                 <Link
                   href="/my-checklist"
@@ -103,50 +131,105 @@ export default function MyChecklistsSummaryPage() {
               </p>
             </div>
           ) : (
-            <motion.ul
-              className="space-y-4"
-              initial="hidden"
-              animate="visible"
-              variants={{
-                visible: {
-                  transition: {
-                    staggerChildren: 0.05,
-                  },
-                },
-              }}
-            >
-              {summaries.map((summary) => (
-                <motion.li
-                  key={summary._id}
-                  variants={itemVariants}
-                  className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center hover:shadow-md transition-shadow duration-200"
+            <div className="space-y-8">
+              {groupedSummaries.map((categoryGroup) => (
+                <div
+                  key={categoryGroup.categoryId}
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
                 >
-                  <div className="flex-grow mb-3 sm:mb-0">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      {summary.checklistTitle}
-                    </h2>
-                    <p className="text-gray-700 text-sm mt-1">
-                      <span className="font-medium">Task Code:</span> {summary.taskCode}
-                    </p>
-                    {summary.commitMessage && (
-                      <p className="text-gray-600 text-sm">
-                        <span className="font-medium">Commit:</span> {summary.commitMessage}
-                      </p>
-                    )}
-                    <p className="text-gray-500 text-xs mt-1">
-                      Saved on: {new Date(summary.updatedAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => router.push(`/public-checklists/${summary._id}`)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
-                  >
-                    View Details
-                    <FaExternalLinkAlt size={12} />
-                  </button>
-                </motion.li>
+                  <h2 className="text-2xl font-semibold text-gray-900 mb-6 border-b pb-3">
+                    Category: {categoryGroup.categoryTitle}
+                  </h2>
+
+                  {categoryGroup.taskCodeGroups.map((taskGroup) => (
+                    <div key={taskGroup.taskCode} className="mb-8 last:mb-0">
+                      <h3 className="text-xl font-semibold text-gray-800 mb-4 pl-4 border-l-4 border-blue-500">
+                        Task Code: {taskGroup.taskCode}
+                      </h3>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200 table-fixed">
+                          <colgroup>
+                            <col style={{ width: '35%' }} />
+                            <col style={{ width: '25%' }} />
+                            <col style={{ width: '10%' }} />
+                            <col style={{ width: '10%' }} />
+                            <col style={{ width: '20%' }} />
+                          </colgroup>
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th
+                                scope="col"
+                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                              >
+                                Checklist Title
+                              </th>
+                              <th
+                                scope="col"
+                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                              >
+                                Last Updated
+                              </th>
+                              <th
+                                scope="col"
+                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                              >
+                                Total
+                              </th>
+                              <th
+                                scope="col"
+                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                              >
+                                Passed
+                              </th>
+                              <th
+                                scope="col"
+                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                              >
+                                Completion
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {taskGroup.summaries.map((summary) => (
+                              <motion.tr
+                                key={summary._id}
+                                variants={itemVariants}
+                                className="cursor-pointer hover:bg-gray-50"
+                                onClick={() =>
+                                  router.push(
+                                    `/public-checklists/${summary._id}`,
+                                  )
+                                }
+                              >
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                  {summary.checklist.title}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {new Date(
+                                    summary.updatedAt,
+                                  ).toLocaleDateString()}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {summary.totalItems}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {summary.passedItems}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {summary.totalItems > 0
+                                    ? `${~~((summary.passedItems / summary.totalItems) * 100)}%`
+                                    : '0%'}
+                                </td>
+                              </motion.tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ))}
-            </motion.ul>
+            </div>
           )}
         </motion.div>
       </div>

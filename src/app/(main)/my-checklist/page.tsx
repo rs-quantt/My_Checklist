@@ -4,38 +4,12 @@ import BackButton from '@/app/components/BackButton';
 import CommonSelect from '@/app/components/CommonSelect';
 import InlineLoadingSpinner from '@/app/components/InlineLoadingSpinner';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
-import {
-  ChecklistItemsTour,
-  InitialTour,
-} from '@/app/components/tour/MyChecklistTour';
 import { PortableText } from '@portabletext/react';
-import { PortableTextBlock } from '@portabletext/types';
 import { AnimatePresence, motion, Variants } from 'framer-motion';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
-import { FaQuestionCircle, FaSave } from 'react-icons/fa';
+import { FaQuestionCircle, FaSave, FaArrowRight } from 'react-icons/fa'; // Added FaArrowRight
 import ptComponents from '../../components/ptComponents';
-import { Checklist, ChecklistItem } from '@/types/checklist';
-
-type ChecklistTemplate = {
-  _id: string;
-  title: string;
-  description?: string;
-  items: ChecklistItem[];
-  isCommon: boolean;
-};
-
-type Status = 'done' | 'incomplete' | 'na' | '';
-
-type ItemState = {
-  status: Status;
-  note: string;
-};
-
-type ItemStateMap = {
-  [itemId: string]: ItemState;
-};
+import { Status } from '@/types/enum';
+import { useMyChecklistLogic } from '@/hooks/useMyChecklistLogic';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -55,199 +29,39 @@ const itemVariants: Variants = {
 };
 
 export default function MyChecklistPage() {
-  const { data: session, status: sessionStatus } = useSession();
-  const router = useRouter();
-  const [checklistTemplates, setChecklistTemplates] = useState<
-    ChecklistTemplate[]
-  >([]);
-  const [selectedTemplate, setSelectedTemplate] =
-    useState<ChecklistTemplate | null>(null);
-  const [isTemplateLoading, setIsTemplateLoading] = useState(false);
-  const [taskCode, setTaskCode] = useState<string>('');
-  const [commitMessage, setCommitMessage] = useState<string>('');
-  const [itemStates, setItemStates] = useState<ItemStateMap>({});
-  const [expandedItems, setExpandedItems] = useState<{
-    [itemId: string]: boolean;
-  }>({});
-  const [isSaveButtonDisabled, setIsSaveButtonDisabled] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [savedChecklistId, setSavedChecklistId] = useState<string | null>(null);
+  const {
+    sessionStatus,
+    router,
+    categories,
+    selectedCategory,
+    checklistTemplates,
+    currentChecklistIndex,
+    displayedChecklist,
+    isTemplateLoading,
+    taskCode,
+    setTaskCode,
+    commitMessage,
+    setCommitMessage,
+    itemStates,
+    expandedItems,
+    isSaveButtonDisabled,
+    isSaving,
+    showSuccessPopup,
+    setShowSuccessPopup,
+    error,
+    initialLoading,
+    savedChecklistId,
+    handleCategoryChange,
+    handleChecklistNavigation, // New function
+    saveAllChecklists, // New function
+    resetForm,
+    handleStatusChange,
+    toggleItem,
+    handleNoteChange,
+    handleTaskCodeBlur,
+  } = useMyChecklistLogic();
 
-  const [isStickyHeaderVisible, setIsStickyHeaderVisible] = useState(false);
-  const templateHeaderRef = useRef<HTMLDivElement>(null);
-
-  const loggedInUserId = session?.user?.id;
-
-  useEffect(() => {
-    const headerEl = templateHeaderRef.current;
-    if (!headerEl) {
-      setIsStickyHeaderVisible(false);
-      return;
-    }
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsStickyHeaderVisible(!entry.isIntersecting);
-      },
-      { rootMargin: '-80px 0px 0px 0px', threshold: 0 },
-    );
-
-    observer.observe(headerEl);
-
-    return () => {
-      if (headerEl) {
-        observer.unobserve(headerEl);
-      }
-    };
-  }, [selectedTemplate]);
-
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        setError(null);
-        const checklistRes = await fetch('/api/checklists');
-
-        if (!checklistRes.ok)
-          throw new Error('Failed to fetch checklist templates');
-
-        const checklistData = await checklistRes.json();
-
-        const filteredChecklists = checklistData.filter(
-          (template: ChecklistTemplate) => !template.isCommon,
-        );
-        setChecklistTemplates(filteredChecklists);
-      } catch (err) {
-        console.error(err);
-        setError('Could not load initial data. Please try again later.');
-      } finally {
-        setInitialLoading(false);
-      }
-    };
-    fetchInitialData();
-  }, []);
-
-  const handleTemplateChange = async (templateId: string) => {
-    if (!templateId) {
-      setSelectedTemplate(null);
-      setItemStates({});
-      return;
-    }
-
-    setIsTemplateLoading(true);
-    setSelectedTemplate(null);
-
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const response = await fetch(`/api/checklists/${templateId}`);
-      if (!response.ok) throw new Error('Failed to fetch checklist details');
-      const data = await response.json();
-      setSelectedTemplate(data.checklist);
-      setItemStates({});
-    } catch (err) {
-      console.error(err);
-      setError('Could not load the selected checklist. Please try again.');
-    } finally {
-      setIsTemplateLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const allItemsChecked =
-      selectedTemplate?.items.every((item) => itemStates[item._id]?.status) ??
-      false;
-    setIsSaveButtonDisabled(
-      !loggedInUserId || !taskCode || !selectedTemplate || !allItemsChecked,
-    );
-  }, [loggedInUserId, taskCode, itemStates, selectedTemplate]);
-
-  const resetForm = () => {
-    setSelectedTemplate(null);
-    setTaskCode('');
-    setCommitMessage('');
-    setItemStates({});
-    setExpandedItems({});
-  };
-
-  const saveChecklist = async () => {
-    if (!selectedTemplate || !loggedInUserId) return;
-
-    setIsSaving(true);
-    const validationErrors: string[] = [];
-    selectedTemplate.items.forEach((item) => {
-      const state = itemStates[item._id] || { status: '', note: '' };
-      if (!state.status) {
-        validationErrors.push(
-          `Item "${item.label}" status has not been selected.`,
-        );
-      }
-      if (
-        (state.status === 'incomplete' || state.status === 'na') &&
-        !state.note?.trim()
-      ) {
-        validationErrors.push(`Item "${item.label}" requires a note.`);
-      }
-    });
-
-    if (validationErrors.length > 0) {
-      alert(validationErrors.join('\n'));
-      setIsSaving(false);
-      return;
-    }
-
-    const payload = {
-      userId: loggedInUserId,
-      taskCode,
-      commitMessage,
-      checklistId: selectedTemplate._id,
-      items: Object.entries(itemStates).map(([itemId, state]) => ({
-        itemId,
-        ...state,
-      })),
-    };
-
-    try {
-      const res = await fetch('/api/save-checklist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error('Save failed: ' + (await res.text()));
-      const { summaryId } = await res.json();
-      setSavedChecklistId(summaryId);
-      setShowSuccessPopup(true);
-      window.scrollTo(0, 0);
-    } catch (error) {
-      console.error(error);
-      alert('An error occurred while saving. Please try again.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleStatusChange = (itemId: string, status: Status) => {
-    setItemStates((prev) => ({
-      ...prev,
-      [itemId]: { ...prev[itemId], status },
-    }));
-  };
-
-  const toggleItem = (itemId: string) => {
-    setExpandedItems((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
-  };
-
-  const handleNoteChange = (itemId: string, note: string) => {
-    setItemStates((prev) => ({
-      ...prev,
-      [itemId]: { ...prev[itemId], note },
-    }));
-  };
-
-  const handleTaskCodeBlur = () => {
-    setTaskCode((prev) => prev.toUpperCase());
-  };
+  const isLastChecklist = currentChecklistIndex === checklistTemplates.length - 1;
 
   if (initialLoading || sessionStatus === 'loading')
     return <LoadingSpinner text="Loading page..." />;
@@ -260,32 +74,6 @@ export default function MyChecklistPage() {
 
   return (
     <div className="antialiased bg-gray-50 min-h-screen relative">
-      {!selectedTemplate ? <InitialTour /> : <ChecklistItemsTour />}
-      <AnimatePresence>
-        {isStickyHeaderVisible && selectedTemplate && (
-          <motion.div
-            className="fixed top-16 left-0 right-0 z-20"
-            initial={{ y: '-100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '-100%' }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-          >
-            <div className="container mx-auto max-w-5xl px-2 sm:px-4 lg:px-6">
-              <div className="flex items-center p-3 bg-white/90 backdrop-blur-md rounded-b-lg shadow-md border-x border-b border-gray-200">
-                <img
-                  src="/check.png"
-                  alt="Check Icon"
-                  className="w-6 h-6 mr-3 flex-shrink-0"
-                />
-                <h3 className="font-bold text-gray-800 text-lg truncate">
-                  {selectedTemplate.title}
-                </h3>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <div className="min-h-screen py-8 px-2 sm:px-4 lg:px-6">
         <motion.div
           className="container mx-auto max-w-5xl bg-white text-gray-800 rounded-lg shadow-sm p-6 md:p-8 space-y-8 border border-gray-200"
@@ -295,7 +83,7 @@ export default function MyChecklistPage() {
         >
           <div className="flex justify-between items-center">
             <BackButton />
-            {!selectedTemplate && (
+            {!selectedCategory && ( // Tour button only visible when no category is selected
               <button
                 id="start-my-checklist-tour-button"
                 className="text-blue-500 hover:text-blue-700 transition-colors"
@@ -313,8 +101,7 @@ export default function MyChecklistPage() {
               </h1>
             </div>
             <p className="mt-2 text-base text-gray-600 max-w-xl mx-auto leading-relaxed">
-              Select a checklist template, fill in the details, and save your
-              progress.
+              Select a category and complete checklists.
             </p>
           </motion.div>
 
@@ -326,21 +113,21 @@ export default function MyChecklistPage() {
               animate="visible"
             >
               <motion.div
-                id="template-select-container"
+                id="category-select-container"
                 className="space-y-2"
                 variants={itemVariants}
               >
                 <label className="block text-base font-semibold text-gray-700">
-                  Checklist Template <span className="text-red-500">*</span>
+                  Category <span className="text-red-500">*</span>
                 </label>
                 <CommonSelect
-                  options={checklistTemplates.map((t) => ({
-                    _id: t._id,
-                    name: t.title,
+                  options={categories.map((c) => ({
+                    _id: c._id,
+                    name: c.title,
                   }))}
-                  value={selectedTemplate?._id || ''}
-                  onChange={handleTemplateChange}
-                  placeholder="-- Select a template --"
+                  value={selectedCategory?._id || ''}
+                  onChange={handleCategoryChange}
+                  placeholder="-- Select a category --"
                 />
               </motion.div>
               <motion.div
@@ -383,7 +170,7 @@ export default function MyChecklistPage() {
 
             <div className="relative min-h-[5rem]">
               <AnimatePresence mode="wait">
-                {isTemplateLoading && (
+                {isTemplateLoading && selectedCategory && (
                   <motion.div
                     key="template-loader"
                     initial={{ opacity: 0 }}
@@ -391,13 +178,13 @@ export default function MyChecklistPage() {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <InlineLoadingSpinner text="Loading template..." />
+                    <InlineLoadingSpinner text="Loading checklists..." />
                   </motion.div>
                 )}
 
-                {selectedTemplate && (
+                {selectedCategory && displayedChecklist && (
                   <motion.div
-                    key={selectedTemplate._id}
+                    key={displayedChecklist._id}
                     className="space-y-8"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -405,8 +192,7 @@ export default function MyChecklistPage() {
                     transition={{ duration: 0.5, ease: 'easeOut' }}
                   >
                     <div
-                      ref={templateHeaderRef}
-                      className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                      className="p-4 bg-gray-50 rounded-lg border border-gray-200 mb-6"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center min-w-0">
@@ -417,22 +203,20 @@ export default function MyChecklistPage() {
                           />
                           <div className="min-w-0">
                             <h2 className="text-2xl font-bold text-gray-900 truncate">
-                              {selectedTemplate.title}
+                              {displayedChecklist.title}
                             </h2>
-                            {selectedTemplate.description && (
+                            {displayedChecklist.description && (
                               <p className="text-gray-600 mt-1 truncate">
-                                {selectedTemplate.description}
+                                {displayedChecklist.description}
                               </p>
                             )}
                           </div>
                         </div>
-                        <button
-                          id="start-checklist-items-tour-button"
-                          className="text-blue-500 hover:text-blue-700 transition-colors ml-4 flex-shrink-0"
-                          aria-label="Start checklist items tour"
-                        >
-                          <FaQuestionCircle size={24} />
-                        </button>
+                        {checklistTemplates.length > 1 && (
+                          <span className="text-sm font-medium text-gray-500">
+                            {currentChecklistIndex + 1} / {checklistTemplates.length}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <motion.ul
@@ -441,7 +225,7 @@ export default function MyChecklistPage() {
                       initial="hidden"
                       animate="visible"
                     >
-                      {selectedTemplate.items.map((item, index) => {
+                      {displayedChecklist.items.map((item) => {
                         const state = itemStates[item._id] || {
                           status: '',
                           note: '',
@@ -472,14 +256,11 @@ export default function MyChecklistPage() {
                               ? 'bg-yellow-200 text-yellow-900'
                               : 'bg-blue-200 text-blue-900';
 
-                        const itemTourClass =
-                          index === 0 ? 'my-checklist-item' : '';
-
                         return (
                           <motion.li
                             key={item._id}
                             variants={itemVariants}
-                            className={`relative overflow-hidden rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow duration-200 ease-in-out border border-gray-200 ${itemTourClass}`}
+                            className={`relative overflow-hidden rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow duration-200 ease-in-out border border-gray-200`}
                           >
                             <div
                               className={`absolute top-0 left-0 bottom-0 w-2 ${barColorClass} transition-colors`}
@@ -548,109 +329,95 @@ export default function MyChecklistPage() {
                                           <hr className="my-4 border-gray-200" />
                                         </div>
                                       )}
-                                      <div
-                                        className={
-                                          index === 0
-                                            ? 'my-checklist-status-buttons'
-                                            : ''
-                                        }
-                                      >
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                          Status
-                                        </label>
-                                        <div
-                                          className={`flex flex-wrap items-center gap-2`}
-                                        >
-                                          {['done', 'incomplete', 'na'].map(
-                                            (statusOption) => (
-                                              <button
-                                                key={statusOption}
-                                                onClick={() =>
-                                                  handleStatusChange(
-                                                    item._id,
-                                                    statusOption as Status,
-                                                  )
-                                                }
-                                                className={`px-4 py-2 rounded-md font-medium text-xs transition-all duration-200 ease-in-out border ${
-                                                  state.status === statusOption
-                                                    ? statusOption === 'done'
-                                                      ? 'bg-green-600 text-white border-green-600'
+                                          <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                              Status
+                                            </label>
+                                            <div
+                                              className={`flex flex-wrap items-center gap-2`}
+                                            >
+                                              {['done', 'incomplete', 'na'].map(
+                                                (statusOption) => (
+                                                  <button
+                                                    key={statusOption}
+                                                    onClick={() =>
+                                                      handleStatusChange(
+                                                        item._id,
+                                                        statusOption as Status,
+                                                      )
+                                                    }
+                                                    className={`px-4 py-2 rounded-md font-medium text-xs transition-all duration-200 ease-in-out border ${state.status === statusOption
+                                                        ? statusOption === 'done'
+                                                          ? 'bg-green-600 text-white border-green-600'
+                                                          : statusOption ===
+                                                            'incomplete'
+                                                            ? 'bg-red-600 text-white border-red-600'
+                                                            : 'bg-slate-600 text-white border-slate-600'
+                                                        : statusOption === 'done'
+                                                          ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200'
+                                                          : statusOption ===
+                                                            'incomplete'
+                                                            ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200'
+                                                            : 'bg-slate-200 text-slate-800 border-slate-300 hover:bg-slate-300'
+                                                      }`}
+                                                  >
+                                                    {statusOption === 'done'
+                                                      ? 'Done'
                                                       : statusOption ===
-                                                          'incomplete'
-                                                        ? 'bg-red-600 text-white border-red-600'
-                                                        : 'bg-slate-600 text-white border-slate-600'
-                                                    : statusOption === 'done'
-                                                      ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200'
-                                                      : statusOption ===
-                                                          'incomplete'
-                                                        ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200'
-                                                        : 'bg-slate-200 text-slate-800 border-slate-300 hover:bg-slate-300'
-                                                }`}
+                                                        'incomplete'
+                                                        ? 'Incomplete'
+                                                        : 'N/A'}
+                                                  </button>
+                                                ),
+                                              )}
+                                            </div>
+                                          </div>
+                                          <div>
+                                            <label
+                                              htmlFor={`note-${item._id}`}
+                                              className="block text-sm font-medium text-gray-700 mt-3"
+                                            >
+                                              Reason / Note{' '}
+                                              <span
+                                                className={`text-red-500 ${isNoteRequired ? '' : 'hidden'
+                                                  }`}
                                               >
-                                                {statusOption === 'done'
-                                                  ? 'Done'
-                                                  : statusOption ===
-                                                      'incomplete'
-                                                    ? 'Incomplete'
-                                                    : 'N/A'}
-                                              </button>
-                                            ),
-                                          )}
+                                                *
+                                              </span>
+                                            </label>
+                                            <textarea
+                                              id={`note-${item._id}`}
+                                              value={state.note}
+                                              onChange={(e) =>
+                                                handleNoteChange(
+                                                  item._id,
+                                                  e.target.value,
+                                                )
+                                              }
+                                              placeholder={
+                                                isNoteRequired
+                                                  ? 'Required'
+                                                  : 'Optional'
+                                              }
+                                              className={`w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm transition`}
+                                              rows={2}
+                                              required={isNoteRequired}
+                                            />
+                                          </div>
                                         </div>
-                                      </div>
-                                      <div
-                                        className={
-                                          index === 0
-                                            ? 'my-checklist-note-input'
-                                            : ''
-                                        }
-                                      >
-                                        <label
-                                          htmlFor={`note-${item._id}`}
-                                          className="block text-sm font-medium text-gray-700 mt-3"
-                                        >
-                                          Reason / Note{' '}
-                                          <span
-                                            className={`text-red-500 ${
-                                              isNoteRequired ? '' : 'hidden'
-                                            }`}
-                                          >
-                                            *
-                                          </span>
-                                        </label>
-                                        <textarea
-                                          id={`note-${item._id}`}
-                                          value={state.note}
-                                          onChange={(e) =>
-                                            handleNoteChange(
-                                              item._id,
-                                              e.target.value,
-                                            )
-                                          }
-                                          placeholder={
-                                            isNoteRequired
-                                              ? 'Required'
-                                              : 'Optional'
-                                          }
-                                          className={`w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm transition`}
-                                          rows={2}
-                                          required={isNoteRequired}
-                                        />
-                                      </div>
-                                    </div>
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            </div>
-                          </motion.li>
-                        );
-                      })}
-                    </motion.ul>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              </motion.li>
+                            );
+                          })}
+                        </motion.ul>
                     <div className="border-t border-gray-200 pt-6 mt-6">
                       <div className="flex justify-end">
                         <motion.button
-                          id="save-checklist-button"
-                          onClick={saveChecklist}
+                          id="action-button"
+                          onClick={isLastChecklist ? saveAllChecklists : handleChecklistNavigation}
                           disabled={isSaveButtonDisabled || isSaving}
                           className="relative flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-blue-600 text-white font-bold shadow-md transition-all duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed w-48 h-10"
                           whileTap={
@@ -693,15 +460,22 @@ export default function MyChecklistPage() {
                               </motion.div>
                             ) : (
                               <motion.span
-                                key="save"
+                                key="action-text"
                                 initial={{ y: 10, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 exit={{ y: -10, opacity: 0 }}
                                 transition={{ duration: 0.2 }}
                                 className="absolute flex items-center justify-center"
                               >
-                                <FaSave className="mr-2" />
-                                Save Checklist
+                                {isLastChecklist ? (
+                                  <>
+                                    <FaSave className="mr-2" /> Save All Checklists
+                                  </>
+                                ) : (
+                                  <>
+                                    Next Checklist <FaArrowRight className="ml-2" />
+                                  </>
+                                )}
                               </motion.span>
                             )}
                           </AnimatePresence>
@@ -709,6 +483,16 @@ export default function MyChecklistPage() {
                       </div>
                     </div>
                   </motion.div>
+                )}
+                {!selectedCategory && !isTemplateLoading && !error && (
+                  <div className="text-center text-gray-500 mt-10">
+                    Please select a category to start.
+                  </div>
+                )}
+                {selectedCategory && !isTemplateLoading && checklistTemplates.length === 0 && (
+                  <div className="text-center text-gray-500 mt-10">
+                    No checklists found for this category.
+                  </div>
                 )}
               </AnimatePresence>
             </div>
@@ -736,25 +520,12 @@ export default function MyChecklistPage() {
               <p className="text-gray-700 mb-6">
                 Your checklist has been saved successfully.
               </p>
-              <div className="flex justify-center gap-4">
+              <div className="flex justify-center">
                 <button
-                  onClick={() => {
-                    setShowSuccessPopup(false);
-                    resetForm();
-                  }}
+                  onClick={() => setShowSuccessPopup(false)}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 ease-in-out"
                 >
-                  Start Another Task
-                </button>
-                <button
-                  onClick={() => {
-                    if (savedChecklistId) {
-                      router.push(`/public-checklists/${savedChecklistId}`);
-                    }
-                  }}
-                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200 ease-in-out"
-                >
-                  View Public Checklist
+                  OK
                 </button>
               </div>
             </motion.div>

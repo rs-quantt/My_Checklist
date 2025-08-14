@@ -1,4 +1,5 @@
 import { PortableTextBlock } from "@portabletext/types";
+import { Status } from "./enum";
 
 export interface ChecklistItem {
   _id: string;
@@ -13,4 +14,35 @@ export interface Checklist {
   title: string;
   description?: string;
   items: ChecklistItem[];
+  isCommon?: boolean;
 }
+
+export interface ChecklistItemState {
+  status: Status;
+  note: string;
+}
+
+export interface ItemState {
+  status: Status;
+  note: string;
+};
+
+export interface ItemStateMap {
+  [itemId: string]: ItemState;
+};
+
+export interface ChecklistSummary {
+  _id: string;
+  userId: string;
+  checklistId: string;
+  checklistTitle: string;
+  taskCode: string;
+  commitMessage?: string;
+  createdAt: string;
+  updatedAt: string;
+  items: Array<{
+    itemId: string;
+    status: Status;
+    note?: string;
+  }>;
+};

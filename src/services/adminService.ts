@@ -9,7 +9,7 @@ export const clearUserChecklistItems = async (): Promise<void> => {
     // userChecklistItem
 
     await client.delete({
-      query: `*[_type in ["checklistSummary", "userChecklistItem"]]`,
+      query: `*[_type in ["categorySummary", "checklistSummary", "userChecklistItem"]]`,
     });
   } catch (error) {
     console.error('Failed to delete user checklist item data:', error);

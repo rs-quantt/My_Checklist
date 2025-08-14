@@ -1,6 +1,7 @@
 import { createUser, getUserByEmail } from '@/services/userService';
 import bcrypt from 'bcrypt';
-import NextAuth, {
+import NextAuth,
+{
   Account,
   AuthOptions,
   User as NextAuthUser,

@@ -1,30 +1,30 @@
 import { ActivityIcon } from '@sanity/icons';
 import { defineField, defineType } from 'sanity';
 
-export const checklistSummaryType = defineType({
-  name: 'checklistSummary',
-  title: 'Checklist Summary',
-  type: 'document',
+export const categorySummaryType = defineType({
+  name: 'categorySummary',
+  title: 'Category Summary',
   icon: ActivityIcon,
+  type: 'document',
   fields: [
     defineField({
       name: 'user',
       title: 'User',
       type: 'reference',
       to: [{ type: 'user' }],
+      validation: (rule) => rule.required(),
     }),
     defineField({
-      name: 'checklist',
-      title: 'Checklist',
+      name: 'category',
+      title: 'Category',
       type: 'reference',
-      to: [{ type: 'checklist' }],
+      to: [{ type: 'category' }],
+      validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'taskCode',
       title: 'Task Code',
       type: 'string',
-      // Temporarily removed validation to check if it's the cause of red display
-      // validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'commitMessage',
@@ -35,33 +35,41 @@ export const checklistSummaryType = defineType({
       name: 'totalItems',
       title: 'Total Items',
       type: 'number',
-      readOnly: true, // Calculated based on checklist items
+      validation: (rule) => rule.required().min(0),
     }),
     defineField({
       name: 'passedItems',
       title: 'Passed Items',
       type: 'number',
-      readOnly: true, // Calculated based on userChecklistItems status
+      validation: (rule) => rule.required().min(0),
+    }),
+    defineField({
+      name: 'items',
+      title: 'Items',
+      type: 'array',
+      of: [{ type: 'checklistSummary' }], // Reference to checklistSummaryType
     }),
     defineField({
       name: 'updatedAt',
-      title: 'Last Updated At',
+      title: 'Updated At',
       type: 'datetime',
-      readOnly: true,
+      options: {
+        dateFormat: 'YYYY-MM-DDTHH:mm:ssZ',
+      },
+      validation: (rule) => rule.required(),
     }),
   ],
   preview: {
     select: {
       userName: 'user.name',
-      checklistTitle: 'checklist.title',
+      categoryTitle: 'category.title',
       total: 'totalItems',
       passed: 'passedItems',
-      taskCode: 'taskCode',
     },
-    prepare: ({ userName, checklistTitle, total, passed, taskCode }) => {
+    prepare: ({ userName, categoryTitle, total, passed }) => {
       const percentage = total > 0 ? (passed / total) * 100 : 0;
       return {
-        title: `${checklistTitle} summary by ${userName} (${taskCode})`,
+        title: `${categoryTitle} summary by ${userName}`,
         subtitle: `${passed}/${total} (${percentage.toFixed(2)}%) items passed`,
       };
     },

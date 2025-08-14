@@ -13,6 +13,7 @@ type CommonSelectProps = {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  disabled?: boolean;
 };
 
 export default function CommonSelect({
@@ -20,6 +21,7 @@ export default function CommonSelect({
   value,
   onChange,
   placeholder = '-- Select --',
+  disabled = false,
 }: CommonSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const selectRef = useRef<HTMLDivElement>(null);
@@ -27,6 +29,7 @@ export default function CommonSelect({
   const selectedOption = options.find((option) => option._id === value);
 
   const handleSelect = (optionValue: string) => {
+    if (disabled) return;
     onChange(optionValue);
     setIsOpen(false);
   };
@@ -48,14 +51,17 @@ export default function CommonSelect({
     <div className="relative" ref={selectRef}>
       <button
         type="button"
-        className="w-full bg-white border border-gray-300 text-gray-800 py-2 px-3 rounded-md leading-tight focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm text-base flex justify-between items-center"
+        className={`w-full bg-white border border-gray-300 text-gray-800 py-2 px-3 rounded-md leading-tight focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm text-base flex justify-between items-center ${
+          disabled ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         onClick={() => setIsOpen(!isOpen)}
+        disabled={disabled}
       >
         <span>{selectedOption ? selectedOption.name : placeholder}</span>
         <FaChevronDown className={`transform transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {isOpen && (
+      {isOpen && !disabled && (
         <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg max-h-60 overflow-auto">
           {options.map((option) => (
             <li

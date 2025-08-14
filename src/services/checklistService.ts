@@ -31,6 +31,7 @@ export async function getChecklistById(id: string): Promise<Checklist | null> {
           title,
           description,
           type,
+          category->{_id, title}, // Fetch category reference
           "items": items[]-> | order(priority asc) {
             _id,
             label,
@@ -45,6 +46,41 @@ export async function getChecklistById(id: string): Promise<Checklist | null> {
   } catch (error) {
     console.error(`Error fetching checklist with id ${id}:`, error);
     throw new Error(`Failed to fetch checklist with id ${id}.`);
+  }
+}
+
+export async function getChecklistsByCategoryId(
+  categoryId: string,
+): Promise<Checklist[]> {
+  try {
+    const categoryWithChecklists = await client.fetch(
+      `
+      *[_type == "category" && _id == $categoryId][0]{
+        "checklists": checklists[]->{
+          _id,
+          title,
+          description,
+          type,
+          "items": items[]-> | order(priority asc) {
+            _id,
+            label,
+            description,
+            priority
+          }
+        }
+      }
+      `,
+      { categoryId },
+    );
+
+    // Return the checklists array from the fetched category, or an empty array if not found
+    return categoryWithChecklists?.checklists || [];
+  } catch (error) {
+    console.error(
+      `Error fetching checklists for category ${categoryId}:`,
+      error,
+    );
+    throw new Error(`Failed to fetch checklists for category ${categoryId}.`);
   }
 }
 
@@ -71,10 +107,7 @@ export async function updateChecklist(
   updates: Partial<Omit<Checklist, '_id' | 'items'>>,
 ): Promise<Checklist> {
   try {
-    const updatedChecklist = await client
-      .patch(id)
-      .set(updates)
-      .commit();
+    const updatedChecklist = await client.patch(id).set(updates).commit();
 
     return updatedChecklist as unknown as Checklist;
   } catch (error) {
@@ -94,6 +127,12 @@ export async function countChecklists(): Promise<number> {
   }
 }
 
+interface CategoryChecklistSummary {
+  _id: string;
+  totalItems: number;
+  passedItems: number;
+}
+
 /**
  * This function remains correct as its logic for counting items does not depend on their order.
  */
@@ -103,6 +142,7 @@ export async function saveUserChecklistItems(
   taskCode: string,
   commitMessage: string,
   items: Array<{ itemId: string; status: string; note?: string }>,
+  categoryId: string, // categoryId is now directly passed in
 ) {
   try {
     if (!checklistId) {
@@ -195,6 +235,90 @@ export async function saveUserChecklistItems(
 
     await summaryTransaction.commit();
 
+    // Step 3: Create or update categorySummary
+
+    if (categoryId) {
+      // First, get all checklist IDs that belong to this category
+      const checklistsInThisCategory = await client.fetch(
+        `*[_type == "category" && _id == $categoryId][0]{
+          "checklistIds": checklists[]._ref
+        }`,
+        { categoryId },
+      );
+
+      const relatedChecklistIds = checklistsInThisCategory?.checklistIds || [];
+
+      // Find all checklistSummaries for this user, taskCode, and related checklist IDs
+      const categoryChecklistSummaries = await client.fetch(
+        `*[_type == "checklistSummary"
+            && user._ref == $userId
+            && taskCode == $taskCode
+            && checklist._ref in $relatedChecklistIds]{
+          _id,
+          totalItems,
+          passedItems
+        }`,
+        { userId, taskCode, relatedChecklistIds }, // Pass relatedChecklistIds here
+      );
+
+      let totalCategoryItems = 0;
+      let passedCategoryItems = 0;
+      const categorySummaryItems: Array<{
+        _ref: string;
+        _type: string;
+        _key: string;
+      }> = [];
+
+      categoryChecklistSummaries.forEach(
+        (summary: CategoryChecklistSummary) => {
+          totalCategoryItems += summary.totalItems;
+          passedCategoryItems += summary.passedItems;
+          // CHANGE HERE: Specify the actual document type for the reference
+          categorySummaryItems.push({
+            _key: summary._id, // Add a unique key for each item in the array
+            _ref: summary._id,
+            _type: 'checklistSummary',
+          });
+        },
+      );
+
+      const categorySummaryDocId = `${userId}-${categoryId}-${taskCode.toLowerCase()}-category-summary`;
+      const existingCategorySummary = await client.fetch(
+        `*[_type == "categorySummary" && _id == $categorySummaryDocId][0]`,
+        { categorySummaryDocId },
+      );
+
+      const categorySummaryTransaction = client.transaction();
+      const categorySummaryData = {
+        user: { _type: 'reference', _ref: userId },
+        category: { _type: 'reference', _ref: categoryId },
+        totalItems: totalCategoryItems,
+        passedItems: passedCategoryItems,
+        items: categorySummaryItems, // Array of references to checklistSummary documents
+        updatedAt: new Date().toISOString(),
+        taskCode,
+        commitMessage,
+      };
+
+      if (existingCategorySummary) {
+        categorySummaryTransaction.patch(categorySummaryDocId, {
+          set: categorySummaryData,
+        });
+      } else {
+        categorySummaryTransaction.create({
+          _id: categorySummaryDocId,
+          _type: 'categorySummary',
+          ...categorySummaryData,
+        });
+      }
+
+      await categorySummaryTransaction.commit();
+    } else {
+      console.warn(
+        `categoryId is not provided. Skipping category summary update.`,
+      );
+    }
+
     return summaryDocId;
   } catch (error) {
     console.error('Error saving user checklist items:', error);
@@ -236,17 +360,16 @@ export async function getChecklistSummaryById(id: string) {
           "items": items[]->{
             _id,
             "title": label,
+            description, // ADDED description here
             "status": coalesce(
-              *[
-                _type == "userChecklistItem" &&
+              *[_type == "userChecklistItem" &&
                 user._ref == $userRef &&
                 item._ref == ^._id &&
                 taskCode == $taskCode
               ][0].status,
               "incomplete"
             ),
-            "note": *[
-              _type == "userChecklistItem" &&
+            "note": *[_type == "userChecklistItem" &&
               user._ref == $userRef &&
               item._ref == ^._id &&
               taskCode == $taskCode

@@ -4,9 +4,9 @@ import { saveUserChecklistItems } from '@/services/checklistService';
 export async function POST(req: Request) {
   try {
     const payload = await req.json();
-    const { userId, taskCode, checklistId, items, commitMessage } = payload;
+    const { userId, taskCode, checklistId, items, commitMessage, categoryId } = payload;
 
-    if (!userId || !taskCode || !checklistId || !items || !Array.isArray(items)) {
+    if (!userId || !taskCode || !checklistId || !items || !Array.isArray(items) || !categoryId) {
       return NextResponse.json(
         { error: 'Missing required parameters' },
         { status: 400 },
@@ -19,6 +19,7 @@ export async function POST(req: Request) {
       taskCode,
       commitMessage || '',
       items,
+      categoryId,
     );
 
     return NextResponse.json({

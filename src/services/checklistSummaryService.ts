@@ -15,12 +15,27 @@ interface ChecklistSummary {
   checklist: {
     _id: string;
     title: string;
+    description?: string;
+    category?: {
+      _id: string;
+      title: string;
+    };
   };
   items: {
     _key: string;
     itemId: string;
     status: 'done' | 'incomplete' | 'na';
     note?: string;
+  }[];
+}
+
+// New type for grouped summaries
+interface GroupedChecklistSummary {
+  categoryId: string;
+  categoryTitle: string;
+  taskCodeGroups: {
+    taskCode: string;
+    summaries: ChecklistSummary[];
   }[];
 }
 
@@ -131,7 +146,8 @@ export async function getChecklistSummaries(options?: {
           label,
           description,
           priority
-        }
+        },
+        category->{_id, title} // Fetch category information
       },
       items[]{
         _key,
@@ -146,5 +162,96 @@ export async function getChecklistSummaries(options?: {
   } catch (error) {
     console.error('Error fetching checklist summaries:', error);
     throw new Error('Failed to fetch checklist summaries');
+  }
+}
+
+export async function getGroupedChecklistSummaries(options?: {
+  userId?: string;
+  search?: string;
+}): Promise<GroupedChecklistSummary[]> {
+  try {
+    const { userId, search = '' } = options || {};
+
+    let query = `*[_type == "checklistSummary"`;
+    const params: { userId?: string; search?: string } = {};
+
+    if (userId) {
+      query += ` && user._ref == $userId`;
+      params.userId = userId;
+    }
+    if (search) {
+      query += ` && taskCode match $search`;
+      params.search = `*${search}*`;
+    }
+
+    query += `] {
+      _id,
+      updatedAt,
+      taskCode,
+      totalItems,
+      passedItems,
+      user->{
+        _id,
+        name
+      },
+      checklist->{
+        _id,
+        title,
+        description,
+        category->{_id, title} // Fetch category information
+      },
+      items[]{
+        _key,
+        itemId,
+        status,
+        note
+      }
+    } | order(updatedAt desc)`;
+
+    const rawSummaries: (ChecklistSummary & { checklist: { category: { _id: string; title: string } | null } })[] = await client.fetch(query, params);
+
+    const grouped: { [categoryId: string]: GroupedChecklistSummary } = {};
+
+    rawSummaries.forEach(summary => {
+      const categoryId = summary.checklist?.category?._id || 'uncategorized';
+      const categoryTitle = summary.checklist?.category?.title || 'Uncategorized';
+      const taskCode = summary.taskCode || 'no-task-code';
+
+      if (!grouped[categoryId]) {
+        grouped[categoryId] = {
+          categoryId,
+          categoryTitle,
+          taskCodeGroups: []
+        };
+      }
+
+      let taskCodeGroup = grouped[categoryId].taskCodeGroups.find(
+        group => group.taskCode === taskCode
+      );
+
+      if (!taskCodeGroup) {
+        taskCodeGroup = { taskCode, summaries: [] };
+        grouped[categoryId].taskCodeGroups.push(taskCodeGroup);
+        // Sort taskCodeGroups so that task codes within a category are consistent (e.g., by taskCode string)
+        grouped[categoryId].taskCodeGroups.sort((a, b) => a.taskCode.localeCompare(b.taskCode));
+      }
+      taskCodeGroup.summaries.push(summary);
+    });
+
+    // Convert the grouped object back to an array and sort categories by title
+    const result = Object.values(grouped).sort((a, b) => a.categoryTitle.localeCompare(b.categoryTitle));
+
+    // Sort summaries within each taskCodeGroup by updatedAt desc
+    result.forEach(categoryGroup => {
+      categoryGroup.taskCodeGroups.forEach(taskGroup => {
+        taskGroup.summaries.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      });
+    });
+
+    return result;
+
+  } catch (error) {
+    console.error('Error fetching grouped checklist summaries:', error);
+    throw new Error('Failed to fetch grouped checklist summaries');
   }
 }

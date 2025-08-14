@@ -167,7 +167,7 @@ export default function MainLayout({
                         </div>
                         {isAuthenticated && (
                           <Link
-                            href="/my-checklists-summary"
+                            href="/my-category-summary"
                             className="group flex w-full items-center rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-blue-500 hover:text-white"
                           >
                             <DocumentCheckIcon
