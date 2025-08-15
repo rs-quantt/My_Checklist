@@ -25,6 +25,7 @@ interface UserCategorySummary {
   completedChecklists: number;
   completionPercentage: number;
   taskCode?: string;
+  updatedAt: string; // Add updatedAt to the interface
 }
 
 // Raw data structure fetched from Sanity for category summaries
@@ -41,6 +42,7 @@ interface RawCategorySummary {
   totalItems: number;
   passedItems: number;
   taskCode?: string;
+  updatedAt: string; // Add updatedAt to the interface
 }
 
 // New interface for individual category summary item in Admin List Page
@@ -52,6 +54,7 @@ export interface AdminCategoryListItem {
   totalChecklists: number;
   completedChecklists: number;
   completionPercentage: number;
+  updatedAt: string; // Add updatedAt to AdminCategoryListItem
 }
 
 export async function getMyCategorySummaries(
@@ -71,8 +74,9 @@ export async function getMyCategorySummaries(
         category->{_id, title},
         totalItems,
         passedItems,
-        taskCode
-      } | order(category->title asc)
+        taskCode,
+        updatedAt // Include updatedAt in the query
+      } | order(updatedAt desc) // Sort by updatedAt descending
     `;
 
     const params = { userId };
@@ -109,6 +113,7 @@ export async function getMyCategorySummaries(
               ? (completedChecklists / totalChecklists) * 100
               : 0,
           taskCode: summary.taskCode,
+          updatedAt: summary.updatedAt, // Add updatedAt
         };
 
         return processedItem;
@@ -138,8 +143,9 @@ export async function getAllIndividualCategorySummaries(): Promise<AdminCategory
         user->{_id, name},
         totalItems,
         passedItems,
-        taskCode
-      } | order(category->title asc, user->name asc, taskCode asc)
+        taskCode,
+        updatedAt // Include updatedAt
+      } | order(updatedAt desc) // Sort by updatedAt descending
     `;
 
     const rawSummaries: RawCategorySummary[] = await client.fetch(query);
@@ -173,6 +179,7 @@ export async function getAllIndividualCategorySummaries(): Promise<AdminCategory
             totalChecklists > 0
               ? (completedChecklists / totalChecklists) * 100
               : 0,
+          updatedAt: summary.updatedAt, // Add updatedAt
         };
       })
       .filter(Boolean) as AdminCategoryListItem[];

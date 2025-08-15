@@ -13,6 +13,11 @@ interface CategorySummary {
   completedChecklists: number;
   completionPercentage: number;
   taskCode?: string;
+  updatedAt: string; // Add updatedAt to the interface
+}
+
+interface GroupedCategorySummaries {
+  [date: string]: CategorySummary[];
 }
 
 const CACHE_KEY = 'myCategorySummariesCache';
@@ -20,7 +25,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 export default function MyCategorySummaryPage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
-  const [categorySummaries, setCategorySummaries] = useState<CategorySummary[]>([]);
+  const [groupedCategorySummaries, setGroupedCategorySummaries] = useState<GroupedCategorySummaries>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +40,8 @@ export default function MyCategorySummaryPage() {
       if (cachedData) {
         const { data, timestamp } = JSON.parse(cachedData);
         if (Date.now() - timestamp < CACHE_DURATION) {
-          setCategorySummaries(data);
+          const groupedData = groupSummaries(data);
+          setGroupedCategorySummaries(groupedData);
           setLoading(false);
           return;
         }
@@ -49,8 +55,9 @@ export default function MyCategorySummaryPage() {
           const errorData = await response.json();
           throw new Error(`Error: ${response.statusText} - ${errorData.error || 'Unknown'}`);
         }
-        const data = await response.json();
-        setCategorySummaries(data);
+        const data: CategorySummary[] = await response.json();
+        const groupedData = groupSummaries(data);
+        setGroupedCategorySummaries(groupedData);
         sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
       } catch (err) {
         const errorMessage =
@@ -64,6 +71,19 @@ export default function MyCategorySummaryPage() {
 
     fetchCategorySummaries();
   }, [isAuthenticated, user, authLoading]);
+
+  const groupSummaries = (summaries: CategorySummary[]) => {
+    // Group by date (YYYY-MM-DD)
+    const grouped: GroupedCategorySummaries = {};
+    summaries.forEach(summary => {
+      const date = new Date(summary.updatedAt).toISOString().split('T')[0]; // Get YYYY-MM-DD
+      if (!grouped[date]) {
+        grouped[date] = [];
+      }
+      grouped[date].push(summary);
+    });
+    return grouped;
+  };
 
   if (authLoading || loading) {
     return <LoadingSpinner />;
@@ -84,45 +104,65 @@ export default function MyCategorySummaryPage() {
     );
   }
 
+  const dates = Object.keys(groupedCategorySummaries).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">My Category Summaries</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-2">My Category Summaries</h1>
+      <p className="text-gray-600 mb-6">Overview of your progress across different checklist categories, grouped by their last update date.</p>
 
-      {categorySummaries.length === 0 ? (
+      {dates.length === 0 ? (
         <div className="text-center text-gray-600">
           <p>No category summaries found for your account.</p>
           <p className="mt-2">Start completing checklists to see your progress here!</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {categorySummaries.map((summary) => (
-            <Link
-              key={summary._id}
-              href={`/my-category-summary/${summary._id}`}
-              className="block"
-            >
-              <motion.div
-                className="bg-white rounded-lg shadow-md p-6 border border-gray-200 cursor-pointer"
-                whileHover={{ translateY: -5, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)" }}
-                transition={{ duration: 0.2 }}
-              >
-                <h2 className="text-xl font-semibold text-blue-700 mb-2">{summary.title}</h2>
-                {summary.taskCode && (
-                  <p className="text-gray-500 text-sm mb-2">Task Code: <span className="font-medium">{summary.taskCode}</span></p>
-                )}
-                <p className="text-gray-600">Total Checklists: <span className="font-medium">{summary.totalChecklists}</span></p>
-                <p className="text-gray-600">Completed: <span className="font-medium">{summary.completedChecklists}</span></p>
-                <div className="mt-4 bg-gray-200 rounded-full h-2.5">
-                  <div
-                    className="bg-blue-600 h-2.5 rounded-full"
-                    style={{ width: `${summary.completionPercentage}%` }}
-                  ></div>
-                </div>
-                <p className="text-sm text-gray-500 mt-2">{summary.completionPercentage.toFixed(0)}% Complete</p>
-              </motion.div>
-            </Link>
-          ))}
-        </div>
+        dates.map(date => (
+          <div key={date} className="mb-8 last:mb-0">
+            <div className="bg-blue-50 rounded-md px-4 py-2 mb-4 border-l-4 border-blue-500 flex items-center justify-between shadow-sm">
+              <h2 className="text-lg font-bold text-blue-800">
+                {new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </h2>
+              <span className="text-sm text-blue-600 font-medium">
+                ({groupedCategorySummaries[date].length} Summaries)
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {groupedCategorySummaries[date].map((summary) => (
+                <Link
+                  key={summary._id}
+                  href={`/my-category-summary/${summary._id}`}
+                  className="block"
+                >
+                  <motion.div
+                    className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 cursor-pointer"
+                    whileHover={{
+                      translateY: -3,
+                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                      borderColor: "#3b82f6" // blue-500
+                    }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <h2 className="text-lg font-bold text-blue-700 mb-1">{summary.title}</h2>
+                    {summary.taskCode && (
+                      <p className="text-gray-600 text-sm mb-1">Task Code: <span className="font-medium text-gray-700">{summary.taskCode}</span></p>
+                    )}
+                    <p className="text-gray-700 text-sm">Total Checklists: <span className="font-semibold">{summary.totalChecklists}</span></p>
+                    <p className="text-gray-700 text-sm mb-3">Completed: <span className="font-semibold">{summary.completedChecklists}</span></p>
+                    <div className="mt-auto bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
+                        style={{ width: `${summary.completionPercentage}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-xs font-semibold text-blue-700 mt-1">{summary.completionPercentage.toFixed(0)}% Complete</p>
+                    <p className="text-xs text-gray-500 mt-1">Last Updated: {new Date(summary.updatedAt).toLocaleString()}</p>
+                  </motion.div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))
       )}
     </div>
   );
