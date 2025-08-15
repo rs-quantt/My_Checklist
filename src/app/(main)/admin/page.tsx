@@ -185,16 +185,16 @@ const AdminDashboard: React.FC = () => {
           </Link>
 
           <Link
-            href="/admin/checklists"
+            href="/admin/category-summary"
             className="flex items-center space-x-4 p-6 bg-white rounded-lg shadow hover:shadow-xl transition duration-300 ease-in-out border border-gray-200"
           >
             <FaClipboardList className="text-gray-600 text-3xl" />
             <div>
               <h2 className="text-xl font-semibold text-gray-700 mb-1">
-                Checklist Summary
+                Category Summary
               </h2>
               <p className="text-gray-600 text-sm">
-                View summary of completed checklists.
+                View summary of completed categories.
               </p>
             </div>
           </Link>

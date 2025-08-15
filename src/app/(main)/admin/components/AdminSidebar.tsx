@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
-import { FaHome, FaUsers, FaClipboardList, FaExchangeAlt } from 'react-icons/fa';
-import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { FaHome, FaListAlt, FaUsers } from 'react-icons/fa'; // Added FaListAlt
 
 const AdminSidebar: React.FC = () => {
   const pathname = usePathname();
@@ -51,18 +51,19 @@ const AdminSidebar: React.FC = () => {
             </div>
           </Link>
         </motion.div>
+        {/* New link for Admin Category Summaries */}
         <motion.div
           whileHover={{ scale: 1.02, x: 5 }}
           whileTap={{ scale: 0.98 }}
           transition={{ type: 'spring', stiffness: 400, damping: 17 }}
         >
           <Link
-            href="/admin/checklists"
-            className={`flex items-center px-2 py-2 rounded-md transition duration-200 ${isActive('/admin/checklists') ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+            href="/admin/category-summary"
+            className={`flex items-center px-2 py-2 rounded-md transition duration-200 ${isActive('/admin/category-summary') ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
           >
             <div className="flex items-center">
-              <FaClipboardList className="mr-3" />
-              Checklist Summary
+              <FaListAlt className="mr-3" />
+              Category Summary
             </div>
           </Link>
         </motion.div>

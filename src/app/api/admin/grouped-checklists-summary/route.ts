@@ -6,12 +6,13 @@ export async function GET(request: Request) {
   const search = searchParams.get('search');
 
   try {
+    // Call the service without userId to get all users' checklists
     const groupedSummaries = await getGroupedChecklistSummaries({ search: search || '' });
     return NextResponse.json(groupedSummaries);
   } catch (error) {
-    console.error('API Error: Failed to fetch grouped admin checklist summaries', error);
+    console.error('API Error: Failed to fetch grouped all user checklist summaries', error);
     return NextResponse.json(
-      { message: 'Failed to fetch grouped admin checklist summaries.' },
+      { message: 'Failed to fetch grouped all user checklist summaries.' },
       { status: 500 },
     );
   }
