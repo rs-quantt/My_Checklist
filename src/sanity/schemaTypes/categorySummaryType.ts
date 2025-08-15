@@ -53,9 +53,7 @@ export const categorySummaryType = defineType({
       name: 'updatedAt',
       title: 'Updated At',
       type: 'datetime',
-      options: {
-        dateFormat: 'YYYY-MM-DDTHH:mm:ssZ',
-      },
+      // Removed dateFormat option to let Sanity handle it automatically
       validation: (rule) => rule.required(),
     }),
   ],

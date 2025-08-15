@@ -9,23 +9,34 @@ export const useMyChecklistLogic = () => {
   const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    null,
+  );
   const [checklistTemplates, setChecklistTemplates] = useState<Checklist[]>([]);
   const [currentChecklistIndex, setCurrentChecklistIndex] = useState<number>(0);
-  const [displayedChecklist, setDisplayedChecklist] = useState<Checklist | null>(null);
+  const [displayedChecklist, setDisplayedChecklist] =
+    useState<Checklist | null>(null);
   const [isTemplateLoading, setIsTemplateLoading] = useState(false);
   const [taskCode, setTaskCode] = useState<string>('');
+  const [taskCodeError, setTaskCodeError] = useState<string | null>(null);
   const [commitMessage, setCommitMessage] = useState<string>('');
-  
+
   // State to hold ALL item states across all checklists within the selected category
-  const [allChecklistsItemStates, setAllChecklistsItemStates] = useState<Record<string, ItemStateMap>>({});
+  const [allChecklistsItemStates, setAllChecklistsItemStates] = useState<
+    Record<string, ItemStateMap>
+  >({});
   // State to hold expanded/collapsed status for items across all checklists
-  const [allChecklistsExpandedStates, setAllChecklistsExpandedStates] = useState<Record<string, { [itemId: string]: boolean; }>>({});
+  const [allChecklistsExpandedStates, setAllChecklistsExpandedStates] =
+    useState<Record<string, { [itemId: string]: boolean }>>({});
 
   // Derived state for the currently displayed checklist's items
-  const currentChecklistItemStates = displayedChecklist ? allChecklistsItemStates[displayedChecklist._id] || {} : {};
+  const currentChecklistItemStates = displayedChecklist
+    ? allChecklistsItemStates[displayedChecklist._id] || {}
+    : {};
   // Derived state for the currently displayed checklist's expanded items
-  const currentExpandedItems = displayedChecklist ? allChecklistsExpandedStates[displayedChecklist._id] || {} : {};
+  const currentExpandedItems = displayedChecklist
+    ? allChecklistsExpandedStates[displayedChecklist._id] || {}
+    : {};
 
   const [isSaveButtonDisabled, setIsSaveButtonDisabled] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -43,7 +54,9 @@ export const useMyChecklistLogic = () => {
         const categoriesRes = await fetch('/api/categories');
 
         if (!categoriesRes.ok) {
-          throw new Error(`Failed to fetch categories: ${categoriesRes.status} ${categoriesRes.statusText}`);
+          throw new Error(
+            `Failed to fetch categories: ${categoriesRes.status} ${categoriesRes.statusText}`,
+          );
         }
 
         const categoriesData = await categoriesRes.json();
@@ -61,19 +74,25 @@ export const useMyChecklistLogic = () => {
   // Effect to initialize/load item states and expanded states when displayedChecklist changes
   useEffect(() => {
     if (displayedChecklist) {
-      setAllChecklistsItemStates(prev => {
+      setAllChecklistsItemStates((prev) => {
         if (!prev[displayedChecklist._id]) {
           // Initialize if this checklist's state doesn't exist yet
           const initialStatesForCurrentChecklist: ItemStateMap = {};
-          displayedChecklist.items.forEach(item => {
-            initialStatesForCurrentChecklist[item._id] = { status: Status.EMPTY, note: '' };
+          displayedChecklist.items.forEach((item) => {
+            initialStatesForCurrentChecklist[item._id] = {
+              status: Status.EMPTY,
+              note: '',
+            };
           });
-          return { ...prev, [displayedChecklist._id]: initialStatesForCurrentChecklist };
+          return {
+            ...prev,
+            [displayedChecklist._id]: initialStatesForCurrentChecklist,
+          };
         }
         return prev; // Use existing states if already present
       });
 
-      setAllChecklistsExpandedStates(prev => {
+      setAllChecklistsExpandedStates((prev) => {
         if (!prev[displayedChecklist._id]) {
           return { ...prev, [displayedChecklist._id]: {} }; // Initialize expanded state for this checklist
         }
@@ -81,7 +100,6 @@ export const useMyChecklistLogic = () => {
       });
     }
   }, [displayedChecklist]);
-
 
   const handleCategoryChange = async (categoryId: string) => {
     if (!categoryId) {
@@ -104,9 +122,13 @@ export const useMyChecklistLogic = () => {
     setIsTemplateLoading(true);
 
     try {
-      const checklistRes = await fetch(`/api/category-checklists?categoryId=${categoryId}`);
+      const checklistRes = await fetch(
+        `/api/category-checklists?categoryId=${categoryId}`,
+      );
       if (!checklistRes.ok) {
-        throw new Error(`Failed to fetch checklist templates for category: ${checklistRes.status} ${checklistRes.statusText}`);
+        throw new Error(
+          `Failed to fetch checklist templates for category: ${checklistRes.status} ${checklistRes.statusText}`,
+        );
       }
       const checklistData = await checklistRes.json();
       setChecklistTemplates(checklistData);
@@ -127,46 +149,97 @@ export const useMyChecklistLogic = () => {
   };
 
   // Helper to validate a single checklist's items based on its specific itemStates
-  const validateChecklistItems = useCallback((checklist: Checklist) => {
-    const errors: string[] = [];
-    const statesForThisChecklist = allChecklistsItemStates[checklist._id] || {};
-    checklist.items.forEach((item) => {
-      const state = statesForThisChecklist[item._id];
-      if (!state || state.status === Status.EMPTY) {
-        errors.push(`Item "${item.label}" status has not been selected.`);
-      }
-      if (
-        (state?.status === Status.INCOMPLETE || state?.status === Status.NA) &&
-        !state?.note?.trim()
-      ) {
-        errors.push(`Item "${item.label}" requires a note.`);
-      }
-    });
-    return errors;
-  }, [allChecklistsItemStates]);
+  const validateChecklistItems = useCallback(
+    (checklist: Checklist) => {
+      const errors: string[] = [];
+      const statesForThisChecklist =
+        allChecklistsItemStates[checklist._id] || {};
+      checklist.items.forEach((item) => {
+        const state = statesForThisChecklist[item._id];
+        if (!state || state.status === Status.EMPTY) {
+          errors.push(`Item "${item.label}" status has not been selected.`);
+        }
+        if (
+          (state?.status === Status.INCOMPLETE ||
+            state?.status === Status.NA) &&
+          !state?.note?.trim()
+        ) {
+          errors.push(`Item "${item.label}" requires a note.`);
+        }
+      });
+      return errors;
+    },
+    [allChecklistsItemStates],
+  );
 
-  const handleChecklistNavigation = () => {
+  const validateTaskCode = (code: string): string | null => {
+    const trimmedCode = code.trim();
+    if (trimmedCode.length === 0) {
+      return null; // Don't show error if field is empty (will be handled by required attribute)
+    }
+    if (trimmedCode.length < 3) {
+      return 'Task Code must be at least 3 characters long.';
+    }
+    if (!/^[a-zA-Z0-9]*$/.test(trimmedCode)) {
+      return 'Task Code can only contain numbers and letters.';
+    }
+    return null; // No error
+  };
+
+  const handleSetTaskCode = (value: string) => {
+    setTaskCode(value);
+    // Do NOT set taskCodeError here. It should only be set on blur.
+  };
+
+  const handleTaskCodeBlur = () => {
+    const trimmedValue = taskCode.trim().toUpperCase();
+    setTaskCode(trimmedValue);
+    const error = validateTaskCode(trimmedValue);
+    setTaskCodeError(error);
+  };
+
+  const handleChecklistNavigation = (direction: 'next' | 'previous') => {
     if (!displayedChecklist) return;
 
-    // Validate the current checklist BEFORE navigating
-    const errors = validateChecklistItems(displayedChecklist);
-    if (errors.length > 0) {
-      alert(`Please complete the current checklist before proceeding:\n` + errors.join('\n'));
-      return;
+    // Validate the current checklist BEFORE navigating to the next one
+    if (direction === 'next') {
+      const errors = validateChecklistItems(displayedChecklist);
+      if (errors.length > 0) {
+        setError(
+          `Please complete the current checklist before proceeding:\n` +
+            errors.join('\n'),
+        );
+        return;
+      }
+    }
+    setError(null); // Clear previous error if validation passes
+
+    let newIndex = currentChecklistIndex;
+    if (direction === 'next') {
+      newIndex = currentChecklistIndex + 1;
+    } else if (direction === 'previous') {
+      newIndex = currentChecklistIndex - 1;
     }
 
-    const nextIndex = currentChecklistIndex + 1;
-    if (nextIndex < checklistTemplates.length) {
-      setCurrentChecklistIndex(nextIndex);
-      setDisplayedChecklist(checklistTemplates[nextIndex]); // This will trigger the useEffect to load/initialize states
+    if (newIndex >= 0 && newIndex < checklistTemplates.length) {
+      setCurrentChecklistIndex(newIndex);
+      setDisplayedChecklist(checklistTemplates[newIndex]);
       window.scrollTo(0, 0);
     } else {
-      console.warn("Attempted to navigate past last checklist.");
+      console.warn('Attempted to navigate out of bounds.');
     }
   };
 
   const saveAllChecklists = async () => {
     if (!loggedInUserId || !selectedCategory) return;
+
+    // Perform final task code validation before saving all checklists
+    const finalTaskCodeError = validateTaskCode(taskCode);
+    if (finalTaskCodeError) {
+      setTaskCodeError(finalTaskCodeError);
+      setError('Please correct the Task Code before saving.');
+      return;
+    }
 
     setIsSaving(true);
     let hasOverallError = false;
@@ -177,12 +250,19 @@ export const useMyChecklistLogic = () => {
       // Validate each template using its specific states from allChecklistsItemStates
       const validationErrors = validateChecklistItems(template);
       if (validationErrors.length > 0) {
-        alert(`Validation errors for checklist "${template.title}":\n` + validationErrors.join('\n'));
+        setError(
+          `Validation errors for checklist "${template.title}":\n` +
+            validationErrors.join('\n'),
+        );
         hasOverallError = true;
         break;
       }
 
-      const itemsToSave = template.items.filter(item => allChecklistsItemStates[template._id]?.[item._id]?.status !== Status.EMPTY);
+      const itemsToSave = template.items.filter(
+        (item) =>
+          allChecklistsItemStates[template._id]?.[item._id]?.status !==
+          Status.EMPTY,
+      );
 
       if (itemsToSave.length === 0) {
         continue;
@@ -190,13 +270,15 @@ export const useMyChecklistLogic = () => {
 
       const payload = {
         userId: loggedInUserId,
-        taskCode,
+        taskCode: taskCode.trim().toUpperCase(), // Ensure taskCode is trimmed and uppercased for saving
         commitMessage,
         checklistId: template._id,
         categoryId: selectedCategory._id,
-        items: itemsToSave.map(item => ({
+        items: itemsToSave.map((item) => ({
           itemId: item._id,
-          status: allChecklistsItemStates[template._id]?.[item._id]?.status || Status.EMPTY,
+          status:
+            allChecklistsItemStates[template._id]?.[item._id]?.status ||
+            Status.EMPTY,
           note: allChecklistsItemStates[template._id]?.[item._id]?.note || '',
         })),
       };
@@ -209,14 +291,19 @@ export const useMyChecklistLogic = () => {
         });
 
         if (!res.ok) {
-          throw new Error(`Save failed for checklist "${template.title}": ` + (await res.text()));
+          throw new Error(
+            `Save failed for checklist "${template.title}": ` +
+              (await res.text()),
+          );
         }
         const { summaryId } = await res.json();
         lastSavedId = summaryId;
         savedAnyChecklist = true;
       } catch (error) {
         console.error(error);
-        alert(`An error occurred while saving checklist "${template.title}". Please try again.`);
+        setError(
+          `An error occurred while saving checklist "${template.title}". Please try again.`,
+        );
         hasOverallError = true;
         break;
       }
@@ -227,21 +314,39 @@ export const useMyChecklistLogic = () => {
     if (!hasOverallError && savedAnyChecklist) {
       setSavedChecklistId(lastSavedId);
       setShowSuccessPopup(true);
+      setError(null); // Clear overall error on success
       window.scrollTo(0, 0);
     } else if (!savedAnyChecklist && !hasOverallError) {
-      alert("No checklist items were marked for saving across all checklists.");
+      setError(
+        'No checklist items were marked for saving across all checklists.',
+      );
     }
   };
 
   useEffect(() => {
-    if (!loggedInUserId || !taskCode || !selectedCategory || !displayedChecklist) {
+    // Only check for taskCodeError if taskCode is not empty
+    const isTaskCodeInvalid = taskCode.trim() !== '' && taskCodeError !== null;
+
+    if (
+      !loggedInUserId ||
+      isTaskCodeInvalid ||
+      !selectedCategory ||
+      !displayedChecklist
+    ) {
       setIsSaveButtonDisabled(true);
       return;
     }
 
     const currentChecklistErrors = validateChecklistItems(displayedChecklist);
     setIsSaveButtonDisabled(currentChecklistErrors.length > 0);
-  }, [loggedInUserId, taskCode, selectedCategory, displayedChecklist, validateChecklistItems]);
+  }, [
+    loggedInUserId,
+    taskCode,
+    taskCodeError,
+    selectedCategory,
+    displayedChecklist,
+    validateChecklistItems,
+  ]);
 
   const resetForm = () => {
     setSelectedCategory(null);
@@ -249,6 +354,7 @@ export const useMyChecklistLogic = () => {
     setCurrentChecklistIndex(0);
     setDisplayedChecklist(null);
     setTaskCode('');
+    setTaskCodeError(null);
     setCommitMessage('');
     setAllChecklistsItemStates({}); // Full form reset
     setAllChecklistsExpandedStates({}); // Full form reset
@@ -258,7 +364,7 @@ export const useMyChecklistLogic = () => {
   // Update currentChecklistItemStates via allChecklistsItemStates
   const handleStatusChange = (itemId: string, status: Status) => {
     if (!displayedChecklist) return;
-    setAllChecklistsItemStates(prev => ({
+    setAllChecklistsItemStates((prev) => ({
       ...prev,
       [displayedChecklist._id]: {
         ...prev[displayedChecklist._id],
@@ -270,7 +376,7 @@ export const useMyChecklistLogic = () => {
   // Update currentExpandedItems via allChecklistsExpandedStates
   const toggleItem = (itemId: string) => {
     if (!displayedChecklist) return;
-    setAllChecklistsExpandedStates(prev => ({
+    setAllChecklistsExpandedStates((prev) => ({
       ...prev,
       [displayedChecklist._id]: {
         ...prev[displayedChecklist._id],
@@ -282,17 +388,13 @@ export const useMyChecklistLogic = () => {
   // Update currentChecklistItemStates via allChecklistsItemStates
   const handleNoteChange = (itemId: string, note: string) => {
     if (!displayedChecklist) return;
-    setAllChecklistsItemStates(prev => ({
+    setAllChecklistsItemStates((prev) => ({
       ...prev,
       [displayedChecklist._id]: {
         ...prev[displayedChecklist._id],
         [itemId]: { ...prev[displayedChecklist._id]?.[itemId], note },
       },
     }));
-  };
-
-  const handleTaskCodeBlur = () => {
-    setTaskCode((prev) => prev.toUpperCase());
   };
 
   return {
@@ -306,7 +408,8 @@ export const useMyChecklistLogic = () => {
     displayedChecklist,
     isTemplateLoading,
     taskCode,
-    setTaskCode,
+    setTaskCode: handleSetTaskCode, // Use the new handler
+    taskCodeError,
     commitMessage,
     setCommitMessage,
     itemStates: currentChecklistItemStates, // Expose current checklist's states to component

@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import BackButton from '@/app/components/BackButton';
 import { AdminCategoryListItem } from '@/services/categoryService';
+import CompletionCircle from '@/app/components/CompletionCircle'; // Import CompletionCircle
 
 interface GroupedAdminCategorySummaries {
   [date: string]: AdminCategoryListItem[];
@@ -45,7 +46,8 @@ export default function AdminCategorySummaryPage() {
   const groupSummaries = (summaries: AdminCategoryListItem[]) => {
     const grouped: GroupedAdminCategorySummaries = {};
     summaries.forEach(summary => {
-      const date = new Date(summary.updatedAt).toISOString().split('T')[0]; // Get YYYY-MM-DD
+      // Get the date string in the local timezone (e.g., "8/15/2025")
+      const date = new Date(summary.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric' });
       if (!grouped[date]) {
         grouped[date] = [];
       }
@@ -62,7 +64,14 @@ export default function AdminCategorySummaryPage() {
     return <div className="text-center text-red-500 mt-8">Error: {error}</div>;
   }
 
-  const dates = Object.keys(groupedCategorySummaries).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  // Sort dates in descending order
+  const dates = Object.keys(groupedCategorySummaries).sort((a, b) => {
+    const [monthA, dayA, yearA] = a.split('/').map(Number);
+    const [monthB, dayB, yearB] = b.split('/').map(Number);
+    const dateA = new Date(yearA, monthA - 1, dayA);
+    const dateB = new Date(yearB, monthB - 1, dayB);
+    return dateB.getTime() - dateA.getTime();
+  });
 
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
@@ -96,7 +105,7 @@ export default function AdminCategorySummaryPage() {
                   className="block"
                 >
                   <motion.div
-                    className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 cursor-pointer"
+                    className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 cursor-pointer flex flex-col h-full"
                     whileHover={{
                       translateY: -3,
                       boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
@@ -109,16 +118,20 @@ export default function AdminCategorySummaryPage() {
                     {summary.taskCode && (
                       <p className="text-gray-600 text-sm mb-1">Task Code: <span className="font-medium text-gray-700">{summary.taskCode}</span></p>
                     )}
-                    <p className="text-gray-700 text-sm">Total Checklists: <span className="font-semibold">{summary.totalChecklists}</span></p>
-                    <p className="text-gray-700 text-sm mb-3">Completed: <span className="font-semibold">{summary.completedChecklists}</span></p>
-                    <div className="mt-auto bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
-                        style={{ width: `${summary.completionPercentage}%` }}
-                      ></div>
+                    
+                    {/* Horizontal layout for completion circle and details */}
+                    <div className="flex items-center mt-3 mb-3">
+                      <div className="flex-shrink-0 mr-4">
+                        <CompletionCircle percentage={summary.completionPercentage} />
+                      </div>
+                      <div>
+                        <p className="text-gray-700 text-sm">Total Checklists: <span className="font-semibold">{summary.totalChecklists}</span></p>
+                        <p className="text-gray-700 text-sm">Completed: <span className="font-semibold">{summary.completedChecklists}</span></p>
+                        <p className="text-sm font-semibold text-blue-700 mt-1">{summary.completionPercentage.toFixed(0)}% Complete</p>
+                      </div>
                     </div>
-                    <p className="text-xs font-semibold text-blue-700 mt-1">{summary.completionPercentage.toFixed(0)}% Complete</p>
-                    <p className="text-xs text-gray-500 mt-1">Last Updated: {new Date(summary.updatedAt).toLocaleString()}</p>
+
+                    <p className="text-xs text-gray-500 mt-auto text-right">Last Updated: {new Date(summary.updatedAt).toLocaleDateString()} {new Date(summary.updatedAt).toLocaleTimeString()}</p>
                   </motion.div>
                 </Link>
               ))}

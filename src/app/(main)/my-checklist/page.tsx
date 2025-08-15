@@ -6,7 +6,7 @@ import InlineLoadingSpinner from '@/app/components/InlineLoadingSpinner';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 import { PortableText } from '@portabletext/react';
 import { AnimatePresence, motion, Variants } from 'framer-motion';
-import { FaQuestionCircle, FaSave, FaArrowRight } from 'react-icons/fa'; // Added FaArrowRight
+import { FaQuestionCircle, FaSave, FaArrowRight, FaArrowLeft, FaTimesCircle } from 'react-icons/fa';
 import ptComponents from '../../components/ptComponents';
 import { Status } from '@/types/enum';
 import { useMyChecklistLogic } from '@/hooks/useMyChecklistLogic';
@@ -40,6 +40,7 @@ export default function MyChecklistPage() {
     isTemplateLoading,
     taskCode,
     setTaskCode,
+    taskCodeError,
     commitMessage,
     setCommitMessage,
     itemStates,
@@ -52,8 +53,8 @@ export default function MyChecklistPage() {
     initialLoading,
     savedChecklistId,
     handleCategoryChange,
-    handleChecklistNavigation, // New function
-    saveAllChecklists, // New function
+    handleChecklistNavigation,
+    saveAllChecklists,
     resetForm,
     handleStatusChange,
     toggleItem,
@@ -62,11 +63,10 @@ export default function MyChecklistPage() {
   } = useMyChecklistLogic();
 
   const isLastChecklist = currentChecklistIndex === checklistTemplates.length - 1;
+  const isFirstChecklist = currentChecklistIndex === 0;
 
   if (initialLoading || sessionStatus === 'loading')
     return <LoadingSpinner text="Loading page..." />;
-  if (error)
-    return <div className="text-red-500 text-center mt-10">{error}</div>;
   if (sessionStatus === 'unauthenticated') {
     router.push('/login');
     return null;
@@ -83,7 +83,7 @@ export default function MyChecklistPage() {
         >
           <div className="flex justify-between items-center">
             <BackButton />
-            {!selectedCategory && ( // Tour button only visible when no category is selected
+            {!selectedCategory && (
               <button
                 id="start-my-checklist-tour-button"
                 className="text-blue-500 hover:text-blue-700 transition-colors"
@@ -93,7 +93,12 @@ export default function MyChecklistPage() {
               </button>
             )}
           </div>
-
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+              <strong className="font-bold">Error: </strong>
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
           <motion.div className="text-center mb-6" variants={itemVariants}>
             <div className="flex items-center justify-center">
               <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 leading-tight">
@@ -139,13 +144,18 @@ export default function MyChecklistPage() {
                   Task Code <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className="appearance-none block w-full bg-white border border-gray-300 text-gray-800 py-2 px-3 rounded-md leading-tight focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm text-base"
+                  className={`appearance-none block w-full bg-white border ${taskCodeError ? 'border-red-500' : 'border-gray-300'} text-gray-800 py-2 px-3 rounded-md leading-tight focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm text-base`}
                   type="text"
                   placeholder="Enter task code (e.g., TASK-001)"
                   value={taskCode}
                   onChange={(e) => setTaskCode(e.target.value)}
                   onBlur={handleTaskCodeBlur}
                 />
+                {taskCodeError && ( // Only show error if taskCodeError is not null
+                  <p className="flex items-center text-red-500 font-medium text-sm mt-1">
+                    <FaTimesCircle className="mr-2" /> {taskCodeError}
+                  </p>
+                )}
               </motion.div>
               <motion.div
                 className="space-y-2 md:col-span-2"
@@ -414,10 +424,33 @@ export default function MyChecklistPage() {
                           })}
                         </motion.ul>
                     <div className="border-t border-gray-200 pt-6 mt-6">
-                      <div className="flex justify-end">
+                      <div className="flex justify-between">
+                        {!isFirstChecklist && (
+                          <motion.button
+                            id="previous-checklist-button"
+                            onClick={() => handleChecklistNavigation('previous')}
+                            disabled={isSaving} // Disabled when saving
+                            className="relative flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-blue-600 text-white font-bold shadow-md transition-all duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed w-48 h-10"
+                            whileTap={!isSaving ? { scale: 0.97 } : {}}
+                          >
+                            <AnimatePresence mode="wait" initial={false}>
+                              <motion.span
+                                key="action-text-prev"
+                                initial={{ y: 10, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -10, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="absolute flex items-center justify-center"
+                              >
+                                <FaArrowLeft className="mr-2" /> Previous Checklist
+                              </motion.span>
+                            </AnimatePresence>
+                          </motion.button>
+                        )}
+                        {isFirstChecklist && <div className="w-48 h-10"></div>}{/* Placeholder to balance space if previous button is hidden*/}
                         <motion.button
                           id="action-button"
-                          onClick={isLastChecklist ? saveAllChecklists : handleChecklistNavigation}
+                          onClick={isLastChecklist ? saveAllChecklists : () => handleChecklistNavigation('next')}
                           disabled={isSaveButtonDisabled || isSaving}
                           className="relative flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-blue-600 text-white font-bold shadow-md transition-all duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed w-48 h-10"
                           whileTap={
