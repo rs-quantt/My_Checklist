@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
@@ -26,7 +26,8 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 export default function MyCategorySummaryPage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
-  const [groupedCategorySummaries, setGroupedCategorySummaries] = useState<GroupedCategorySummaries>({});
+  const [groupedCategorySummaries, setGroupedCategorySummaries] =
+    useState<GroupedCategorySummaries>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,20 +52,30 @@ export default function MyCategorySummaryPage() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/my-category-summary?userId=${user.id}`);
+        const response = await fetch(
+          `/api/my-category-summary?userId=${user.id}`,
+        );
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(`Error: ${response.statusText} - ${errorData.error || 'Unknown'}`);
+          throw new Error(
+            `Error: ${response.statusText} - ${errorData.error || 'Unknown'}`,
+          );
         }
         const data: CategorySummary[] = await response.json();
         const groupedData = groupSummaries(data);
         setGroupedCategorySummaries(groupedData);
-        sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+        sessionStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({ data, timestamp: Date.now() }),
+        );
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'An unknown error occurred';
         setError(errorMessage);
-        console.error("MyCategorySummaryPage Debug: Fetch error:", errorMessage);
+        console.error(
+          'MyCategorySummaryPage Debug: Fetch error:',
+          errorMessage,
+        );
       } finally {
         setLoading(false);
       }
@@ -76,9 +87,13 @@ export default function MyCategorySummaryPage() {
   const groupSummaries = (summaries: CategorySummary[]) => {
     // Group by date (YYYY-MM-DD) based on local time
     const grouped: GroupedCategorySummaries = {};
-    summaries.forEach(summary => {
+    summaries.forEach((summary) => {
       // Get the date string in the local timezone (e.g., "8/15/2025")
-      const date = new Date(summary.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric' });
+      const date = new Date(summary.updatedAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+      });
       if (!grouped[date]) {
         grouped[date] = [];
       }
@@ -98,8 +113,13 @@ export default function MyCategorySummaryPage() {
   if (!isAuthenticated || !user) {
     return (
       <div className="text-center mt-8">
-        <p className="text-lg text-gray-700">Please log in to view your category summaries.</p>
-        <Link href="/login" className="mt-4 inline-block bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">
+        <p className="text-lg text-gray-700">
+          Please log in to view your category summaries.
+        </p>
+        <Link
+          href="/login"
+          className="mt-4 inline-block bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+        >
           Go to Login
         </Link>
       </div>
@@ -117,20 +137,68 @@ export default function MyCategorySummaryPage() {
 
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">My Category Summary</h1>
-      <p className="text-gray-600 mb-6">Overview of your progress across different checklist categories, grouped by their last update date.</p>
+      <div className="flex flex-wrap justify-between items-center mb-6">
+        <div className="mb-4 sm:mb-0">
+          <h1 className="text-3xl font-bold text-gray-900">
+            My Category Summary
+          </h1>
+          <p className="text-gray-600 text-sm mt-1">
+            Overview of your progress across different checklist categories.
+          </p>
+        </div>
+        <div className="flex flex-col items-end">
+          <p className="text-gray-600 text-sm mb-2">
+            <strong>Looking to create your own checklist?</strong>
+          </p>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+          >
+            <Link
+              href="/my-checklist"
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold !text-white shadow-md transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+            >
+              Create a new task
+              <svg
+                className="-mr-1 ml-2 h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </Link>
+          </motion.div>
+        </div>
+      </div>
+      <p className="text-gray-600 mb-6">
+        Checklists are grouped by their last update date.
+      </p>
 
       {dates.length === 0 ? (
         <div className="text-center text-gray-600">
           <p>No category summaries found for your account.</p>
-          <p className="mt-2">Start completing checklists to see your progress here!</p>
+          <p className="mt-2">
+            Start completing checklists to see your progress here!
+          </p>
         </div>
       ) : (
-        dates.map(date => (
+        dates.map((date) => (
           <div key={date} className="mb-8 last:mb-0">
             <div className="bg-blue-50 rounded-md px-4 py-2 mb-4 border-l-4 border-blue-500 flex items-center justify-between shadow-sm">
               <h2 className="text-lg font-bold text-blue-800">
-                {new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                {new Date(date).toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
               </h2>
               <span className="text-sm text-blue-600 font-medium">
                 ({groupedCategorySummaries[date].length} Summaries)
@@ -147,29 +215,55 @@ export default function MyCategorySummaryPage() {
                     className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 cursor-pointer flex flex-col h-full"
                     whileHover={{
                       translateY: -3,
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                      borderColor: "#3b82f6" // blue-500
+                      boxShadow:
+                        '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                      borderColor: '#3b82f6', // blue-500
                     }}
                     transition={{ duration: 0.2 }}
                   >
-                    <h2 className="text-lg font-bold text-blue-700 mb-1">{summary.title}</h2>
+                    <h2 className="text-lg font-bold text-blue-700 mb-1">
+                      {summary.title}
+                    </h2>
                     {summary.taskCode && (
-                      <p className="text-gray-600 text-sm mb-1">Task Code: <span className="font-medium text-gray-700">{summary.taskCode}</span></p>
+                      <p className="text-gray-600 text-sm mb-1">
+                        Task Code:{' '}
+                        <span className="font-medium text-gray-700">
+                          {summary.taskCode}
+                        </span>
+                      </p>
                     )}
 
                     {/* Horizontal layout for completion circle and details */}
                     <div className="flex items-center mt-3 mb-3">
                       <div className="flex-shrink-0 mr-4">
-                        <CompletionCircle percentage={summary.completionPercentage} />
+                        <CompletionCircle
+                          percentage={summary.completionPercentage}
+                        />
                       </div>
                       <div>
-                        <p className="text-gray-700 text-sm">Total Checklists: <span className="font-semibold">{summary.totalChecklists}</span></p>
-                        <p className="text-gray-700 text-sm">Completed: <span className="font-semibold">{summary.completedChecklists}</span></p>
-                        <p className="text-sm font-semibold text-blue-700 mt-1">{summary.completionPercentage.toFixed(0)}% Complete</p>
+                        <p className="text-gray-700 text-sm">
+                          Total Checklists:{' '}
+                          <span className="font-semibold">
+                            {summary.totalChecklists}
+                          </span>
+                        </p>
+                        <p className="text-gray-700 text-sm">
+                          Completed:{' '}
+                          <span className="font-semibold">
+                            {summary.completedChecklists}
+                          </span>
+                        </p>
+                        <p className="text-sm font-semibold text-blue-700 mt-1">
+                          {summary.completionPercentage.toFixed(0)}% Complete
+                        </p>
                       </div>
                     </div>
 
-                    <p className="text-xs text-gray-500 mt-auto text-right">Last Updated: {new Date(summary.updatedAt).toLocaleDateString()} {new Date(summary.updatedAt).toLocaleTimeString()}</p>
+                    <p className="text-xs text-gray-500 mt-auto text-right">
+                      Last Updated:{' '}
+                      {new Date(summary.updatedAt).toLocaleDateString()}{' '}
+                      {new Date(summary.updatedAt).toLocaleTimeString()}
+                    </p>
                   </motion.div>
                 </Link>
               ))}

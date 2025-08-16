@@ -39,18 +39,18 @@ interface PublicChecklistDetailProps {
 const getStatusBadgeColor = (status: Status) => {
   switch (status) {
     case 'done':
-      return 'bg-green-100 text-green-800';
+      return 'bg-emerald-50 text-emerald-700'; // Softer green
     case 'incomplete':
-      return 'bg-yellow-100 text-yellow-800';
+      return 'bg-amber-50 text-amber-700'; // Softer yellow/amber
     case 'na':
-      return 'bg-gray-100 text-gray-800';
+      return 'bg-gray-50 text-gray-700'; // Softer gray
     default:
-      return 'bg-gray-100 text-gray-800';
+      return 'bg-gray-50 text-gray-700';
   }
 };
 
 const itemVariants: Variants = {
-  hidden: { y: 20, opacity: 0 },
+  hidden: { y: 15, opacity: 0 }, // Slightly less movement
   visible: {
     y: 0,
     opacity: 1,
@@ -62,7 +62,7 @@ const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.07, delayChildren: 0.2 },
+    transition: { staggerChildren: 0.05, delayChildren: 0.1 }, // Faster stagger
   },
 };
 
@@ -100,12 +100,12 @@ export default function PublicChecklistDetail({ checklist }: PublicChecklistDeta
   const naPercentage = totalItems > 0 ? (naCount / totalItems) * 100 : 0;
 
   return (
-    <div className="bg-white rounded-lg p-8 max-w-4xl mx-auto">
-      <div className="border-b pb-4 mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">
+    <div className="bg-white rounded-xl shadow-sm p-6 max-w-4xl mx-auto border border-gray-100"> {/* Refined container styling */}
+      <div className="border-b border-gray-100 pb-4 mb-5"> {/* Subtle border, refined margin */}
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 tracking-tight">
           {checklist.checklist.title}
         </h1>
-        <div className="flex justify-between items-center mt-2 text-sm text-gray-600">
+        <div className="flex flex-wrap justify-between items-center mt-2 text-sm text-gray-500"> {/* Softer text color */}
           <p>
             <span className="font-semibold">User:</span> {checklist.user.name}
           </p>
@@ -116,7 +116,7 @@ export default function PublicChecklistDetail({ checklist }: PublicChecklistDeta
          {checklist.commitMessage && (
           <div className="mt-4">
               <p className="text-sm text-gray-600 font-semibold">Commit Message:</p>
-              <p className="text-sm text-gray-800 bg-gray-100 p-2 mt-1 rounded-md whitespace-pre-wrap">
+              <p className="text-sm text-gray-700 bg-gray-50 p-2 mt-1 rounded-md whitespace-pre-wrap border border-gray-100"> {/* Softer background, added subtle border */}
                   {checklist.commitMessage}
               </p>
           </div>
@@ -124,45 +124,45 @@ export default function PublicChecklistDetail({ checklist }: PublicChecklistDeta
       </div>
 
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-700 mb-2">
+        <h2 className="text-xl font-semibold text-gray-700 mb-3"> {/* Smaller heading, refined margin */}
           Completion Status
         </h2>
         {totalItems > 0 ? (
           <>
-            <div className="w-full bg-gray-200 rounded-full h-6 flex overflow-hidden">
+            <div className="w-full bg-gray-200 rounded-full h-4 flex overflow-hidden"> {/* Thinner progress bar */}
               <div
-                className="bg-green-500 h-6"
+                className="bg-emerald-400 h-4" // Softer green
                 style={{ width: `${donePercentage}%` }}
                 title={`Done: ${donePercentage.toFixed(1)}%`}
               />
               <div
-                className="bg-yellow-500 h-6"
+                className="bg-amber-400 h-4" // Softer yellow/amber
                 style={{ width: `${incompletePercentage}%` }}
                  title={`Incomplete: ${incompletePercentage.toFixed(1)}%`}
               />
               <div
-                className="bg-gray-400 h-6"
+                className="bg-gray-300 h-4" // Softer gray
                 style={{ width: `${naPercentage}%` }}
                  title={`N/A: ${naPercentage.toFixed(1)}%`}
               />
             </div>
-            <div className="flex justify-between mt-2 text-sm text-gray-600">
-               <div className="flex items-center">
-                 <span className="w-3 h-3 rounded-full bg-green-500 mr-2"></span>
+            <div className="flex justify-between mt-2 text-xs text-gray-500"> {/* Smaller text, softer color */}
+               <div className="flex items-center space-x-1">
+                 <span className="w-2 h-2 rounded-full bg-emerald-400"></span> {/* Smaller circles */}
                  <span>Done ({doneCount}): {donePercentage.toFixed(1)}%</span>
                </div>
-               <div className="flex items-center">
-                 <span className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></span>
+               <div className="flex items-center space-x-1">
+                 <span className="w-2 h-2 rounded-full bg-amber-400"></span>
                  <span>Incomplete ({incompleteCount}): {incompletePercentage.toFixed(1)}%</span>
                </div>
-               <div className="flex items-center">
-                 <span className="w-3 h-3 rounded-full bg-gray-400 mr-2"></span>
+               <div className="flex items-center space-x-1">
+                 <span className="w-2 h-2 rounded-full bg-gray-300"></span>
                  <span>N/A ({naCount}): {naPercentage.toFixed(1)}%</span>
                </div>
             </div>
           </>
         ) : (
-           <p className="text-gray-500">No items in this checklist.</p>
+           <p className="text-gray-500 text-sm">No items in this checklist.</p>
         )}
       </div>
 
@@ -171,7 +171,7 @@ export default function PublicChecklistDetail({ checklist }: PublicChecklistDeta
           Checklist Items
         </h2>
         <motion.ul
-          className="space-y-6"
+          className="space-y-4" // Reduced space
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -188,58 +188,59 @@ export default function PublicChecklistDetail({ checklist }: PublicChecklistDeta
                   : 'Low';
             const priorityClass =
               priority === '1'
-                ? 'bg-red-200 text-red-900'
+                ? 'bg-rose-50 text-rose-700' // Softer red
                 : priority === '2'
-                  ? 'bg-yellow-200 text-yellow-900'
-                  : 'bg-blue-200 text-blue-900';
+                  ? 'bg-amber-50 text-amber-700' // Softer yellow
+                  : 'bg-blue-50 text-blue-700'; // Softer blue
 
             return (
               <motion.li
                 key={item._key || index}
                 variants={itemVariants}
-                className={`relative overflow-hidden rounded-lg bg-white transition-shadow duration-200 ease-in-out border border-gray-200`}
+                className={`relative overflow-hidden rounded-lg bg-white border border-gray-100 shadow-sm transition-shadow duration-200 ease-in-out`} // Refined border and shadow
               >
-                {/* REMOVED THE COLOR BAR DIV */}
-                <div className="p-4"> {/* Adjusted padding from pl-6 to p-4 */}
+                <div className="p-3"> {/* Reduced padding */}
                   <div
-                    className="flex items-center cursor-pointer"
+                    className="flex items-center cursor-pointer justify-between gap-2" // Added gap
                     onClick={() => toggleItem(item._key)}
                   >
-                    <p className="font-semibold text-lg text-gray-800 flex-grow">
+                    <p className="font-medium text-md text-gray-800 flex-grow"> {/* Reduced text size, medium font weight */}
                       {item.title}
                     </p>
-                    {priority && (
+                    <div className="flex-shrink-0 flex items-center gap-2"> {/* Group badges, add gap */}
+                      {priority && (
+                        <span
+                          className={`px-2 py-0.5 text-xs font-semibold rounded-full ${priorityClass}`}
+                        >
+                          {priorityText}
+                        </span>
+                      )}
                       <span
-                        className={`px-3 py-1 text-xs font-bold rounded-full mr-4 ${priorityClass}`}
+                        className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusBadgeColor(
+                          item.status,
+                        )}`}
                       >
-                        {priorityText}
+                        {item.status.toUpperCase()}
                       </span>
-                    )}
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(
-                        item.status,
-                      )} mr-4`}
-                    >
-                      {item.status.toUpperCase()}
-                    </span>
-                    <motion.div
-                      animate={{ rotate: isExpanded ? 180 : 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <svg
-                        className="w-4 h-4 text-gray-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                      <motion.div
+                        animate={{ rotate: isExpanded ? 180 : 0 }}
+                        transition={{ duration: 0.3 }}
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M19 9l-7 7-7-7"
-                        ></path>
-                      </svg>
-                    </motion.div>
+                        <svg
+                          className="w-3.5 h-3.5 text-gray-400" // Smaller icon
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M19 9l-7 7-7-7"
+                          ></path>
+                        </svg>
+                      </motion.div>
+                    </div>
                   </div>
                   <AnimatePresence>
                     {isExpanded && (
@@ -249,7 +250,7 @@ export default function PublicChecklistDetail({ checklist }: PublicChecklistDeta
                         animate={{
                           height: 'auto',
                           opacity: 1,
-                          marginTop: '16px',
+                          marginTop: '12px', // Reduced margin
                         }}
                         exit={{
                           height: 0,
@@ -262,22 +263,22 @@ export default function PublicChecklistDetail({ checklist }: PublicChecklistDeta
                         }}
                         className="overflow-hidden"
                       >
-                        <div className="space-y-3">
+                        <div className="space-y-2"> {/* Reduced space */}
                           {item.description && (
-                            <div className="prose max-w-none">
-                              <hr className="my-4 border-gray-200" />
+                            <div className="prose prose-sm max-w-none"> {/* Added prose-sm for smaller text */}
+                              <hr className="my-3 border-gray-100" /> {/* Lighter border */}
                               <PortableText
                                 value={item.description}
                                 components={ptComponents}
                               />
-                              <hr className="my-4 border-gray-200" />
+                              <hr className="my-3 border-gray-100" />
                             </div>
                           )}
                           {item.note && (
                             <div>
                               <label
                                 htmlFor={`note-${item._key}`}
-                                className="block text-sm font-medium text-gray-700 mt-3"
+                                className="block text-xs font-medium text-gray-600 mt-2" // Smaller label
                               >
                                 Reason / Note
                               </label>
@@ -285,7 +286,7 @@ export default function PublicChecklistDetail({ checklist }: PublicChecklistDeta
                                 id={`note-${item._key}`}
                                 value={item.note}
                                 readOnly
-                                className={`w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-800 text-sm`}
+                                className={`w-full p-2 border border-gray-200 rounded-md bg-gray-50 text-gray-700 text-sm`} // Refined border and text color
                                 rows={2}
                               />
                             </div>
