@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import BackButton from '@/app/components/BackButton';
 import { AdminCategoryListItem } from '@/services/categoryService';
 import CompletionCircle from '@/app/components/CompletionCircle'; // Import CompletionCircle
 
@@ -76,9 +75,7 @@ export default function AdminCategorySummaryPage() {
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <div className="flex justify-between items-center mb-2">
-        <BackButton />
         <h1 className="text-3xl font-bold text-gray-900">All Category Summaries</h1>
-        <div className="w-10"></div> {/* Placeholder to balance BackButton */}
       </div>
       <p className="text-gray-600 mb-6">View and manage all category completion summaries across all users, grouped by their last update date.</p>
 
@@ -119,7 +116,6 @@ export default function AdminCategorySummaryPage() {
                       <p className="text-gray-600 text-sm mb-1">Task Code: <span className="font-medium text-gray-700">{summary.taskCode}</span></p>
                     )}
                     
-                    {/* Horizontal layout for completion circle and details */}
                     <div className="flex items-center mt-3 mb-3">
                       <div className="flex-shrink-0 mr-4">
                         <CompletionCircle percentage={summary.completionPercentage} />

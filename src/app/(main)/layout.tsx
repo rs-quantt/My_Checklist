@@ -210,7 +210,9 @@ export default function MainLayout({
                             ) : (
                               <TrashIcon className="mr-2 h-4 w-4" />
                             )}
-                            {isDeleting ? 'Deleting Data...' : 'Delete All My Data'}
+                            {isDeleting
+                              ? 'Deleting Data...'
+                              : 'Delete All My Data'}
                           </button>
                         </div>
                       )}

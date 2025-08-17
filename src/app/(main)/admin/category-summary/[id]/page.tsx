@@ -1,13 +1,19 @@
 'use client';
 
-import BackButton from '@/app/components/BackButton';
-import CategoryCompletionOverview from '@/app/components/CategoryCompletionOverview'; // Import the new component
-import LoadingSpinner from '@/app/components/LoadingSpinner';
-import PublicChecklistDetail from '@/app/components/PublicChecklistDetail';
-import { MyCategorySummaryDetail } from '@/services/categoryService';
-import { Status } from '@/types/enum';
-import { notFound, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { notFound, useParams } from 'next/navigation';
+import LoadingSpinner from '@/app/components/LoadingSpinner';
+import BackButton from '@/app/components/BackButton';
+import PublicChecklistDetail from '@/app/components/PublicChecklistDetail';
+import { Status } from '@/types/enum';
+import CategoryCompletionOverview from '@/app/components/CategoryCompletionOverview';
+
+interface ChecklistSummaryItem {
+  _id: string;
+  title: string;
+  passedItems: number;
+  totalItems: number;
+}
 
 interface ChecklistItem {
   _key: string;
@@ -32,9 +38,21 @@ interface UserChecklist {
   };
 }
 
+interface CategorySummary {
+  _id: string;
+  title: string;
+  description?: string;
+  slug: {
+    current: string;
+  };
+  items: ChecklistSummaryItem[];
+  checklistsCompletedCount: number;
+  totalChecklistsCount: number;
+}
+
 export default function AdminCategorySummaryDetailPage() {
-  const [categorySummaryDetail, setCategorySummaryDetail] =
-    useState<MyCategorySummaryDetail | null>(null);
+  const [categorySummary, setCategorySummary] =
+    useState<CategorySummary | null>(null);
   const [fetchedChecklistDetails, setFetchedChecklistDetails] = useState<
     UserChecklist[]
   >([]);
@@ -64,9 +82,9 @@ export default function AdminCategorySummaryDetailPage() {
             );
           }
         }
-        const categoryData: MyCategorySummaryDetail =
+        const categoryData: CategorySummary =
           await categoryResponse.json();
-        setCategorySummaryDetail(categoryData);
+        setCategorySummary(categoryData);
 
         const checklistDetailsPromises = categoryData.items.map(
           async (item) => {
@@ -111,24 +129,29 @@ export default function AdminCategorySummaryDetailPage() {
     );
   }
 
-  if (!categorySummaryDetail) {
+  if (!categorySummary || fetchedChecklistDetails.length === 0) {
     return (
-      <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
-        <BackButton />
-        <div className="bg-white rounded-lg shadow-md p-8 max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">
-            Category Summary
+      <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8 bg-gray-50 min-h-screen">
+        <div className="bg-white rounded-xl shadow-lg p-8 sm:p-10 lg:p-12 max-w-7xl mx-auto mt-4 relative">
+          <div className="absolute top-4 left-4">
+            <BackButton />
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 tracking-tight pt-8">
+            {categorySummary?.title || 'Category Summary'}
           </h1>
-          <p className="text-gray-500">No category summary data available.</p>
+          <p className="text-lg text-gray-600">
+            No checklist summaries available for this category or failed to load
+            checklist details.
+          </p>
         </div>
       </div>
     );
   }
 
   const overallCompletionPercentage =
-    categorySummaryDetail.totalChecklistsCount > 0
-      ? (categorySummaryDetail.checklistsCompletedCount /
-          categorySummaryDetail.totalChecklistsCount) *
+    categorySummary.totalChecklistsCount > 0
+      ? (categorySummary.checklistsCompletedCount /
+          categorySummary.totalChecklistsCount) *
         100
       : 0;
 
@@ -145,65 +168,111 @@ export default function AdminCategorySummaryDetailPage() {
   const currentChecklist = fetchedChecklistDetails[currentChecklistIndex];
 
   return (
-    <div className="container mx-auto p-4 bg-gray-50 min-h-screen">
-      <BackButton />
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Category Completion Overview */}
-        <div className="lg:col-span-1">
-          <CategoryCompletionOverview
-            title={categorySummaryDetail.title}
-            description={categorySummaryDetail.description}
-            overallCompletionPercentage={overallCompletionPercentage}
-            checklistsCompletedCount={
-              categorySummaryDetail.checklistsCompletedCount
-            }
-            totalChecklistsCount={categorySummaryDetail.totalChecklistsCount}
-          />
+    <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8 bg-gray-50 min-h-screen">
+      <div className="bg-white rounded-xl shadow-lg p-8 sm:p-10 lg:p-12 max-w-7xl mx-auto mt-4 relative">
+        <div className="absolute top-4 left-4">
+          <BackButton />
         </div>
-
-        {/* Checklist Details */}
-        <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-4">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">
-            Checklist Details
-          </h2>
-
-          {fetchedChecklistDetails.length > 0 ? (
-            <>
-              <div className="flex justify-between items-center mb-4 p-3 border border-gray-100 rounded-md bg-gray-50">
-                <button
-                  onClick={handlePrevious}
-                  disabled={currentChecklistIndex === 0}
-                  className="px-4 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition ease-in-out duration-150"
-                >
-                  Previous
-                </button>
-                <span className="text-md font-medium text-gray-700">
-                  {currentChecklistIndex + 1} / {fetchedChecklistDetails.length}
-                </span>
-                <button
-                  onClick={handleNext}
-                  disabled={
-                    currentChecklistIndex === fetchedChecklistDetails.length - 1
-                  }
-                  className="px-4 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition ease-in-out duration-150"
-                >
-                  Next
-                </button>
-              </div>
-              <div className="space-y-6">
-                {currentChecklist && (
-                  <PublicChecklistDetail
-                    key={currentChecklist._id}
-                    checklist={currentChecklist}
-                  />
-                )}
-              </div>
-            </>
-          ) : (
-            <p className="text-md text-gray-500 text-center p-3 rounded-md bg-gray-50/10">
-              No checklists available for this category.
+        <div className="border-b border-gray-200 pb-6 mb-8 lg:hidden pt-8">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-2 tracking-tight">
+            {categorySummary.title}
+          </h1>
+          {categorySummary.description && (
+            <p className="mt-2 text-lg text-gray-600">
+              {categorySummary.description}
             </p>
           )}
+        </div>
+        <div className="lg:flex lg:space-x-8 lg:items-start lg:pt-8">
+          <CategoryCompletionOverview
+            title={categorySummary.title}
+            description={categorySummary.description}
+            overallCompletionPercentage={overallCompletionPercentage}
+            checklistsCompletedCount={categorySummary.checklistsCompletedCount}
+            totalChecklistsCount={categorySummary.totalChecklistsCount}
+            userName={currentChecklist?.user?.name || ''}
+            taskCode={currentChecklist?.taskCode || ''}
+          />
+          <div className="lg:w-2/3 lg:border-l lg:border-gray-200 lg:pl-8 lg:pt-0">
+            {currentChecklist && currentChecklist.commitMessage && (
+              <div className="mb-4">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3">
+                  Commit Message
+                </h3>
+                <p className="text-base font-semibold text-gray-700 bg-gray-50 p-2 rounded-md border border-gray-200">
+                  {currentChecklist.commitMessage}
+                </p>
+              </div>
+            )}
+            <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-6">
+              Checklist Details
+            </h3>
+            {fetchedChecklistDetails.length > 0 ? (
+              <>
+                <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
+                  <button
+                    onClick={handlePrevious}
+                    disabled={currentChecklistIndex === 0}
+                    className="flex items-center px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  >
+                    <svg
+                      className="-ml-1 mr-2 h-5 w-5 text-gray-500"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M12.79 5.23a.75.75 0 010 1.06L9.06 10l3.73 3.71a.75.75 0 11-1.06 1.06l-4.25-4.25a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Previous
+                  </button>
+                  <span className="text-base font-semibold text-gray-700">
+                    Checklist {currentChecklistIndex + 1} of{' '}
+                    {fetchedChecklistDetails.length}
+                  </span>
+                  <button
+                    onClick={handleNext}
+                    disabled={
+                      currentChecklistIndex ===
+                      fetchedChecklistDetails.length - 1
+                    }
+                    className="flex items-center px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  >
+                    Next
+                    <svg
+                      className="-mr-1 ml-2 h-5 w-5 text-gray-500"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M7.21 14.77a.75.75 0 010-1.06L10.94 10 7.21 6.29a.75.75 0 111.06-1.06l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div className="space-y-8">
+                  {currentChecklist && (
+                    <PublicChecklistDetail
+                      key={currentChecklist._id}
+                      checklist={currentChecklist}
+                    />
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="text-lg text-gray-500">
+                No checklist summaries available for this category.
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

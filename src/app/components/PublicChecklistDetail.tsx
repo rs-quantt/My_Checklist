@@ -105,22 +105,6 @@ export default function PublicChecklistDetail({ checklist }: PublicChecklistDeta
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 tracking-tight">
           {checklist.checklist.title}
         </h1>
-        <div className="flex flex-wrap justify-between items-center mt-2 text-sm text-gray-500"> {/* Softer text color */}
-          <p>
-            <span className="font-semibold">User:</span> {checklist.user.name}
-          </p>
-          <p>
-            <span className="font-semibold">Task Code:</span> {checklist.taskCode}
-          </p>
-        </div>
-         {checklist.commitMessage && (
-          <div className="mt-4">
-              <p className="text-sm text-gray-600 font-semibold">Commit Message:</p>
-              <p className="text-sm text-gray-700 bg-gray-50 p-2 mt-1 rounded-md whitespace-pre-wrap border border-gray-100"> {/* Softer background, added subtle border */}
-                  {checklist.commitMessage}
-              </p>
-          </div>
-        )}
       </div>
 
       <div className="mb-6">
