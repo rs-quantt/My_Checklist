@@ -1,23 +1,22 @@
 'use client';
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useAuth } from '../context/AuthContext';
-import { motion, Variants } from 'framer-motion';
+import { clearUserChecklistItems } from '@/services/adminService';
 import {
+  ArrowLeftEndOnRectangleIcon,
+  ArrowRightStartOnRectangleIcon,
+  Bars3Icon,
+  Cog6ToothIcon,
+  DocumentCheckIcon,
   HomeIcon,
   InformationCircleIcon,
-  Cog6ToothIcon,
-  ArrowRightOnRectangleIcon,
-  ArrowLeftOnRectangleIcon,
-  Bars3Icon,
   TrashIcon,
-  DocumentCheckIcon, // Used for My Checklists
 } from '@heroicons/react/24/outline';
-import { Popover, Transition } from '@headlessui/react';
-import { Fragment } from 'react';
+import * as Popover from '@radix-ui/react-popover';
+import { motion, Variants } from 'framer-motion';
+import Link from 'next/link';
+import React, { useState } from 'react';
 import Avatar from '../components/Avatar';
-import { clearUserChecklistItems } from '@/services/adminService';
 import ButtonLoadingSpinner from '../components/ButtonLoadingSpinner';
+import { useAuth } from '../context/AuthContext';
 
 export default function MainLayout({
   children,
@@ -142,88 +141,83 @@ export default function MainLayout({
                   width={32}
                   height={32}
                 />
-                <Popover className="relative">
-                  <Popover.Button className="p-2 rounded-full hover:bg-gray-100 focus:outline-none">
-                    <Bars3Icon className="h-6 w-6 text-gray-500" />
-                  </Popover.Button>
-                  <Transition
-                    as={Fragment}
-                    enter="transition ease-out duration-200"
-                    enterFrom="transform opacity-0 scale-95"
-                    enterTo="transform opacity-100 scale-100"
-                    leave="transition ease-in duration-75"
-                    leaveFrom="transform opacity-100 scale-100"
-                    leaveTo="transform opacity-0 scale-95"
-                  >
-                    <Popover.Panel className="absolute right-0 z-10 mt-2 w-64 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
-                      <div className="p-2">
-                        <div className="px-4 py-2 border-b border-gray-200 mb-2">
-                          <p className="text-sm font-semibold text-gray-900 truncate">
+                <Popover.Root>
+                  <Popover.Trigger asChild>
+                    <button className="p-2 rounded-full hover:bg-gray-100 focus:outline-none">
+                      <Bars3Icon className="h-6 w-6 text-gray-500" />
+                    </button>
+                  </Popover.Trigger>
+                  <Popover.Portal>
+                    <Popover.Content
+                      className="z-10 mt-2 w-64 rounded-xl bg-white p-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2"
+                      align="end"
+                      sideOffset={5}
+                    >
+                      <div className="flex items-center gap-4 px-4 py-3 border-b border-gray-100 mb-2">
+                        <Avatar
+                          src={user.image}
+                          name={user.name}
+                          alt={user.name}
+                          width={48}
+                          height={48}
+                        />
+                        <div className="flex flex-col">
+                          <p className="text-lg font-bold text-gray-900 truncate">
                             {user.name}
                           </p>
-                          <p className="text-sm text-gray-500 truncate">
+                          <p className="text-sm text-gray-600 truncate">
                             {user.email}
                           </p>
                         </div>
+                      </div>
+                      <div className="p-2">
                         {isAuthenticated && (
                           <Link
                             href="/my-category-summary"
-                            className="group flex w-full items-center rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-blue-500 hover:text-white"
+                            className="flex w-full items-center rounded-lg px-3 py-2 text-base font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 cursor-pointer"
                           >
-                            <DocumentCheckIcon
-                              className="mr-3 h-5 w-5 text-gray-400 group-hover:text-white"
-                              aria-hidden="true"
-                            />
+                            <DocumentCheckIcon className="mr-3 h-5 w-5" />
                             My Checklists
                           </Link>
                         )}
                         <button
                           onClick={handleLogout}
-                          className="group flex w-full items-center rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-blue-500 hover:text-white"
+                          className="flex w-full items-center rounded-lg px-3 py-2 text-base font-medium text-red-700 hover:bg-red-50 hover:text-red-900 transition-all duration-200 cursor-pointer"
                         >
-                          <ArrowRightOnRectangleIcon
-                            className="mr-3 h-5 w-5 text-gray-400 group-hover:text-white"
-                            aria-hidden="true"
-                          />
+                          <ArrowRightStartOnRectangleIcon className="mr-3 h-5 w-5" />
                           Logout
                         </button>
                       </div>
                       {user.email === 'quantt@runsystem.net' && (
-                        <div className="border-t border-red-200 my-2">
-                          <div className="p-2">
-                            <div className="px-4 pt-2">
-                              <h3 className="text-xs font-semibold uppercase text-red-800">
-                                Danger Zone
-                              </h3>
-                            </div>
-                            {deleteError && (
-                              <p className="px-4 text-xs text-red-500 mt-1">
-                                Error: {deleteError}
-                              </p>
-                            )}
-                            <button
-                              onClick={handleDeleteUserChecklistData}
-                              disabled={isDeleting}
-                              className="group flex w-full items-center rounded-md px-4 py-2 text-sm text-red-700 hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {isDeleting ? (
-                                <ButtonLoadingSpinner />
-                              ) : (
-                                <TrashIcon
-                                  className="mr-3 h-5 w-5 text-red-400 group-hover:text-white"
-                                  aria-hidden="true"
-                                />
-                              )}
-                              {isDeleting
-                                ? 'Deleting Data...'
-                                : 'Delete Data'}
-                            </button>
+                        <div className="mt-3 pt-3 border-t border-gray-100 p-2">
+                          <div className="px-3 mb-2">
+                            <h3 className="text-sm font-bold uppercase text-red-700">
+                              Danger Zone
+                            </h3>
                           </div>
+                          {deleteError && (
+                            <p className="px-3 text-xs text-red-500 mb-2">
+                              Error: {deleteError}
+                            </p>
+                          )}
+                          <button
+                            onClick={handleDeleteUserChecklistData}
+                            disabled={isDeleting}
+                            className="group flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-red-50 text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                          >
+                            {isDeleting ? (
+                              <ButtonLoadingSpinner />
+                            ) : (
+                              <TrashIcon className="mr-2 h-4 w-4" />
+                            )}
+                            {isDeleting ? 'Deleting Data...' : 'Delete All My Data'}
+                          </button>
                         </div>
                       )}
-                    </Popover.Panel>
-                  </Transition>
-                </Popover>
+                      <Popover.Arrow className="fill-current text-white" />
+                    </Popover.Content>
+                  </Popover.Portal>
+                </Popover.Root>
               </div>
             ) : (
               <motion.div whileHover={{ scale: 1.05 }}>
@@ -231,7 +225,7 @@ export default function MainLayout({
                   href="/login"
                   className="group inline-flex items-center justify-center whitespace-nowrap rounded-full bg-blue-600 px-5 py-2.5 text-base font-semibold !text-white shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-px hover:shadow-lg hover:shadow-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
                 >
-                  <ArrowLeftOnRectangleIcon className="h-5 w-5 mr-1" />
+                  <ArrowLeftEndOnRectangleIcon className="h-5 w-5 mr-1" />
                   Log in
                 </Link>
               </motion.div>

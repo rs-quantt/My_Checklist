@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/app/context/AuthContext';
+import CompletionCircle from '@/app/components/CompletionCircle'; // Import CompletionCircle
 import LoadingSpinner from '@/app/components/LoadingSpinner';
+import { useAuth } from '@/app/context/AuthContext';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import CompletionCircle from '@/app/components/CompletionCircle'; // Import CompletionCircle
+import { useEffect, useState } from 'react';
 
 interface CategorySummary {
   _id: string;
