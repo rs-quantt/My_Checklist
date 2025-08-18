@@ -4,12 +4,13 @@ import BackButton from '@/app/components/BackButton';
 import CommonSelect from '@/app/components/CommonSelect';
 import InlineLoadingSpinner from '@/app/components/InlineLoadingSpinner';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
+import { useMyChecklistLogic } from '@/hooks/useMyChecklistLogic';
+import { Status } from '@/types/enum';
 import { PortableText } from '@portabletext/react';
 import { AnimatePresence, motion, Variants } from 'framer-motion';
-import { FaQuestionCircle, FaSave, FaArrowRight, FaArrowLeft, FaTimesCircle } from 'react-icons/fa';
+import { useSearchParams } from 'next/navigation'; // Import useSearchParams
+import { FaArrowLeft, FaArrowRight, FaQuestionCircle, FaSave, FaTimesCircle } from 'react-icons/fa';
 import ptComponents from '../../components/ptComponents';
-import { Status } from '@/types/enum';
-import { useMyChecklistLogic } from '@/hooks/useMyChecklistLogic';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -29,6 +30,9 @@ const itemVariants: Variants = {
 };
 
 export default function MyChecklistPage() {
+  const searchParams = useSearchParams();
+  const categorySummaryId = searchParams.get('categorySummaryId') || undefined; // Get the ID from URL, use undefined if null
+
   const {
     sessionStatus,
     router,
@@ -51,16 +55,14 @@ export default function MyChecklistPage() {
     setShowSuccessPopup,
     error,
     initialLoading,
-    savedChecklistId,
     handleCategoryChange,
     handleChecklistNavigation,
     saveAllChecklists,
-    resetForm,
     handleStatusChange,
     toggleItem,
     handleNoteChange,
     handleTaskCodeBlur,
-  } = useMyChecklistLogic();
+  } = useMyChecklistLogic(categorySummaryId); // Pass the ID to the hook
 
   const isLastChecklist = currentChecklistIndex === checklistTemplates.length - 1;
   const isFirstChecklist = currentChecklistIndex === 0;
@@ -73,7 +75,7 @@ export default function MyChecklistPage() {
   }
 
   return (
-    <div className="antialiased bg-gray-50 min-h-screen relative">
+    <div className="antialiased bg-gray-100 min-h-screen relative">
       <div className="min-h-screen py-8 px-2 sm:px-4 lg:px-6">
         <motion.div
           className="container mx-auto max-w-5xl bg-white text-gray-800 rounded-lg shadow-sm p-6 md:p-8 space-y-8 border border-gray-200"
@@ -102,7 +104,7 @@ export default function MyChecklistPage() {
           <motion.div className="text-center mb-6" variants={itemVariants}>
             <div className="flex items-center justify-center">
               <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 leading-tight">
-                Start a New Task
+                {categorySummaryId ? 'Edit Task' : 'Start a New Task'}
               </h1>
             </div>
             <p className="mt-2 text-base text-gray-600 max-w-xl mx-auto leading-relaxed">
@@ -133,6 +135,7 @@ export default function MyChecklistPage() {
                   value={selectedCategory?._id || ''}
                   onChange={handleCategoryChange}
                   placeholder="-- Select a category --"
+                  disabled={!!categorySummaryId} // Disable if editing existing
                 />
               </motion.div>
               <motion.div
@@ -144,14 +147,19 @@ export default function MyChecklistPage() {
                   Task Code <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className={`appearance-none block w-full bg-white border ${taskCodeError ? 'border-red-500' : 'border-gray-300'} text-gray-800 py-2 px-3 rounded-md leading-tight focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm text-base`}
+                  className={`appearance-none block w-full border ${taskCodeError ? 'border-red-500' : 'border-gray-300'} text-gray-800 py-2 px-3 rounded-md leading-tight ${
+                    !!categorySummaryId
+                      ? 'bg-gray-200 opacity-100 cursor-not-allowed'
+                      : 'bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
+                  } transition duration-200 ease-in-out shadow-sm text-base`}
                   type="text"
                   placeholder="Enter task code (e.g., TASK-001)"
                   value={taskCode}
                   onChange={(e) => setTaskCode(e.target.value)}
                   onBlur={handleTaskCodeBlur}
+                  disabled={!!categorySummaryId} // Disable if editing existing
                 />
-                {taskCodeError && ( // Only show error if taskCodeError is not null
+                {taskCodeError && (
                   <p className="flex items-center text-red-500 font-medium text-sm mt-1">
                     <FaTimesCircle className="mr-2" /> {taskCodeError}
                   </p>

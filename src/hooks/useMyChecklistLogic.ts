@@ -1,11 +1,16 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import {
+  MyCategorySummaryDetail,
+  getMyCategorySummaryDetailById,
+} from '@/services/categoryService';
+import { getUserChecklistItemsByTaskCodeAndUserId } from '@/services/checklistService';
+import { Category } from '@/types/category';
 import { Checklist, ItemStateMap } from '@/types/checklist';
 import { Status } from '@/types/enum';
-import { Category } from '@/types/category';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 
-export const useMyChecklistLogic = () => {
+export const useMyChecklistLogic = (categorySummaryId?: string) => {
   const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -51,6 +56,7 @@ export const useMyChecklistLogic = () => {
     const fetchInitialData = async () => {
       try {
         setError(null);
+
         const categoriesRes = await fetch('/api/categories');
 
         if (!categoriesRes.ok) {
@@ -61,15 +67,120 @@ export const useMyChecklistLogic = () => {
 
         const categoriesData = await categoriesRes.json();
         setCategories(categoriesData);
+
+        if (categorySummaryId && loggedInUserId) {
+          const summaryData: MyCategorySummaryDetail | null =
+            await getMyCategorySummaryDetailById(categorySummaryId);
+
+          if (!summaryData) {
+            throw new Error('Category summary not found.');
+          }
+
+          setTaskCode(summaryData.taskCode);
+          setCommitMessage(summaryData.commitMessage || '');
+          setSelectedCategory(summaryData.category);
+
+          // Add null check for summaryData.category here
+          if (!summaryData.category) {
+            throw new Error('Category data missing from summary.');
+          }
+
+          // Fetch checklist templates for the category
+          setIsTemplateLoading(true);
+
+          const checklistRes = await fetch(
+            `/api/category-checklists?categoryId=${summaryData.category._id}`,
+          );
+          if (!checklistRes.ok) {
+            throw new Error(
+              `Failed to fetch checklist templates: ${checklistRes.status} ${checklistRes.statusText}`,
+            );
+          }
+          const checklistData: Checklist[] = await checklistRes.json();
+          setChecklistTemplates(checklistData);
+
+          if (checklistData.length > 0) {
+            setDisplayedChecklist(checklistData[0]);
+
+            // NEW: Fetch individual user checklist items for this taskCode
+
+            const userChecklistItems =
+              await getUserChecklistItemsByTaskCodeAndUserId(
+                loggedInUserId,
+                summaryData.taskCode,
+              );
+
+            const initialItemStates: Record<string, ItemStateMap> = {};
+            const initialExpandedStates: Record<
+              string,
+              { [itemId: string]: boolean }
+            > = {};
+
+            // Initialize all items with empty status first
+            checklistData.forEach((template) => {
+              initialItemStates[template._id] = {};
+              initialExpandedStates[template._id] = {};
+              template.items.forEach((item) => {
+                initialItemStates[template._id][item._id] = {
+                  status: Status.EMPTY,
+                  note: '',
+                };
+                // Do NOT set to true here. Items should start collapsed unless explicitly expanded by user interaction.
+                initialExpandedStates[template._id][item._id] = false;
+              });
+            });
+
+            // Then populate with existing data
+            userChecklistItems.forEach((userItem) => {
+              // Ensure userItem has checklistId before accessing it
+              if (
+                userItem.checklistId &&
+                initialItemStates[userItem.checklistId] &&
+                initialItemStates[userItem.checklistId][userItem.itemId]
+              ) {
+                initialItemStates[userItem.checklistId][userItem.itemId] = {
+                  status: userItem.status,
+                  note: userItem.note || '',
+                };
+              }
+            });
+
+            setAllChecklistsItemStates(initialItemStates);
+            setAllChecklistsExpandedStates(initialExpandedStates);
+          } else {
+            setDisplayedChecklist(null);
+          }
+          setIsTemplateLoading(false);
+
+          setInitialLoading(false); // Set initialLoading to false when done with categorySummaryId flow
+        } else {
+          // Standard flow: no categorySummaryId, just set initial loading to false
+          setInitialLoading(false);
+        }
       } catch (err) {
         console.error('Error fetching initial data:', err);
         setError('Could not load initial data. Please try again later.');
+        setInitialLoading(false); // Ensure initialLoading is false on error
+        setIsTemplateLoading(false); // Ensure isTemplateLoading is false on error
       } finally {
-        setInitialLoading(false);
+        // Ensure that initialLoading is set to false in all cases after fetchInitialData completes
+        if (initialLoading) {
+          // Only set if it hasn't been set to false already
+          setInitialLoading(false);
+        }
+        if (isTemplateLoading) {
+          // Only set if it hasn't been set to false already
+          setIsTemplateLoading(false);
+        }
       }
     };
-    fetchInitialData();
-  }, []);
+
+    if (sessionStatus === 'authenticated') {
+      fetchInitialData();
+    } else if (sessionStatus === 'unauthenticated') {
+      setInitialLoading(false);
+    }
+  }, [categorySummaryId, loggedInUserId, sessionStatus]);
 
   // Effect to initialize/load item states and expanded states when displayedChecklist changes
   useEffect(() => {
@@ -94,14 +205,25 @@ export const useMyChecklistLogic = () => {
 
       setAllChecklistsExpandedStates((prev) => {
         if (!prev[displayedChecklist._id]) {
-          return { ...prev, [displayedChecklist._id]: {} }; // Initialize expanded state for this checklist
+          // Ensure all items are collapsed by default for any new checklist displayed
+          const newExpandedStates: { [itemId: string]: boolean } = {};
+          displayedChecklist.items.forEach((item) => {
+            newExpandedStates[item._id] = false;
+          });
+          return { ...prev, [displayedChecklist._id]: newExpandedStates };
         }
         return prev; // Use existing expanded state if already present
       });
     }
-  }, [displayedChecklist]);
+  }, [displayedChecklist, categorySummaryId]);
 
   const handleCategoryChange = async (categoryId: string) => {
+    if (categorySummaryId) {
+      // Prevent changing category if editing an existing summary
+      console.warn('Cannot change category when editing an existing summary.');
+      return;
+    }
+
     if (!categoryId) {
       setSelectedCategory(null);
       setChecklistTemplates([]);
@@ -324,8 +446,9 @@ export const useMyChecklistLogic = () => {
   };
 
   useEffect(() => {
-    // Only check for taskCodeError if taskCode is not empty
-    const isTaskCodeInvalid = taskCode.trim() !== '' && taskCodeError !== null;
+    // Only check for taskCodeError if taskCode is not empty and not in edit mode
+    const isTaskCodeInvalid =
+      !categorySummaryId && taskCode.trim() !== '' && taskCodeError !== null;
 
     if (
       !loggedInUserId ||
@@ -346,6 +469,7 @@ export const useMyChecklistLogic = () => {
     selectedCategory,
     displayedChecklist,
     validateChecklistItems,
+    categorySummaryId, // Add categorySummaryId to dependencies
   ]);
 
   const resetForm = () => {

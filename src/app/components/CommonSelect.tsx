@@ -51,9 +51,11 @@ export default function CommonSelect({
     <div className="relative" ref={selectRef}>
       <button
         type="button"
-        className={`w-full bg-white border border-gray-300 text-gray-800 py-2 px-3 rounded-md leading-tight focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm text-base flex justify-between items-center ${
-          disabled ? 'opacity-50 cursor-not-allowed' : ''
-        }`}
+        className={`w-full border text-gray-800 py-2 px-3 rounded-md leading-tight focus:outline-none ${
+          disabled 
+            ? 'bg-gray-200 opacity-100 cursor-not-allowed border-gray-300' 
+            : 'bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 border-gray-300'
+        } transition duration-200 ease-in-out shadow-sm text-base flex justify-between items-center`}
         onClick={() => setIsOpen(!isOpen)}
         disabled={disabled}
       >

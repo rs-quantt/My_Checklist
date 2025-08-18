@@ -5,6 +5,7 @@ import LoadingSpinner from '@/app/components/LoadingSpinner';
 import { useAuth } from '@/app/context/AuthContext';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // Import useRouter
 import { useEffect, useState } from 'react';
 
 interface CategorySummary {
@@ -26,6 +27,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 export default function MyCategorySummaryPage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const router = useRouter(); // Initialize router
   const [groupedCategorySummaries, setGroupedCategorySummaries] =
     useState<GroupedCategorySummaries>({});
   const [loading, setLoading] = useState(true);
@@ -135,6 +137,12 @@ export default function MyCategorySummaryPage() {
     return dateB.getTime() - dateA.getTime();
   });
 
+  const handleEditClick = (e: React.MouseEvent, summaryId: string) => {
+    e.stopPropagation(); // Prevent parent Link from triggering
+    e.preventDefault(); // Prevent default link behavior
+    router.push(`/my-checklist?categorySummaryId=${summaryId}`);
+  };
+
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <div className="flex flex-wrap justify-between items-center mb-6">
@@ -209,7 +217,7 @@ export default function MyCategorySummaryPage() {
                   className="block"
                 >
                   <motion.div
-                    className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 cursor-pointer flex flex-col h-full"
+                    className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 cursor-pointer flex flex-col h-full relative"
                     whileHover={{
                       translateY: -3,
                       boxShadow:
@@ -218,7 +226,31 @@ export default function MyCategorySummaryPage() {
                     }}
                     transition={{ duration: 0.2 }}
                   >
-                    <h2 className="text-lg font-bold text-blue-700 mb-1">
+                    {/* Edit icon at top right - Updated with specific hover background, more margin, and cursor pointer */}
+                    <motion.button
+                      className="absolute top-4 right-4 p-3 rounded-full bg-transparent text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 cursor-pointer"
+                      onClick={(e) => handleEditClick(e, summary._id)}
+                      aria-label="Edit Checklist"
+                      whileHover={{ backgroundColor: '#2b7fff', color: 'white' }} // Change to blue-500
+                      whileTap={{ scale: 0.9, backgroundColor: '#bfdbfe' }} // blue-200
+                      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </motion.button>
+
+                    <h2 className="text-lg font-bold text-blue-700 mb-1 pr-8">
                       {summary.title}
                     </h2>
                     {summary.taskCode && (
@@ -261,6 +293,8 @@ export default function MyCategorySummaryPage() {
                       {new Date(summary.updatedAt).toLocaleDateString()}{' '}
                       {new Date(summary.updatedAt).toLocaleTimeString()}
                     </p>
+
+                    {/* Removed the old button */}
                   </motion.div>
                 </Link>
               ))}

@@ -262,7 +262,7 @@ export default function PublicChecklistDetail({ checklist }: PublicChecklistDeta
                             <div>
                               <label
                                 htmlFor={`note-${item._key}`}
-                                className="block text-xs font-medium text-gray-600 mt-2" // Smaller label
+                                className="block text-xs font-medium text-gray-600 mt-2 pb-2" // Smaller label
                               >
                                 Reason / Note
                               </label>

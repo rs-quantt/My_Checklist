@@ -233,11 +233,16 @@ interface CategorySummaryChecklistItem {
 
 export interface MyCategorySummaryDetail {
   _id: string;
-  title: string;
-  description?: string;
-  slug: {
-    current: string;
-  };
+  category: {
+    _id: string;
+    title: string;
+    description?: string;
+    slug: {
+      current: string;
+    };
+  } | null; // Allow category to be null
+  taskCode: string; 
+  commitMessage?: string; 
   items: CategorySummaryChecklistItem[];
   checklistsCompletedCount: number;
   totalChecklistsCount: number;
@@ -250,6 +255,8 @@ export async function getMyCategorySummaryDetailById(
     const query = `
       *[_type == "categorySummary" && _id == $id][0]{
         _id,
+        taskCode,
+        commitMessage,
         category->{
           _id,
           title,
@@ -258,7 +265,7 @@ export async function getMyCategorySummaryDetailById(
         },
         "items": items[]->{ // Dereference each item in the array
           _id,
-          "title": checklist->title, // Get title from the referenced checklist in checklistSummary
+          "title": checklist->title,
           passedItems,
           totalItems,
         },
@@ -270,27 +277,13 @@ export async function getMyCategorySummaryDetailById(
     const params = { id };
     const result = await client.fetch(query, params);
 
-    if (!result || !result.category) {
+    if (!result) {
       return null;
     }
 
-    // Transform the result to match the MyCategorySummaryDetail interface
-    const transformedResult: MyCategorySummaryDetail = {
-      _id: result._id,
-      title: result.category.title,
-      description: result.category.description,
-      slug: { current: result.category.slug },
-      items: result.items.map((item: CategorySummaryChecklistItem) => ({
-        _id: item._id,
-        title: item.title,
-        passedItems: item.passedItems, // Corrected field name
-        totalItems: item.totalItems, // Corrected field name
-      })),
-      checklistsCompletedCount: result.checklistsCompletedCount,
-      totalChecklistsCount: result.totalChecklistsCount,
-    };
-
-    return transformedResult;
+    // Directly return the result, as the query already structures it correctly.
+    // The null check for result.category will be handled by the MyCategorySummaryDetail interface.
+    return result as MyCategorySummaryDetail;
   } catch (error) {
     console.error('Error fetching my category summary detail by ID:', error);
     throw new Error('Failed to fetch category summary detail.');

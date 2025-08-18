@@ -1,5 +1,5 @@
 import { client } from '@/sanity/lib/client';
-import { Checklist, ChecklistItem } from '@/types/checklist';
+import { Checklist, ChecklistItem, UserChecklistItem } from '@/types/checklist';
 
 // Updated to fetch 'type' and 'itemCount'
 export async function getChecklists(): Promise<Checklist[]> {
@@ -182,6 +182,7 @@ export async function saveUserChecklistItems(
           note: note || '',
           taskCode,
           updatedAt: new Date().toISOString(),
+          checklist: { _type: 'reference', _ref: checklistId }, // Add checklist reference here
         });
       }
     }
@@ -401,5 +402,36 @@ export async function getChecklistSummaryById(id: string) {
       error,
     );
     throw new Error(`Failed to fetch user checklist with summary id ${id}.`);
+  }
+}
+
+// New function to fetch UserChecklistItem by taskCode and userId
+export async function getUserChecklistItemsByTaskCodeAndUserId(
+  userId: string,
+  taskCode: string,
+): Promise<UserChecklistItem[]> {
+  try {
+    const query = `
+      *[_type == "userChecklistItem" && user._ref == $userId && taskCode == $taskCode]{
+        "_id": _id,
+        "itemId": item._ref,
+        status,
+        note,
+        // Dynamically find the checklistId by looking at which checklist contains this item
+        "checklistId": *[_type == "checklist" && references(^.item._ref)][0]._id
+      }
+    `;
+
+    const params = { userId, taskCode };
+    const userChecklistItems = await client.fetch(query, params);
+    return userChecklistItems;
+  } catch (error) {
+    console.error(
+      `Error fetching user checklist items for user ${userId} and task code ${taskCode}:`,
+      error,
+    );
+    throw new Error(
+      `Failed to fetch user checklist items for user ${userId} and task code ${taskCode}.`,
+    );
   }
 }

@@ -20,7 +20,7 @@ export interface Checklist {
 export interface ChecklistItemState {
   status: Status;
   note: string;
-}
+};
 
 export interface ItemState {
   status: Status;
@@ -31,6 +31,14 @@ export interface ItemStateMap {
   [itemId: string]: ItemState;
 };
 
+// New interface for individual user checklist items within a summary
+export interface UserChecklistItem {
+  itemId: string;
+  status: Status;
+  note?: string;
+  checklistId: string; // Add checklistId here
+}
+
 export interface ChecklistSummary {
   _id: string;
   userId: string;
@@ -40,9 +48,5 @@ export interface ChecklistSummary {
   commitMessage?: string;
   createdAt: string;
   updatedAt: string;
-  items: Array<{
-    itemId: string;
-    status: Status;
-    note?: string;
-  }>;
+  items: UserChecklistItem[]; // Use the new interface here
 };
