@@ -142,7 +142,7 @@ export default function MyCategorySummaryPage() {
           <h1 className="text-3xl font-bold text-gray-900">
             My Category Summary
           </h1>
-          <p className="text-gray-600 text-sm mt-1">
+          <p className="text-gray-600 mb-6 pt-2">
             Overview of your progress across different checklist categories.
           </p>
         </div>
@@ -177,9 +177,6 @@ export default function MyCategorySummaryPage() {
           </motion.div>
         </div>
       </div>
-      <p className="text-gray-600 mb-6">
-        Checklists are grouped by their last update date.
-      </p>
 
       {dates.length === 0 ? (
         <div className="text-center text-gray-600">
