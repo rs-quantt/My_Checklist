@@ -303,9 +303,9 @@ export default function ChecklistPage() {
       <ChecklistTour />
       <div className="bg-blue-600 text-white py-12 text-center shadow-md relative" style={{
         background:
-          'url(https://images.pexels.com/photos/212323/pexels-photo-212323.jpeg)',
+          'url(https://images.pexels.com/photos/9790672/pexels-photo-9790672.jpeg)',
         backgroundSize: 'cover',
-        backgroundPositionY: '-806px',
+        backgroundPositionY: '-158px',
         backgroundRepeat: 'no-repeat'
       }}>
         <button
