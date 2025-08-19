@@ -4,7 +4,16 @@ export default function Home() {
   return (
     <div className="antialiased bg-gray-50 min-h-screen">
       {/* Hero Section */}
-      <div className="bg-blue-700 text-white py-20 text-center shadow-md">
+      <div
+        className="bg-blue-700 text-white py-20 text-center shadow-md"
+        style={{
+          backgroundImage:
+            'url(https://images.pexels.com/photos/19763008/pexels-photo-19763008.jpeg)',
+          backgroundSize: 'cover',
+          backgroundPositionY: '-116px',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight">
           Efficient Task Management with My Checklist
         </h1>
@@ -204,7 +213,16 @@ export default function Home() {
       </section>
 
       {/* Call to Action Section */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-blue-600 text-white text-center">
+      <section
+        className="py-12 px-4 sm:px-6 lg:px-8 bg-blue-600 text-white text-center"
+        style={{
+          backgroundImage:
+            'url(https://images.pexels.com/photos/19763008/pexels-photo-19763008.jpeg)',
+          backgroundSize: 'cover',
+          backgroundPositionY: '-498px',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
         <div className="container mx-auto">
           <h2 className="text-3xl md:text-4xl font-extrabold mb-4">
             Ready to get started?

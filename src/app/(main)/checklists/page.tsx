@@ -237,24 +237,22 @@ export default function ChecklistPage() {
     let filtered = checklists;
     if (searchQuery) {
       const lowercasedQuery = searchQuery.toLowerCase();
-       filtered = checklists.filter(
+      filtered = checklists.filter(
         (checklist) =>
           checklist.title.toLowerCase().includes(lowercasedQuery) ||
           (checklist.description &&
             checklist.description.toLowerCase().includes(lowercasedQuery)),
       );
     }
-    
+
     return [...filtered].sort((a, b) => {
-        if (sortOrder === 'asc') {
-            return a.title.localeCompare(b.title);
-        } else {
-            return b.title.localeCompare(a.title);
-        }
+      if (sortOrder === 'asc') {
+        return a.title.localeCompare(b.title);
+      } else {
+        return b.title.localeCompare(a.title);
+      }
     });
-
   }, [checklists, searchQuery, sortOrder]);
-
 
   const commonChecklists = useMemo(
     () => sortedChecklists.filter((c) => c.isCommon),
@@ -271,8 +269,8 @@ export default function ChecklistPage() {
   };
 
   const toggleSortOrder = () => {
-    setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
-  }
+    setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+  };
 
   if (loading) {
     return <LoadingSpinner text="Loading checklist list..." />;
@@ -298,9 +296,18 @@ export default function ChecklistPage() {
   };
 
   return (
-    <div className="antialiased bg-gray-50 min-h-screen">
+    <div
+      className="antialiased bg-gray-50 min-h-screen"
+      
+    >
       <ChecklistTour />
-      <div className="bg-blue-600 text-white py-12 text-center shadow-md relative">
+      <div className="bg-blue-600 text-white py-12 text-center shadow-md relative" style={{
+        background:
+          'url(https://images.pexels.com/photos/212323/pexels-photo-212323.jpeg)',
+        backgroundSize: 'cover',
+        backgroundPositionY: '-806px',
+        backgroundRepeat: 'no-repeat'
+      }}>
         <button
           id="start-tour-button"
           className="absolute top-4 right-4 text-white hover:text-blue-200 transition-colors"
@@ -347,37 +354,39 @@ export default function ChecklistPage() {
         </div>
 
         <div className="mt-6 text-center">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-              className="inline-block"
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+            className="inline-block"
+          >
+            <Link
+              id="start-new-task-button"
+              href="/my-checklist"
+              className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300 ease-in-out !text-blue-700"
             >
-              <Link
-                id="start-new-task-button"
-                href="/my-checklist"
-                className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300 ease-in-out !text-blue-700"
-              >
-                <FaPlus className="mr-2 -ml-1" />
-                Start a New Task
-              </Link>
-            </motion.div>
-            <p className="mt-3 text-sm text-blue-100 opacity-80 max-w-md mx-auto">
-              Select a checklist template, enter your task code, and start your
-              review.
-            </p>
-          </div>
+              <FaPlus className="mr-2 -ml-1" />
+              Start a New Task
+            </Link>
+          </motion.div>
+          <p className="mt-3 text-sm text-blue-100 opacity-80 max-w-md mx-auto">
+            Select a checklist template, enter your task code, and start your
+            review.
+          </p>
+        </div>
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex justify-end items-center mb-8 gap-4">
-            <button 
-             onClick={toggleSortOrder}
-             className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors text-sm font-medium"
-            >
-                {sortOrder === 'asc' ? <FaSortAlphaDown/> : <FaSortAlphaUp/>}
-                 <span className='capitalize'>{sortOrder === 'asc' ? 'Asc' : 'Desc'}</span>
-            </button>
+          <button
+            onClick={toggleSortOrder}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors text-sm font-medium"
+          >
+            {sortOrder === 'asc' ? <FaSortAlphaDown /> : <FaSortAlphaUp />}
+            <span className="capitalize">
+              {sortOrder === 'asc' ? 'Asc' : 'Desc'}
+            </span>
+          </button>
           <div className="flex items-center gap-1 rounded-lg bg-gray-200 p-1">
             <motion.button
               onClick={() => setViewMode('grid')}
@@ -397,7 +406,7 @@ export default function ChecklistPage() {
             <motion.button
               onClick={() => setViewMode('list')}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors relative`}
-               animate={{ color: viewMode === 'list' ? '#2563EB' : '#4B5563' }}
+              animate={{ color: viewMode === 'list' ? '#2563EB' : '#4B5563' }}
             >
               {viewMode === 'list' && (
                 <motion.div
