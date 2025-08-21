@@ -59,7 +59,6 @@ export default function MyCategorySummaryDetailPage() {
   >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentChecklistIndex, setCurrentChecklistIndex] = useState(0);
   const params = useParams();
   const id = params.id as string;
 
@@ -106,8 +105,6 @@ export default function MyCategorySummaryDetailPage() {
         setFetchedChecklistDetails(
           allChecklistDetails.filter(Boolean) as UserChecklist[],
         );
-
-        setCurrentChecklistIndex(0); // Reset index when new data is loaded
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Something went wrong');
       } finally {
@@ -163,18 +160,6 @@ export default function MyCategorySummaryDetailPage() {
         100
       : 0;
 
-  const handlePrevious = () => {
-    setCurrentChecklistIndex((prevIndex) => Math.max(0, prevIndex - 1));
-  };
-
-  const handleNext = () => {
-    setCurrentChecklistIndex((prevIndex) =>
-      Math.min(fetchedChecklistDetails.length - 1, prevIndex + 1),
-    );
-  };
-
-  const currentChecklist = fetchedChecklistDetails[currentChecklistIndex];
-
   return (
     <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-xl shadow-lg p-8 sm:p-10 lg:p-12 max-w-7xl mx-auto mt-4 relative">
@@ -206,19 +191,19 @@ export default function MyCategorySummaryDetailPage() {
             overallCompletionPercentage={overallCompletionPercentage}
             checklistsCompletedCount={categorySummary.checklistsCompletedCount}
             totalChecklistsCount={categorySummary.totalChecklistsCount}
-            userName={currentChecklist?.user?.name || ''}
-            taskCode={currentChecklist?.taskCode || ''}
+            userName={fetchedChecklistDetails[0]?.user?.name || ''}
+            taskCode={fetchedChecklistDetails[0]?.taskCode || ''}
           />
           <div className="lg:w-2/3 lg:border-l lg:border-gray-200 lg:pl-8 lg:pt-0">
             {' '}
             {/* Checklist Details section - added left border and padding, removed top padding */}
-            {currentChecklist && currentChecklist.commitMessage && (
+            {fetchedChecklistDetails[0] && fetchedChecklistDetails[0].commitMessage && (
               <div className="mb-4">
                 <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3">
                   Commit Message
                 </h3>
                 <p className="text-base font-semibold text-gray-700 bg-gray-50 p-2 rounded-md border border-gray-200">
-                  {currentChecklist.commitMessage}
+                  {fetchedChecklistDetails[0].commitMessage}
                 </p>
               </div>
             )}
@@ -226,65 +211,14 @@ export default function MyCategorySummaryDetailPage() {
               Checklist Details
             </h3>
             {fetchedChecklistDetails.length > 0 ? (
-              <>
-                <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
-                  <button
-                    onClick={handlePrevious}
-                    disabled={currentChecklistIndex === 0}
-                    className="flex items-center px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                  >
-                    <svg
-                      className="-ml-1 mr-2 h-5 w-5 text-gray-500"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M12.79 5.23a.75.75 0 010 1.06L9.06 10l3.73 3.71a.75.75 0 11-1.06 1.06l-4.25-4.25a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    Previous
-                  </button>
-                  <span className="text-base font-semibold text-gray-700">
-                    Checklist {currentChecklistIndex + 1} of{' '}
-                    {fetchedChecklistDetails.length}
-                  </span>
-                  <button
-                    onClick={handleNext}
-                    disabled={
-                      currentChecklistIndex ===
-                      fetchedChecklistDetails.length - 1
-                    }
-                    className="flex items-center px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                  >
-                    Next
-                    <svg
-                      className="-mr-1 ml-2 h-5 w-5 text-gray-500"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M7.21 14.77a.75.75 0 010-1.06L10.94 10 7.21 6.29a.75.75 0 111.06-1.06l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                </div>
-                <div className="space-y-8">
-                  {currentChecklist && (
-                    <PublicChecklistDetail
-                      key={currentChecklist._id}
-                      checklist={currentChecklist}
-                    />
-                  )}
-                </div>
-              </>
+              <div className="space-y-8">
+                {fetchedChecklistDetails.map((checklist) => (
+                  <PublicChecklistDetail
+                    key={checklist._id}
+                    checklist={checklist}
+                  />
+                ))}
+              </div>
             ) : (
               <p className="text-lg text-gray-500">
                 No checklist summaries available for this category.

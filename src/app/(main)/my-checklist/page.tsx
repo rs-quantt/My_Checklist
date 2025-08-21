@@ -8,8 +8,8 @@ import { useMyChecklistLogic } from '@/hooks/useMyChecklistLogic';
 import { Status } from '@/types/enum';
 import { PortableText } from '@portabletext/react';
 import { AnimatePresence, motion, Variants } from 'framer-motion';
-import { useSearchParams } from 'next/navigation'; // Import useSearchParams
-import { FaArrowLeft, FaArrowRight, FaQuestionCircle, FaSave, FaTimesCircle } from 'react-icons/fa';
+import { useSearchParams } from 'next/navigation';
+import { FaQuestionCircle, FaSave, FaTimesCircle } from 'react-icons/fa';
 import ptComponents from '../../components/ptComponents';
 
 const containerVariants: Variants = {
@@ -31,7 +31,7 @@ const itemVariants: Variants = {
 
 export default function MyChecklistPage() {
   const searchParams = useSearchParams();
-  const categorySummaryId = searchParams.get('categorySummaryId') || undefined; // Get the ID from URL, use undefined if null
+  const categorySummaryId = searchParams.get('categorySummaryId') || undefined;
 
   const {
     sessionStatus,
@@ -39,16 +39,14 @@ export default function MyChecklistPage() {
     categories,
     selectedCategory,
     checklistTemplates,
-    currentChecklistIndex,
-    displayedChecklist,
     isTemplateLoading,
     taskCode,
     setTaskCode,
     taskCodeError,
     commitMessage,
     setCommitMessage,
-    itemStates,
-    expandedItems,
+    allChecklistsItemStates,
+    allChecklistsExpandedStates,
     isSaveButtonDisabled,
     isSaving,
     showSuccessPopup,
@@ -56,16 +54,12 @@ export default function MyChecklistPage() {
     error,
     initialLoading,
     handleCategoryChange,
-    handleChecklistNavigation,
     saveAllChecklists,
     handleStatusChange,
     toggleItem,
     handleNoteChange,
     handleTaskCodeBlur,
-  } = useMyChecklistLogic(categorySummaryId); // Pass the ID to the hook
-
-  const isLastChecklist = currentChecklistIndex === checklistTemplates.length - 1;
-  const isFirstChecklist = currentChecklistIndex === 0;
+  } = useMyChecklistLogic(categorySummaryId);
 
   if (initialLoading || sessionStatus === 'loading')
     return <LoadingSpinner text="Loading page..." />;
@@ -135,7 +129,7 @@ export default function MyChecklistPage() {
                   value={selectedCategory?._id || ''}
                   onChange={handleCategoryChange}
                   placeholder="-- Select a category --"
-                  disabled={!!categorySummaryId} // Disable if editing existing
+                  disabled={!!categorySummaryId}
                 />
               </motion.div>
               <motion.div
@@ -157,7 +151,7 @@ export default function MyChecklistPage() {
                   value={taskCode}
                   onChange={(e) => setTaskCode(e.target.value)}
                   onBlur={handleTaskCodeBlur}
-                  disabled={!!categorySummaryId} // Disable if editing existing
+                  disabled={!!categorySummaryId}
                 />
                 {taskCodeError && (
                   <p className="flex items-center text-red-500 font-medium text-sm mt-1">
@@ -200,265 +194,243 @@ export default function MyChecklistPage() {
                   </motion.div>
                 )}
 
-                {selectedCategory && displayedChecklist && (
+                {selectedCategory && checklistTemplates.length > 0 && (
                   <motion.div
-                    key={displayedChecklist._id}
+                    key="all-checklists"
                     className="space-y-8"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.5, ease: 'easeOut' }}
                   >
-                    <div
-                      className="p-4 bg-gray-50 rounded-lg border border-gray-200 mb-6"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center min-w-0">
-                          <img
-                            src="/check.png"
-                            alt="Check Icon"
-                            className="w-6 h-6 mr-3 flex-shrink-0"
-                          />
-                          <div className="min-w-0">
-                            <h2 className="text-2xl font-bold text-gray-900 truncate">
-                              {displayedChecklist.title}
-                            </h2>
-                            {displayedChecklist.description && (
-                              <p className="text-gray-600 mt-1 truncate">
-                                {displayedChecklist.description}
-                              </p>
-                            )}
+                    {checklistTemplates.map((checklist) => (
+                      <div key={checklist._id}>
+                        <div
+                          className="p-4 bg-gray-50 rounded-lg border border-gray-200 mb-6"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center min-w-0">
+                              <img
+                                src="/check.png"
+                                alt="Check Icon"
+                                className="w-6 h-6 mr-3 flex-shrink-0"
+                              />
+                              <div className="min-w-0">
+                                <h2 className="text-2xl font-bold text-gray-900 truncate">
+                                  {checklist.title}
+                                </h2>
+                                {checklist.description && (
+                                  <p className="text-gray-600 mt-1 truncate">
+                                    {checklist.description}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        {checklistTemplates.length > 1 && (
-                          <span className="text-sm font-medium text-gray-500">
-                            {currentChecklistIndex + 1} / {checklistTemplates.length}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <motion.ul
-                      className="space-y-6"
-                      variants={containerVariants}
-                      initial="hidden"
-                      animate="visible"
-                    >
-                      {displayedChecklist.items.map((item) => {
-                        const state = itemStates[item._id] || {
-                          status: '',
-                          note: '',
-                        };
-                        const isExpanded = expandedItems[item._id] || false;
-                        const isNoteRequired =
-                          state.status === 'incomplete' ||
-                          state.status === 'na';
-                        let barColorClass = 'bg-gray-400';
-                        if (state.status === 'done')
-                          barColorClass = 'bg-green-500';
-                        else if (state.status === 'incomplete')
-                          barColorClass = 'bg-red-500';
-                        else if (state.status === 'na')
-                          barColorClass = 'bg-slate-400';
+                        <motion.ul
+                          className="space-y-6"
+                          variants={containerVariants}
+                          initial="hidden"
+                          animate="visible"
+                        >
+                          {checklist.items.map((item) => {
+                            const state = allChecklistsItemStates[checklist._id]?.[item._id] || {
+                              status: '',
+                              note: '',
+                            };
+                            const isExpanded = allChecklistsExpandedStates[checklist._id]?.[item._id] || false;
+                            const isNoteRequired =
+                              state.status === 'incomplete' ||
+                              state.status === 'na';
+                            let barColorClass = 'bg-gray-400';
+                            if (state.status === 'done')
+                              barColorClass = 'bg-green-500';
+                            else if (state.status === 'incomplete')
+                              barColorClass = 'bg-red-500';
+                            else if (state.status === 'na')
+                              barColorClass = 'bg-slate-400';
 
-                        const priority = item.priority;
-                        const priorityText =
-                          priority === '1'
-                            ? 'High'
-                            : priority === '2'
-                              ? 'Medium'
-                              : 'Low';
-                        const priorityClass =
-                          priority === '1'
-                            ? 'bg-red-200 text-red-900'
-                            : priority === '2'
-                              ? 'bg-yellow-200 text-yellow-900'
-                              : 'bg-blue-200 text-blue-900';
+                            const priority = item.priority;
+                            const priorityText =
+                              priority === '1'
+                                ? 'High'
+                                : priority === '2'
+                                  ? 'Medium'
+                                  : 'Low';
+                            const priorityClass =
+                              priority === '1'
+                                ? 'bg-red-200 text-red-900'
+                                : priority === '2'
+                                  ? 'bg-yellow-200 text-yellow-900'
+                                  : 'bg-blue-200 text-blue-900';
 
-                        return (
-                          <motion.li
-                            key={item._id}
-                            variants={itemVariants}
-                            className={`relative overflow-hidden rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow duration-200 ease-in-out border border-gray-200`}
-                          >
-                            <div
-                              className={`absolute top-0 left-0 bottom-0 w-2 ${barColorClass} transition-colors`}
-                            ></div>
-                            <div className="pl-6 p-4">
-                              <div
-                                className="flex items-center cursor-pointer"
-                                onClick={() => toggleItem(item._id)}
+                            return (
+                              <motion.li
+                                key={item._id}
+                                variants={itemVariants}
+                                className={`relative overflow-hidden rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow duration-200 ease-in-out border border-gray-200`}
                               >
-                                <p className="font-semibold text-lg text-gray-800 flex-grow">
-                                  {item.label}
-                                </p>
-                                <span
-                                  className={`px-3 py-1 text-xs font-bold rounded-full mr-4 ${priorityClass}`}
-                                >
-                                  {priorityText}
-                                </span>
-                                <motion.div
-                                  animate={{ rotate: isExpanded ? 180 : 0 }}
-                                  transition={{ duration: 0.3 }}
-                                >
-                                  <svg
-                                    className="w-4 h-4 text-gray-500"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
+                                <div
+                                  className={`absolute top-0 left-0 bottom-0 w-2 ${barColorClass} transition-colors`}
+                                ></div>
+                                <div className="pl-6 p-4">
+                                  <div
+                                    className="flex items-center cursor-pointer"
+                                    onClick={() => toggleItem(checklist._id, item._id)}
                                   >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth="2"
-                                      d="M19 9l-7 7-7-7"
-                                    ></path>
-                                  </svg>
-                                </motion.div>
-                              </div>
-                              <AnimatePresence>
-                                {isExpanded && (
-                                  <motion.div
-                                    key="content"
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{
-                                      height: 'auto',
-                                      opacity: 1,
-                                      marginTop: '16px',
-                                    }}
-                                    exit={{
-                                      height: 0,
-                                      opacity: 0,
-                                      marginTop: '0px',
-                                    }}
-                                    transition={{
-                                      duration: 0.4,
-                                      ease: [0.16, 1, 0.3, 1],
-                                    }}
-                                    className="overflow-hidden"
-                                  >
-                                    <div className="space-y-3">
-                                      {item.description && (
-                                        <div className="prose max-w-none">
-                                          <hr className="my-4 border-gray-200" />
-                                          <PortableText
-                                            value={item.description}
-                                            components={ptComponents}
-                                          />
-                                          <hr className="my-4 border-gray-200" />
-                                        </div>
-                                      )}
-                                          <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                              Status
-                                            </label>
-                                            <div
-                                              className={`flex flex-wrap items-center gap-2`}
-                                            >
-                                              {['done', 'incomplete', 'na'].map(
-                                                (statusOption) => (
-                                                  <button
-                                                    key={statusOption}
-                                                    onClick={() =>
-                                                      handleStatusChange(
-                                                        item._id,
-                                                        statusOption as Status,
-                                                      )
-                                                    }
-                                                    className={`px-4 py-2 rounded-md font-medium text-xs transition-all duration-200 ease-in-out border ${state.status === statusOption
-                                                        ? statusOption === 'done'
-                                                          ? 'bg-green-600 text-white border-green-600'
+                                    <p className="font-semibold text-lg text-gray-800 flex-grow">
+                                      {item.label}
+                                    </p>
+                                    <span
+                                      className={`px-3 py-1 text-xs font-bold rounded-full mr-4 ${priorityClass}`}
+                                    >
+                                      {priorityText}
+                                    </span>
+                                    <motion.div
+                                      animate={{ rotate: isExpanded ? 180 : 0 }}
+                                      transition={{ duration: 0.3 }}
+                                    >
+                                      <svg
+                                        className="w-4 h-4 text-gray-500"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth="2"
+                                          d="M19 9l-7 7-7-7"
+                                        ></path>
+                                      </svg>
+                                    </motion.div>
+                                  </div>
+                                  <AnimatePresence>
+                                    {isExpanded && (
+                                      <motion.div
+                                        key="content"
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{
+                                          height: 'auto',
+                                          opacity: 1,
+                                          marginTop: '16px',
+                                        }}
+                                        exit={{
+                                          height: 0,
+                                          opacity: 0,
+                                          marginTop: '0px',
+                                        }}
+                                        transition={{
+                                          duration: 0.4,
+                                          ease: [0.16, 1, 0.3, 1],
+                                        }}
+                                        className="overflow-hidden"
+                                      >
+                                        <div className="space-y-3">
+                                          {item.description && (
+                                            <div className="prose max-w-none">
+                                              <hr className="my-4 border-gray-200" />
+                                              <PortableText
+                                                value={item.description}
+                                                components={ptComponents}
+                                              />
+                                              <hr className="my-4 border-gray-200" />
+                                            </div>
+                                          )}
+                                              <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                  Status
+                                                </label>
+                                                <div
+                                                  className={`flex flex-wrap items-center gap-2`}
+                                                >
+                                                  {['done', 'incomplete', 'na'].map(
+                                                    (statusOption) => (
+                                                      <button
+                                                        key={statusOption}
+                                                        onClick={() =>
+                                                          handleStatusChange(
+                                                            checklist._id,
+                                                            item._id,
+                                                            statusOption as Status,
+                                                          )
+                                                        }
+                                                        className={`px-4 py-2 rounded-md font-medium text-xs transition-all duration-200 ease-in-out border ${state.status === statusOption
+                                                            ? statusOption === 'done'
+                                                              ? 'bg-green-600 text-white border-green-600'
+                                                              : statusOption ===
+                                                                'incomplete'
+                                                                ? 'bg-red-600 text-white border-red-600'
+                                                                : 'bg-slate-600 text-white border-slate-600'
+                                                            : statusOption === 'done'
+                                                              ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200'
+                                                              : statusOption ===
+                                                                'incomplete'
+                                                                ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200'
+                                                                : 'bg-slate-200 text-slate-800 border-slate-300 hover:bg-slate-300'
+                                                          }`}
+                                                      >
+                                                        {statusOption === 'done'
+                                                          ? 'Done'
                                                           : statusOption ===
                                                             'incomplete'
-                                                            ? 'bg-red-600 text-white border-red-600'
-                                                            : 'bg-slate-600 text-white border-slate-600'
-                                                        : statusOption === 'done'
-                                                          ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200'
-                                                          : statusOption ===
-                                                            'incomplete'
-                                                            ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200'
-                                                            : 'bg-slate-200 text-slate-800 border-slate-300 hover:bg-slate-300'
+                                                            ? 'Incomplete'
+                                                            : 'N/A'}
+                                                      </button>
+                                                    ),
+                                                  )}
+                                                </div>
+                                              </div>
+                                              <div>
+                                                <label
+                                                  htmlFor={`note-${item._id}`}
+                                              className="block text-sm font-medium text-gray-700 mt-3"
+                                                >
+                                                  Reason / Note{' '}
+                                                  <span
+                                                    className={`text-red-500 ${isNoteRequired ? '' : 'hidden'
                                                       }`}
                                                   >
-                                                    {statusOption === 'done'
-                                                      ? 'Done'
-                                                      : statusOption ===
-                                                        'incomplete'
-                                                        ? 'Incomplete'
-                                                        : 'N/A'}
-                                                  </button>
-                                                ),
-                                              )}
+                                                    *
+                                                  </span>
+                                                </label>
+                                                <textarea
+                                                  id={`note-${item._id}`}
+                                                  value={state.note}
+                                                  onChange={(e) =>
+                                                    handleNoteChange(
+                                                      checklist._id,
+                                                      item._id,
+                                                      e.target.value,
+                                                    )
+                                                  }
+                                                  placeholder={
+                                                    isNoteRequired
+                                                      ? 'Required'
+                                                      : 'Optional'
+                                                  }
+                                                  className={`w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm transition`}
+                                                  rows={2}
+                                                  required={isNoteRequired}
+                                                />
+                                              </div>
                                             </div>
-                                          </div>
-                                          <div>
-                                            <label
-                                              htmlFor={`note-${item._id}`}
-                                              className="block text-sm font-medium text-gray-700 mt-3"
-                                            >
-                                              Reason / Note{' '}
-                                              <span
-                                                className={`text-red-500 ${isNoteRequired ? '' : 'hidden'
-                                                  }`}
-                                              >
-                                                *
-                                              </span>
-                                            </label>
-                                            <textarea
-                                              id={`note-${item._id}`}
-                                              value={state.note}
-                                              onChange={(e) =>
-                                                handleNoteChange(
-                                                  item._id,
-                                                  e.target.value,
-                                                )
-                                              }
-                                              placeholder={
-                                                isNoteRequired
-                                                  ? 'Required'
-                                                  : 'Optional'
-                                              }
-                                              className={`w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm transition`}
-                                              rows={2}
-                                              required={isNoteRequired}
-                                            />
-                                          </div>
-                                        </div>
-                                      </motion.div>
-                                    )}
-                                  </AnimatePresence>
-                                </div>
-                              </motion.li>
-                            );
-                          })}
-                        </motion.ul>
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
+                                    </div>
+                                  </motion.li>
+                                );
+                              })}
+                            </motion.ul>
+                          </div>
+                        ))}
                     <div className="border-t border-gray-200 pt-6 mt-6">
-                      <div className="flex justify-between">
-                        {!isFirstChecklist && (
-                          <motion.button
-                            id="previous-checklist-button"
-                            onClick={() => handleChecklistNavigation('previous')}
-                            disabled={isSaving} // Disabled when saving
-                            className="relative flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-blue-600 text-white font-bold shadow-md transition-all duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed w-48 h-10"
-                            whileTap={!isSaving ? { scale: 0.97 } : {}}
-                          >
-                            <AnimatePresence mode="wait" initial={false}>
-                              <motion.span
-                                key="action-text-prev"
-                                initial={{ y: 10, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                exit={{ y: -10, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="absolute flex items-center justify-center"
-                              >
-                                <FaArrowLeft className="mr-2" /> Previous Checklist
-                              </motion.span>
-                            </AnimatePresence>
-                          </motion.button>
-                        )}
-                        {isFirstChecklist && <div className="w-48 h-10"></div>}{/* Placeholder to balance space if previous button is hidden*/}
+                      <div className="flex justify-end">
                         <motion.button
                           id="action-button"
-                          onClick={isLastChecklist ? saveAllChecklists : () => handleChecklistNavigation('next')}
+                          onClick={saveAllChecklists}
                           disabled={isSaveButtonDisabled || isSaving}
                           className="relative flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-blue-600 text-white font-bold shadow-md transition-all duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed w-48 h-10"
                           whileTap={
@@ -508,15 +480,7 @@ export default function MyChecklistPage() {
                                 transition={{ duration: 0.2 }}
                                 className="absolute flex items-center justify-center"
                               >
-                                {isLastChecklist ? (
-                                  <>
-                                    <FaSave className="mr-2" /> Save All Checklists
-                                  </>
-                                ) : (
-                                  <>
-                                    Next Checklist <FaArrowRight className="ml-2" />
-                                  </>
-                                )}
+                                <FaSave className="mr-2" /> Save Checklist
                               </motion.span>
                             )}
                           </AnimatePresence>

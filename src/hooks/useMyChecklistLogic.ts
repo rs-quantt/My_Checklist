@@ -18,9 +18,6 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
     null,
   );
   const [checklistTemplates, setChecklistTemplates] = useState<Checklist[]>([]);
-  const [currentChecklistIndex, setCurrentChecklistIndex] = useState<number>(0);
-  const [displayedChecklist, setDisplayedChecklist] =
-    useState<Checklist | null>(null);
   const [isTemplateLoading, setIsTemplateLoading] = useState(false);
   const [taskCode, setTaskCode] = useState<string>('');
   const [taskCodeError, setTaskCodeError] = useState<string | null>(null);
@@ -33,15 +30,6 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
   // State to hold expanded/collapsed status for items across all checklists
   const [allChecklistsExpandedStates, setAllChecklistsExpandedStates] =
     useState<Record<string, { [itemId: string]: boolean }>>({});
-
-  // Derived state for the currently displayed checklist's items
-  const currentChecklistItemStates = displayedChecklist
-    ? allChecklistsItemStates[displayedChecklist._id] || {}
-    : {};
-  // Derived state for the currently displayed checklist's expanded items
-  const currentExpandedItems = displayedChecklist
-    ? allChecklistsExpandedStates[displayedChecklist._id] || {}
-    : {};
 
   const [isSaveButtonDisabled, setIsSaveButtonDisabled] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -61,8 +49,7 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
 
         if (!categoriesRes.ok) {
           throw new Error(
-            `Failed to fetch categories: ${categoriesRes.status} ${categoriesRes.statusText}`,
-          );
+            `Failed to fetch categories: ${categoriesRes.status} ${categoriesRes.statusText}`);
         }
 
         const categoriesData = await categoriesRes.json();
@@ -93,63 +80,55 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
           );
           if (!checklistRes.ok) {
             throw new Error(
-              `Failed to fetch checklist templates: ${checklistRes.status} ${checklistRes.statusText}`,
-            );
+              `Failed to fetch checklist templates: ${checklistRes.status} ${checklistRes.statusText}`);
           }
           const checklistData: Checklist[] = await checklistRes.json();
           setChecklistTemplates(checklistData);
 
-          if (checklistData.length > 0) {
-            setDisplayedChecklist(checklistData[0]);
+          // NEW: Fetch individual user checklist items for this taskCode
+          const userChecklistItems =
+            await getUserChecklistItemsByTaskCodeAndUserId(
+              loggedInUserId,
+              summaryData.taskCode,
+            );
 
-            // NEW: Fetch individual user checklist items for this taskCode
+          const initialItemStates: Record<string, ItemStateMap> = {};
+          const initialExpandedStates: Record<
+            string,
+            { [itemId: string]: boolean }
+          > = {};
 
-            const userChecklistItems =
-              await getUserChecklistItemsByTaskCodeAndUserId(
-                loggedInUserId,
-                summaryData.taskCode,
-              );
-
-            const initialItemStates: Record<string, ItemStateMap> = {};
-            const initialExpandedStates: Record<
-              string,
-              { [itemId: string]: boolean }
-            > = {};
-
-            // Initialize all items with empty status first
-            checklistData.forEach((template) => {
-              initialItemStates[template._id] = {};
-              initialExpandedStates[template._id] = {};
-              template.items.forEach((item) => {
-                initialItemStates[template._id][item._id] = {
-                  status: Status.EMPTY,
-                  note: '',
-                };
-                // Do NOT set to true here. Items should start collapsed unless explicitly expanded by user interaction.
-                initialExpandedStates[template._id][item._id] = false;
-              });
+          // Initialize all items with empty status first
+          checklistData.forEach((template: Checklist) => {
+            initialItemStates[template._id] = {};
+            initialExpandedStates[template._id] = {};
+            template.items.forEach((item) => {
+              initialItemStates[template._id][item._id] = {
+                status: Status.EMPTY,
+                note: '',
+              };
+              // Do NOT set to true here. Items should start collapsed unless explicitly expanded by user interaction.
+              initialExpandedStates[template._id][item._id] = false;
             });
+          });
 
-            // Then populate with existing data
-            userChecklistItems.forEach((userItem) => {
-              // Ensure userItem has checklistId before accessing it
-              if (
-                userItem.checklistId &&
-                initialItemStates[userItem.checklistId] &&
-                initialItemStates[userItem.checklistId][userItem.itemId]
-              ) {
-                initialItemStates[userItem.checklistId][userItem.itemId] = {
-                  status: userItem.status,
-                  note: userItem.note || '',
-                };
-              }
-            });
+          // Then populate with existing data
+          userChecklistItems.forEach((userItem) => {
+            // Ensure userItem has checklistId before accessing it
+            if (
+              userItem.checklistId &&
+              initialItemStates[userItem.checklistId] &&
+              initialItemStates[userItem.checklistId][userItem.itemId]
+            ) {
+              initialItemStates[userItem.checklistId][userItem.itemId] = {
+                status: userItem.status,
+                note: userItem.note || '',
+              };
+            }
+          });
 
-            setAllChecklistsItemStates(initialItemStates);
-            setAllChecklistsExpandedStates(initialExpandedStates);
-          } else {
-            setDisplayedChecklist(null);
-          }
+          setAllChecklistsItemStates(initialItemStates);
+          setAllChecklistsExpandedStates(initialExpandedStates);
           setIsTemplateLoading(false);
 
           setInitialLoading(false); // Set initialLoading to false when done with categorySummaryId flow
@@ -182,41 +161,6 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
     }
   }, [categorySummaryId, loggedInUserId, sessionStatus]);
 
-  // Effect to initialize/load item states and expanded states when displayedChecklist changes
-  useEffect(() => {
-    if (displayedChecklist) {
-      setAllChecklistsItemStates((prev) => {
-        if (!prev[displayedChecklist._id]) {
-          // Initialize if this checklist's state doesn't exist yet
-          const initialStatesForCurrentChecklist: ItemStateMap = {};
-          displayedChecklist.items.forEach((item) => {
-            initialStatesForCurrentChecklist[item._id] = {
-              status: Status.EMPTY,
-              note: '',
-            };
-          });
-          return {
-            ...prev,
-            [displayedChecklist._id]: initialStatesForCurrentChecklist,
-          };
-        }
-        return prev; // Use existing states if already present
-      });
-
-      setAllChecklistsExpandedStates((prev) => {
-        if (!prev[displayedChecklist._id]) {
-          // Ensure all items are collapsed by default for any new checklist displayed
-          const newExpandedStates: { [itemId: string]: boolean } = {};
-          displayedChecklist.items.forEach((item) => {
-            newExpandedStates[item._id] = false;
-          });
-          return { ...prev, [displayedChecklist._id]: newExpandedStates };
-        }
-        return prev; // Use existing expanded state if already present
-      });
-    }
-  }, [displayedChecklist, categorySummaryId]);
-
   const handleCategoryChange = async (categoryId: string) => {
     if (categorySummaryId) {
       // Prevent changing category if editing an existing summary
@@ -227,8 +171,6 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
     if (!categoryId) {
       setSelectedCategory(null);
       setChecklistTemplates([]);
-      setDisplayedChecklist(null);
-      setCurrentChecklistIndex(0);
       setAllChecklistsItemStates({}); // Clear all saved states for all checklists
       setAllChecklistsExpandedStates({}); // Clear all expanded states
       return;
@@ -236,8 +178,6 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
 
     const category = categories.find((c) => c._id === categoryId);
     setSelectedCategory(category || null);
-    setCurrentChecklistIndex(0);
-    setDisplayedChecklist(null); // Will trigger useEffect to reset states for new checklist
     setAllChecklistsItemStates({}); // Clear all saved states for all checklists
     setAllChecklistsExpandedStates({}); // Clear all expanded states
 
@@ -249,22 +189,33 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
       );
       if (!checklistRes.ok) {
         throw new Error(
-          `Failed to fetch checklist templates for category: ${checklistRes.status} ${checklistRes.statusText}`,
-        );
+          `Failed to fetch checklist templates for category: ${checklistRes.status} ${checklistRes.statusText}`);
       }
       const checklistData = await checklistRes.json();
       setChecklistTemplates(checklistData);
 
-      if (checklistData.length > 0) {
-        setDisplayedChecklist(checklistData[0]);
-      } else {
-        setDisplayedChecklist(null);
-      }
+      // Initialize states for newly loaded checklists
+      const initialItemStates: Record<string, ItemStateMap> = {};
+      const initialExpandedStates: Record<string, { [itemId: string]: boolean }> = {};
+
+      checklistData.forEach((template: Checklist) => {
+        initialItemStates[template._id] = {};
+        initialExpandedStates[template._id] = {};
+        template.items.forEach((item) => {
+          initialItemStates[template._id][item._id] = {
+            status: Status.EMPTY,
+            note: '',
+          };
+          initialExpandedStates[template._id][item._id] = false;
+        });
+      });
+      setAllChecklistsItemStates(initialItemStates);
+      setAllChecklistsExpandedStates(initialExpandedStates);
+
     } catch (err) {
       console.error('Error fetching checklists for category:', err);
       setError('Could not load checklists for the selected category.');
       setChecklistTemplates([]);
-      setDisplayedChecklist(null);
     } finally {
       setIsTemplateLoading(false);
     }
@@ -320,38 +271,6 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
     setTaskCodeError(error);
   };
 
-  const handleChecklistNavigation = (direction: 'next' | 'previous') => {
-    if (!displayedChecklist) return;
-
-    // Validate the current checklist BEFORE navigating to the next one
-    if (direction === 'next') {
-      const errors = validateChecklistItems(displayedChecklist);
-      if (errors.length > 0) {
-        setError(
-          `Please complete the current checklist before proceeding:\n` +
-            errors.join('\n'),
-        );
-        return;
-      }
-    }
-    setError(null); // Clear previous error if validation passes
-
-    let newIndex = currentChecklistIndex;
-    if (direction === 'next') {
-      newIndex = currentChecklistIndex + 1;
-    } else if (direction === 'previous') {
-      newIndex = currentChecklistIndex - 1;
-    }
-
-    if (newIndex >= 0 && newIndex < checklistTemplates.length) {
-      setCurrentChecklistIndex(newIndex);
-      setDisplayedChecklist(checklistTemplates[newIndex]);
-      window.scrollTo(0, 0);
-    } else {
-      console.warn('Attempted to navigate out of bounds.');
-    }
-  };
-
   const saveAllChecklists = async () => {
     if (!loggedInUserId || !selectedCategory) return;
 
@@ -368,8 +287,8 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
     let savedAnyChecklist = false;
     let lastSavedId: string | null = null;
 
+    // Validate ALL checklists before attempting to save any
     for (const template of checklistTemplates) {
-      // Validate each template using its specific states from allChecklistsItemStates
       const validationErrors = validateChecklistItems(template);
       if (validationErrors.length > 0) {
         setError(
@@ -377,9 +296,12 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
             validationErrors.join('\n'),
         );
         hasOverallError = true;
-        break;
+        setIsSaving(false);
+        return; // Stop saving if any checklist has errors
       }
+    }
 
+    for (const template of checklistTemplates) {
       const itemsToSave = template.items.filter(
         (item) =>
           allChecklistsItemStates[template._id]?.[item._id]?.status !==
@@ -424,10 +346,10 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
       } catch (error) {
         console.error(error);
         setError(
-          `An error occurred while saving checklist "${template.title}". Please try again.`,
+          `An error occurred while saving checklist "${template.title}". Please try again.`
         );
         hasOverallError = true;
-        break;
+        break; // Stop if there's an error saving any checklist
       }
     }
 
@@ -440,7 +362,7 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
       window.scrollTo(0, 0);
     } else if (!savedAnyChecklist && !hasOverallError) {
       setError(
-        'No checklist items were marked for saving across all checklists.',
+        'No checklist items were marked for saving across all checklists.'
       );
     }
   };
@@ -454,29 +376,31 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
       !loggedInUserId ||
       isTaskCodeInvalid ||
       !selectedCategory ||
-      !displayedChecklist
+      checklistTemplates.length === 0 // Check if any checklists are loaded
     ) {
       setIsSaveButtonDisabled(true);
       return;
     }
 
-    const currentChecklistErrors = validateChecklistItems(displayedChecklist);
-    setIsSaveButtonDisabled(currentChecklistErrors.length > 0);
+    // Validate all loaded checklists to determine save button state
+    const allChecklistsHaveErrors = checklistTemplates.some(checklist =>
+      validateChecklistItems(checklist).length > 0
+    );
+
+    setIsSaveButtonDisabled(allChecklistsHaveErrors);
   }, [
     loggedInUserId,
     taskCode,
     taskCodeError,
     selectedCategory,
-    displayedChecklist,
+    checklistTemplates, // Dependency on all checklists
     validateChecklistItems,
-    categorySummaryId, // Add categorySummaryId to dependencies
+    categorySummaryId,
   ]);
 
   const resetForm = () => {
     setSelectedCategory(null);
     setChecklistTemplates([]);
-    setCurrentChecklistIndex(0);
-    setDisplayedChecklist(null);
     setTaskCode('');
     setTaskCodeError(null);
     setCommitMessage('');
@@ -486,37 +410,34 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
   };
 
   // Update currentChecklistItemStates via allChecklistsItemStates
-  const handleStatusChange = (itemId: string, status: Status) => {
-    if (!displayedChecklist) return;
+  const handleStatusChange = (checklistId: string, itemId: string, status: Status) => {
     setAllChecklistsItemStates((prev) => ({
       ...prev,
-      [displayedChecklist._id]: {
-        ...prev[displayedChecklist._id],
-        [itemId]: { ...prev[displayedChecklist._id]?.[itemId], status },
+      [checklistId]: {
+        ...prev[checklistId],
+        [itemId]: { ...prev[checklistId]?.[itemId], status },
       },
     }));
   };
 
   // Update currentExpandedItems via allChecklistsExpandedStates
-  const toggleItem = (itemId: string) => {
-    if (!displayedChecklist) return;
+  const toggleItem = (checklistId: string, itemId: string) => {
     setAllChecklistsExpandedStates((prev) => ({
       ...prev,
-      [displayedChecklist._id]: {
-        ...prev[displayedChecklist._id],
-        [itemId]: !prev[displayedChecklist._id]?.[itemId],
+      [checklistId]: {
+        ...prev[checklistId],
+        [itemId]: !prev[checklistId]?.[itemId],
       },
     }));
   };
 
   // Update currentChecklistItemStates via allChecklistsItemStates
-  const handleNoteChange = (itemId: string, note: string) => {
-    if (!displayedChecklist) return;
+  const handleNoteChange = (checklistId: string, itemId: string, note: string) => {
     setAllChecklistsItemStates((prev) => ({
       ...prev,
-      [displayedChecklist._id]: {
-        ...prev[displayedChecklist._id],
-        [itemId]: { ...prev[displayedChecklist._id]?.[itemId], note },
+      [checklistId]: {
+        ...prev[checklistId],
+        [itemId]: { ...prev[checklistId]?.[itemId], note },
       },
     }));
   };
@@ -528,16 +449,14 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
     categories,
     selectedCategory,
     checklistTemplates,
-    currentChecklistIndex,
-    displayedChecklist,
     isTemplateLoading,
     taskCode,
     setTaskCode: handleSetTaskCode, // Use the new handler
     taskCodeError,
     commitMessage,
     setCommitMessage,
-    itemStates: currentChecklistItemStates, // Expose current checklist's states to component
-    expandedItems: currentExpandedItems, // Expose current checklist's expanded states to component
+    allChecklistsItemStates, // Expose all item states
+    allChecklistsExpandedStates, // Expose all expanded states
     isSaveButtonDisabled,
     isSaving,
     showSuccessPopup,
@@ -547,7 +466,6 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
     savedChecklistId,
     loggedInUserId,
     handleCategoryChange,
-    handleChecklistNavigation,
     saveAllChecklists,
     resetForm,
     handleStatusChange,
