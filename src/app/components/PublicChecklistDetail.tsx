@@ -81,79 +81,23 @@ export default function PublicChecklistDetail({ checklist }: PublicChecklistDeta
   }
 
   const { items } = checklist.checklist;
-  const totalItems = items.length;
-
-  const statusCounts = items.reduce(
-    (acc, item) => {
-      acc[item.status] = (acc[item.status] || 0) + 1;
-      return acc;
-    },
-    {} as Record<Status, number>,
-  );
-
-  const doneCount = statusCounts.done || 0;
-  const incompleteCount = statusCounts.incomplete || 0;
-  const naCount = statusCounts.na || 0;
-
-  const donePercentage = totalItems > 0 ? (doneCount / totalItems) * 100 : 0;
-  const incompletePercentage = totalItems > 0 ? (incompleteCount / totalItems) * 100 : 0;
-  const naPercentage = totalItems > 0 ? (naCount / totalItems) * 100 : 0;
-
+  
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 max-w-4xl mx-auto border border-gray-100"> {/* Refined container styling */}
-      <div className="border-b border-gray-100 pb-4 mb-5"> {/* Subtle border, refined margin */}
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 tracking-tight">
-          {checklist.checklist.title}
-        </h1>
-      </div>
-
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-700 mb-3"> {/* Smaller heading, refined margin */}
-          Completion Status
-        </h2>
-        {totalItems > 0 ? (
-          <>
-            <div className="w-full bg-gray-200 rounded-full h-4 flex overflow-hidden"> {/* Thinner progress bar */}
-              <div
-                className="bg-emerald-400 h-4" // Softer green
-                style={{ width: `${donePercentage}%` }}
-                title={`Done: ${donePercentage.toFixed(1)}%`}
-              />
-              <div
-                className="bg-amber-400 h-4" // Softer yellow/amber
-                style={{ width: `${incompletePercentage}%` }}
-                 title={`Incomplete: ${incompletePercentage.toFixed(1)}%`}
-              />
-              <div
-                className="bg-gray-300 h-4" // Softer gray
-                style={{ width: `${naPercentage}%` }}
-                 title={`N/A: ${naPercentage.toFixed(1)}%`}
-              />
-            </div>
-            <div className="flex justify-between mt-2 text-xs text-gray-500"> {/* Smaller text, softer color */}
-               <div className="flex items-center space-x-1">
-                 <span className="w-2 h-2 rounded-full bg-emerald-400"></span> {/* Smaller circles */}
-                 <span>Done ({doneCount}): {donePercentage.toFixed(1)}%</span>
-               </div>
-               <div className="flex items-center space-x-1">
-                 <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                 <span>Incomplete ({incompleteCount}): {incompletePercentage.toFixed(1)}%</span>
-               </div>
-               <div className="flex items-center space-x-1">
-                 <span className="w-2 h-2 rounded-full bg-gray-300"></span>
-                 <span>N/A ({naCount}): {naPercentage.toFixed(1)}%</span>
-               </div>
-            </div>
-          </>
-        ) : (
-           <p className="text-gray-500 text-sm">No items in this checklist.</p>
-        )}
+      <div className="border-b border-gray-100 pb-2 mb-3"> {/* Reduced padding and margin */}
+        <div className="flex items-center">
+          <img
+            src="/check.png"
+            alt="Checkmark icon"
+            className="w-5 h-5 mr-2"
+          />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 tracking-tight">
+            {checklist.checklist.title}
+          </h1>
+        </div>
       </div>
 
       <div>
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">
-          Checklist Items
-        </h2>
         <motion.ul
           className="space-y-4" // Reduced space
           variants={containerVariants}

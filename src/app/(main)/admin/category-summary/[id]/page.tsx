@@ -48,6 +48,14 @@ interface CategorySummary {
   items: ChecklistSummaryItem[];
   checklistsCompletedCount: number;
   totalChecklistsCount: number;
+  category?: {
+    _id: string;
+    title: string;
+    description?: string;
+    slug: {
+      current: string;
+    };
+  } | null; // Add this to match MyCategorySummaryDetail
 }
 
 export default function AdminCategorySummaryDetailPage() {
@@ -171,8 +179,8 @@ export default function AdminCategorySummaryDetailPage() {
         </div>
         <div className="lg:flex lg:space-x-8 lg:items-start lg:pt-8">
           <CategoryCompletionOverview
-            title={categorySummary.title}
-            description={categorySummary.description}
+            title={categorySummary.category?.title ?? 'Untitled Category'}
+            description={categorySummary.category?.description ?? ''}
             overallCompletionPercentage={overallCompletionPercentage}
             checklistsCompletedCount={categorySummary.checklistsCompletedCount}
             totalChecklistsCount={categorySummary.totalChecklistsCount}

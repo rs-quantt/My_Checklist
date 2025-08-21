@@ -49,6 +49,14 @@ interface CategorySummary {
   items: ChecklistSummaryItem[];
   checklistsCompletedCount: number;
   totalChecklistsCount: number;
+  category?: {
+    _id: string;
+    title: string;
+    description?: string;
+    slug: {
+      current: string;
+    };
+  } | null; // Add this to match MyCategorySummaryDetail
 }
 
 export default function MyCategorySummaryDetailPage() {
@@ -186,27 +194,28 @@ export default function MyCategorySummaryDetailPage() {
           {' '}
           {/* Added lg:pt-8 to shift content below the absolute BackButton, align items to start */}
           <CategoryCompletionOverview
-            title={categorySummary.title}
-            description={categorySummary.description}
+            title={categorySummary.category?.title ?? 'Untitled Category'}
+            description={categorySummary.category?.description ?? ''}
             overallCompletionPercentage={overallCompletionPercentage}
             checklistsCompletedCount={categorySummary.checklistsCompletedCount}
             totalChecklistsCount={categorySummary.totalChecklistsCount}
-            userName={fetchedChecklistDetails[0]?.user?.name || ''}
-            taskCode={fetchedChecklistDetails[0]?.taskCode || ''}
+            userName={fetchedChecklistDetails[0]?.user?.name ?? ''}
+            taskCode={fetchedChecklistDetails[0]?.taskCode ?? ''}
           />
           <div className="lg:w-2/3 lg:border-l lg:border-gray-200 lg:pl-8 lg:pt-0">
             {' '}
             {/* Checklist Details section - added left border and padding, removed top padding */}
-            {fetchedChecklistDetails[0] && fetchedChecklistDetails[0].commitMessage && (
-              <div className="mb-4">
-                <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3">
-                  Commit Message
-                </h3>
-                <p className="text-base font-semibold text-gray-700 bg-gray-50 p-2 rounded-md border border-gray-200">
-                  {fetchedChecklistDetails[0].commitMessage}
-                </p>
-              </div>
-            )}
+            {fetchedChecklistDetails[0] &&
+              fetchedChecklistDetails[0].commitMessage && (
+                <div className="mb-4">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3">
+                    Commit Message
+                  </h3>
+                  <p className="text-base font-semibold text-gray-700 bg-gray-50 p-2 rounded-md border border-gray-200">
+                    {fetchedChecklistDetails[0].commitMessage}
+                  </p>
+                </div>
+              )}
             <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-6">
               Checklist Details
             </h3>
