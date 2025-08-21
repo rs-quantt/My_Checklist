@@ -222,13 +222,13 @@ export default function MainLayout({
                 </Popover.Root>
               </div>
             ) : (
-              <motion.div whileHover={{ scale: 1.05 }}>
+              <motion.div variants={linkVariants} whileHover="hover">
                 <Link
                   href="/login"
-                  className="group inline-flex items-center justify-center whitespace-nowrap rounded-full bg-blue-600 px-5 py-2.5 text-base font-semibold !text-white shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-px hover:shadow-lg hover:shadow-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
+                  className="flex items-center px-3 py-2 rounded-full text-base font-medium !text-gray-600 hover:text-blue-600 transition-colors duration-200 cursor-pointer"
                 >
                   <ArrowLeftEndOnRectangleIcon className="h-5 w-5 mr-1" />
-                  Log in
+                  Login
                 </Link>
               </motion.div>
             )}
