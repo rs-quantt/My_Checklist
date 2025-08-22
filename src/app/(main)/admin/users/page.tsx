@@ -214,7 +214,7 @@ export default function UsersPage() {
           <button
             onClick={handleSearch}
             disabled={isSearching}
-            className="inline-flex h-10 w-32 items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex h-10 w-32 items-center justify-center rounded-md border border-transparent bg-blue-900 px-4 text-base font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
           >
             {isSearching ? (
               <ButtonLoadingSpinner />

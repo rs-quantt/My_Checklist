@@ -1,14 +1,14 @@
 'use client';
 import { clearUserChecklistItems } from '@/services/adminService';
 import {
-    ArrowLeftEndOnRectangleIcon,
-    ArrowRightStartOnRectangleIcon,
-    Bars3Icon,
-    Cog6ToothIcon,
-    DocumentCheckIcon,
-    HomeIcon,
-    InformationCircleIcon,
-    TrashIcon,
+  ArrowLeftEndOnRectangleIcon,
+  ArrowRightStartOnRectangleIcon,
+  Bars3Icon,
+  Cog6ToothIcon,
+  DocumentCheckIcon,
+  HomeIcon,
+  InformationCircleIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 import * as Popover from '@radix-ui/react-popover';
 import { motion, Variants } from 'framer-motion';

@@ -18,6 +18,12 @@ import {
   FaTh,
   FaTimes,
   FaVial,
+  FaBook,
+  FaRocket,
+  FaLaptopCode,
+  FaFlask,
+  FaClipboardList,
+  FaTasks
 } from 'react-icons/fa';
 
 type Checklist = {
@@ -38,25 +44,25 @@ const getTypeStyle = (type: Checklist['type']) => {
       return {
         color: 'text-blue-900',
         bgColor: 'bg-blue-50',
-        icon: <FaCode />,
+        icon: <FaTasks />,
       };
     case 'Test Case':
       return {
         color: 'text-green-600',
         bgColor: 'bg-green-50',
-        icon: <FaVial />,
+        icon: <FaFlask />,
       };
     case 'Experience':
       return {
         color: 'text-amber-600',
         bgColor: 'bg-amber-50',
-        icon: <FaLightbulb />,
+        icon: <FaRocket />,
       };
     default:
       return {
         color: 'text-gray-600',
         bgColor: 'bg-gray-50',
-        icon: null,
+        icon: <FaTasks />,
       };
   }
 };
@@ -126,7 +132,12 @@ const ChecklistCard = ({ checklist }: { checklist: Checklist }) => {
           </p>
         )}
       </div>
-      <div className="px-6 py-4 flex justify-end items-center border-t border-gray-100">
+      <div className="px-6 py-4 flex justify-between items-center border-t border-gray-100">
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${typeStyle.bgColor} ${typeStyle.color}`}
+        >
+          {checklist.type}
+        </span>
         <span className="text-sm font-medium text-gray-500">
           {checklist.itemCount} item{checklist.itemCount !== 1 ? 's' : ''}
         </span>
@@ -176,8 +187,10 @@ const ChecklistListItem = ({ checklist }: { checklist: Checklist }) => {
           {checklist.description}
         </p>
       </div>
-      <div className="flex items-center gap-6 mx-6 flex-shrink-0">
-        <span className="text-sm font-medium text-gray-500 hidden md:block">
+      <div className="flex items-center gap-6 ml-auto flex-shrink-0">
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${typeStyle.bgColor} ${typeStyle.color}`}
+        >
           {checklist.type}
         </span>
         <span className="text-sm font-medium text-gray-500">
@@ -438,8 +451,8 @@ export default function ChecklistPage() {
           <>
             {commonChecklists.length > 0 && (
               <section className="mb-12 common-templates">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-3 border-b-2 border-blue-300 flex items-center gap-2.5 justify-center !text-blue-900">
-                  <FaStar className="text-yellow-400" /> Common Templates
+                <h2 className="text-3xl font-bold text-gray-800 mb-6 text-left !text-blue-900">
+                  <FaStar className="text-yellow-400 inline-block mr-2 mb-2" /> Common Templates
                 </h2>
                 <motion.div
                   className={
@@ -458,7 +471,7 @@ export default function ChecklistPage() {
 
             {otherChecklists.length > 0 && (
               <section className="all-templates">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-3 border-b-2 border-blue-300 text-center !text-blue-900">
+                <h2 className="text-3xl font-bold text-gray-800 mb-6 text-left !text-blue-900">
                   All Templates
                 </h2>
                 <motion.div
