@@ -205,7 +205,7 @@ export default function MyCategorySummaryPage() {
                   day: 'numeric',
                 })}
               </h2>
-              <span className="text-sm text-blue-600 font-medium">
+              <span className="text-sm text-blue-900 font-medium">
                 ({groupedCategorySummaries[date].length} Summaries)
               </span>
             </div>

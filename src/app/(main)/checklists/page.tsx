@@ -1,24 +1,24 @@
 'use client';
-import { useEffect, useState, useMemo } from 'react';
-import Link from 'next/link';
-import { useSession } from 'next-auth/react';
-import { motion, Variants } from 'framer-motion';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
+import { ChecklistTour } from '@/app/components/tour/ChecklistTour';
+import { motion, Variants } from 'framer-motion';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  FaSearch,
-  FaTimes,
-  FaQuestionCircle,
-  FaPlus,
-  FaStar,
   FaCode,
-  FaVial,
   FaLightbulb,
-  FaTh,
   FaList,
+  FaPlus,
+  FaQuestionCircle,
+  FaSearch,
   FaSortAlphaDown,
   FaSortAlphaUp,
+  FaStar,
+  FaTh,
+  FaTimes,
+  FaVial,
 } from 'react-icons/fa';
-import { ChecklistTour } from '@/app/components/tour/ChecklistTour';
 
 type Checklist = {
   _id: string;
@@ -36,7 +36,7 @@ const getTypeStyle = (type: Checklist['type']) => {
   switch (type) {
     case 'Coding Rule':
       return {
-        color: 'text-blue-600',
+        color: 'text-blue-900',
         bgColor: 'bg-blue-50',
         icon: <FaCode />,
       };
@@ -105,7 +105,7 @@ const ChecklistCard = ({ checklist }: { checklist: Checklist }) => {
     <div className={cardClasses.trim()}>
       <div className="p-6 flex-grow">
         <div
-          className={`flex items-center justify-center w-12 h-12 rounded-lg mb-4 ${typeStyle.bgColor} ${typeStyle.color}`}
+          className={`flex items-center justify-center w-14 h-14 rounded-lg mb-4 text-2xl ${typeStyle.bgColor} ${typeStyle.color}`}
         >
           {typeStyle.icon}
         </div>
@@ -166,7 +166,7 @@ const ChecklistListItem = ({ checklist }: { checklist: Checklist }) => {
   const content = (
     <div className={itemClasses}>
       <div
-        className={`flex items-center justify-center w-10 h-10 rounded-lg ${typeStyle.bgColor} ${typeStyle.color} mr-4 flex-shrink-0`}
+        className={`flex items-center justify-center w-12 h-12 rounded-lg text-xl ${typeStyle.bgColor} ${typeStyle.color} mr-4 flex-shrink-0`}
       >
         {typeStyle.icon}
       </div>
@@ -303,14 +303,14 @@ export default function ChecklistPage() {
       <ChecklistTour />
       <div className="bg-blue-600 text-white py-12 text-center shadow-md relative" style={{
         background:
-          'url(https://images.pexels.com/photos/9790672/pexels-photo-9790672.jpeg)',
+          'url(https://images.pexels.com/photos/6192758/pexels-photo-6192758.jpeg)',
         backgroundSize: 'cover',
-        backgroundPositionY: '-158px',
+        backgroundPositionY: '-153px',
         backgroundRepeat: 'no-repeat'
       }}>
         <button
           id="start-tour-button"
-          className="absolute top-4 right-4 text-white hover:text-blue-200 transition-colors"
+          className="absolute top-4 right-4 text-white hover:text-blue-200 transition-colors cursor-pointer"
           aria-label="Start page tour"
         >
           <FaQuestionCircle size={24} />
@@ -326,23 +326,23 @@ export default function ChecklistPage() {
 
         <div
           id="search-bar"
-          className="mt-8 mx-auto w-full max-w-md px-4 sm:px-0 relative"
+          className="mt-8 mx-auto w-full max-w-xl px-4 sm:px-0 relative"
         >
           <input
             type="text"
             placeholder="Search checklists by name or description..."
             className="
-              w-full p-3 pl-10 rounded-lg border border-blue-300 shadow-sm
+              w-full p-3 pl-10 rounded-lg border-2 border-blue-400 shadow-lg
               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
               bg-white
               text-gray-800 placeholder-gray-500
               transition-all duration-200 ease-in-out
-              focus:shadow-lg
+              focus:border-blue-500
             "
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
+          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600 text-xl" />
           {searchQuery && (
             <button
               onClick={handleClearSearch}
@@ -363,7 +363,7 @@ export default function ChecklistPage() {
             <Link
               id="start-new-task-button"
               href="/my-checklist"
-              className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300 ease-in-out !text-blue-700"
+              className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300 ease-in-out !text-blue-900"
             >
               <FaPlus className="mr-2 -ml-1" />
               Start a New Task
@@ -380,7 +380,7 @@ export default function ChecklistPage() {
         <div className="flex justify-end items-center mb-8 gap-4">
           <button
             onClick={toggleSortOrder}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors text-sm font-medium"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors text-sm font-medium cursor-pointer"
           >
             {sortOrder === 'asc' ? <FaSortAlphaDown /> : <FaSortAlphaUp />}
             <span className="capitalize">
@@ -390,7 +390,7 @@ export default function ChecklistPage() {
           <div className="flex items-center gap-1 rounded-lg bg-gray-200 p-1">
             <motion.button
               onClick={() => setViewMode('grid')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors relative`}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors relative cursor-pointer`}
               animate={{ color: viewMode === 'grid' ? '#2563EB' : '#4B5563' }}
             >
               {viewMode === 'grid' && (
@@ -405,7 +405,7 @@ export default function ChecklistPage() {
             </motion.button>
             <motion.button
               onClick={() => setViewMode('list')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors relative`}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors relative cursor-pointer`}
               animate={{ color: viewMode === 'list' ? '#2563EB' : '#4B5563' }}
             >
               {viewMode === 'list' && (
@@ -438,7 +438,7 @@ export default function ChecklistPage() {
           <>
             {commonChecklists.length > 0 && (
               <section className="mb-12 common-templates">
-                <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2.5">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-3 border-b-2 border-blue-300 flex items-center gap-2.5 justify-center !text-blue-900">
                   <FaStar className="text-yellow-400" /> Common Templates
                 </h2>
                 <motion.div
@@ -458,7 +458,7 @@ export default function ChecklistPage() {
 
             {otherChecklists.length > 0 && (
               <section className="all-templates">
-                <h2 className="text-xl font-semibold text-gray-800 mb-6 pb-3 border-b border-gray-200">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-3 border-b-2 border-blue-300 text-center !text-blue-900">
                   All Templates
                 </h2>
                 <motion.div

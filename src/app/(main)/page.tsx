@@ -98,7 +98,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Feature 1 */}
             <div className="bg-white rounded-lg shadow-lg p-6 text-center transform hover:scale-105 transition duration-300 ease-in-out">
-              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mx-auto mb-4">
+              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-900 mx-auto mb-4">
                 <svg
                   className="w-8 h-8"
                   fill="none"

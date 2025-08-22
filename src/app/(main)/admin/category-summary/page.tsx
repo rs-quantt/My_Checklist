@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import CompletionCircle from '@/app/components/CompletionCircle'; // Import CompletionCircle
 import LoadingSpinner from '@/app/components/LoadingSpinner';
+import { AdminCategoryListItem } from '@/services/categoryService';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { AdminCategoryListItem } from '@/services/categoryService';
-import CompletionCircle from '@/app/components/CompletionCircle'; // Import CompletionCircle
+import { useEffect, useState } from 'react';
 
 interface GroupedAdminCategorySummaries {
   [date: string]: AdminCategoryListItem[];
@@ -90,7 +90,7 @@ export default function AdminCategorySummaryPage() {
               <h2 className="text-lg font-bold text-blue-800">
                 {new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </h2>
-              <span className="text-sm text-blue-600 font-medium">
+              <span className="text-sm text-blue-900 font-medium">
                 ({groupedCategorySummaries[date].length} Summaries)
               </span>
             </div>

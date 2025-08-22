@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import LoadingSpinner from '../../components/LoadingSpinner';
-import { FaChartBar, FaUsers, FaClipboardList } from 'react-icons/fa';
-import ChecklistPieChart from './components/ChecklistPieChart';
 import { motion, Variants } from 'framer-motion';
+import Link from 'next/link';
+import React, { useEffect, useState } from 'react';
+import { FaChartBar, FaClipboardList, FaUsers } from 'react-icons/fa';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import ChecklistPieChart from './components/ChecklistPieChart';
 
 interface Counts {
   userCount: number | null;
@@ -110,7 +110,7 @@ const AdminDashboard: React.FC = () => {
       <div className="flex items-center justify-between mb-12">
         <div className="flex items-center space-x-4">
           <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
-          <FaChartBar className="text-blue-600 text-4xl" />
+          <FaChartBar className="text-blue-900 text-4xl" />
         </div>
       </div>
 
@@ -134,7 +134,7 @@ const AdminDashboard: React.FC = () => {
                 <h3 className="text-lg font-semibold text-gray-700">
                   Total Users
                 </h3>
-                <p className="text-4xl font-extrabold text-blue-600 mt-2">
+                <p className="text-4xl font-extrabold text-blue-900 mt-2">
                   {counts.userCount}
                 </p>
               </div>

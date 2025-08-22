@@ -64,7 +64,7 @@ const RulesPage = () => {
                 className="bg-white rounded-lg shadow-md p-6 cursor-pointer border border-gray-200 h-full flex flex-col"
               >
                 <div className="flex items-center mb-4">
-                  <DocumentTextIcon className="h-8 w-8 text-blue-600 mr-4" />
+                  <DocumentTextIcon className="h-8 w-8 text-blue-900 mr-4" />
                   <h2 className="text-2xl font-semibold text-gray-800">
                     {rule.title}
                   </h2>

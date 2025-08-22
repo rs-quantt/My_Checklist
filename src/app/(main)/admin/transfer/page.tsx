@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import {
-  ArrowRightIcon,
-  CheckCircleIcon,
-  ExclamationCircleIcon,
-  MagnifyingGlassIcon,
-} from '@heroicons/react/24/outline';
 import CommonSelect from '@/app/components/CommonSelect';
+import {
+    ArrowRightIcon,
+    CheckCircleIcon,
+    ExclamationCircleIcon,
+    MagnifyingGlassIcon,
+} from '@heroicons/react/24/outline';
+import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 
 interface Checklist {
   _id: string;
@@ -105,7 +105,7 @@ export default function TransferChecklistItemsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-sm">
             <div className="text-center">
                 <svg
-                    className="animate-spin h-12 w-12 text-blue-600 mx-auto"
+                    className="animate-spin h-12 w-12 text-blue-900 mx-auto"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -247,7 +247,7 @@ export default function TransferChecklistItemsPage() {
                     id={`dest-${c._id}`}
                     readOnly
                     checked={selectedDestinations.includes(c._id)}
-                    className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    className="h-5 w-5 rounded border-gray-300 text-blue-900 focus:ring-blue-500 cursor-pointer"
                   />
                   <label
                     htmlFor={`dest-${c._id}`}

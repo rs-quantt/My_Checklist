@@ -1,14 +1,14 @@
 'use client';
 import { clearUserChecklistItems } from '@/services/adminService';
 import {
-  ArrowLeftEndOnRectangleIcon,
-  ArrowRightStartOnRectangleIcon,
-  Bars3Icon,
-  Cog6ToothIcon,
-  DocumentCheckIcon,
-  HomeIcon,
-  InformationCircleIcon,
-  TrashIcon,
+    ArrowLeftEndOnRectangleIcon,
+    ArrowRightStartOnRectangleIcon,
+    Bars3Icon,
+    Cog6ToothIcon,
+    DocumentCheckIcon,
+    HomeIcon,
+    InformationCircleIcon,
+    TrashIcon,
 } from '@heroicons/react/24/outline';
 import * as Popover from '@radix-ui/react-popover';
 import { motion, Variants } from 'framer-motion';
@@ -83,8 +83,7 @@ export default function MainLayout({
                 <motion.span
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="text-base font-bold"
-                  style={{ color: '#2196F3' }}
+                  className="text-base font-bold text-blue-900"
                 >
                   ADMIN
                 </motion.span>
@@ -97,7 +96,7 @@ export default function MainLayout({
               <motion.div variants={linkVariants} whileHover="hover">
                 <Link
                   href="/"
-                  className="flex items-center hover:text-blue-600 transition-colors duration-200 cursor-pointer"
+                  className="flex items-center hover:text-blue-900 transition-colors duration-200 cursor-pointer"
                 >
                   <HomeIcon className="h-5 w-5 mr-1" />
                   Home
@@ -108,7 +107,7 @@ export default function MainLayout({
                   href="https://runsystem.net/vi"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center hover:text-blue-600 transition-colors duration-200 cursor-pointer"
+                  className="flex items-center hover:text-blue-900 transition-colors duration-200 cursor-pointer"
                 >
                   <InformationCircleIcon className="h-5 w-5 mr-1" />
                   About us
@@ -118,7 +117,7 @@ export default function MainLayout({
                 <motion.div variants={linkVariants} whileHover="hover">
                   <Link
                     href="/admin"
-                    className="flex items-center hover:text-blue-600 transition-colors duration-200 cursor-pointer"
+                    className="flex items-center hover:text-blue-900 transition-colors duration-200 cursor-pointer"
                   >
                     <Cog6ToothIcon className="h-5 w-5 mr-1" />
                     Admin
@@ -143,7 +142,7 @@ export default function MainLayout({
                 />
                 <Popover.Root>
                   <Popover.Trigger asChild>
-                    <button className="p-2 rounded-full hover:bg-gray-100 focus:outline-none">
+                    <button className="p-2 rounded-full hover:bg-gray-100 focus:outline-none cursor-pointer">
                       <Bars3Icon className="h-6 w-6 text-gray-500" />
                     </button>
                   </Popover.Trigger>
@@ -225,7 +224,7 @@ export default function MainLayout({
               <motion.div variants={linkVariants} whileHover="hover">
                 <Link
                   href="/login"
-                  className="flex items-center px-3 py-2 rounded-full text-base font-medium !text-gray-600 hover:text-blue-600 transition-colors duration-200 cursor-pointer"
+                  className="flex items-center px-3 py-2 rounded-full text-base font-medium !text-gray-600 hover:text-blue-900 transition-colors duration-200 cursor-pointer"
                 >
                   <ArrowLeftEndOnRectangleIcon className="h-5 w-5 mr-1" />
                   Login

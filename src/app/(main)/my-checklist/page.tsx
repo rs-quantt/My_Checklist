@@ -82,7 +82,7 @@ export default function MyChecklistPage() {
             {!selectedCategory && (
               <button
                 id="start-my-checklist-tour-button"
-                className="text-blue-500 hover:text-blue-700 transition-colors"
+                className="text-blue-900 transition-colors cursor-pointer"
                 aria-label="Start page tour"
               >
                 <FaQuestionCircle size={24} />
@@ -97,7 +97,7 @@ export default function MyChecklistPage() {
           )}
           <motion.div className="text-center mb-6" variants={itemVariants}>
             <div className="flex items-center justify-center">
-              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 leading-tight">
+              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-blue-900 leading-tight">
                 {categorySummaryId ? 'Edit Task' : 'Start a New Task'}
               </h1>
             </div>
