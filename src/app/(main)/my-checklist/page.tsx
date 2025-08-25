@@ -152,6 +152,7 @@ export default function MyChecklistPage() {
                   onChange={(e) => setTaskCode(e.target.value)}
                   onBlur={handleTaskCodeBlur}
                   disabled={!!categorySummaryId}
+                  spellCheck={false}
                 />
                 {taskCodeError && (
                   <p className="flex items-center text-red-500 font-medium text-sm mt-1">
@@ -176,6 +177,7 @@ export default function MyChecklistPage() {
                   placeholder="Enter your commit message (optional)"
                   value={commitMessage}
                   onChange={(e) => setCommitMessage(e.target.value)}
+                  spellCheck={false}
                 />
               </motion.div>
             </motion.div>
@@ -236,7 +238,7 @@ export default function MyChecklistPage() {
                         >
                           {checklist.items.map((item) => {
                             const state = allChecklistsItemStates[checklist._id]?.[item._id] || {
-                              status: '',
+                              status: '' as Status,
                               note: '',
                             };
                             const isExpanded = allChecklistsExpandedStates[checklist._id]?.[item._id] || false;
@@ -385,7 +387,7 @@ export default function MyChecklistPage() {
                                               <div>
                                                 <label
                                                   htmlFor={`note-${item._id}`}
-                                              className="block text-sm font-medium text-gray-700 mt-3"
+                                              className="block text-sm font-medium text-gray-700 mt-3 pb-2"
                                                 >
                                                   Reason / Note{' '}
                                                   <span
@@ -405,14 +407,30 @@ export default function MyChecklistPage() {
                                                       e.target.value,
                                                     )
                                                   }
+                                                  onInput={(e) => {
+                                                    const textarea = e.currentTarget;
+                                                    textarea.style.height = 'auto';
+                                                    const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight);
+                                                    const maxRows = 5;
+                                                    const maxHeight = lineHeight * maxRows;
+
+                                                    if (textarea.scrollHeight <= maxHeight) {
+                                                      textarea.style.height = textarea.scrollHeight + 'px';
+                                                      textarea.style.overflowY = 'hidden';
+                                                    } else {
+                                                      textarea.style.height = maxHeight + 'px';
+                                                      textarea.style.overflowY = 'auto';
+                                                    }
+                                                  }}
                                                   placeholder={
                                                     isNoteRequired
                                                       ? 'Required'
                                                       : 'Optional'
                                                   }
-                                                  className={`w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm transition`}
-                                                  rows={2}
+                                                  className={`w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:ring-inset text-sm transition resize-none`}
+                                                  rows={1}
                                                   required={isNoteRequired}
+                                                  spellCheck="false"
                                                 />
                                               </div>
                                             </div>
@@ -432,7 +450,7 @@ export default function MyChecklistPage() {
                           id="action-button"
                           onClick={saveAllChecklists}
                           disabled={isSaveButtonDisabled || isSaving}
-                          className="relative flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-blue-600 text-white font-bold shadow-md transition-all duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed w-48 h-10"
+                          className="relative flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-blue-900 text-white font-bold shadow-md transition-all duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed w-48 h-10"
                           whileTap={
                             !isSaveButtonDisabled && !isSaving
                               ? { scale: 0.97 }
@@ -480,7 +498,7 @@ export default function MyChecklistPage() {
                                 transition={{ duration: 0.2 }}
                                 className="absolute flex items-center justify-center"
                               >
-                                <FaSave className="mr-2" /> Save Checklist
+                                <FaSave className="mr-2" /> Save
                               </motion.span>
                             )}
                           </AnimatePresence>

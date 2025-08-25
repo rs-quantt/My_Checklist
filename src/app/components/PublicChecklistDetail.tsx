@@ -216,6 +216,7 @@ export default function PublicChecklistDetail({ checklist }: PublicChecklistDeta
                                 readOnly
                                 className={`w-full p-2 border border-gray-200 rounded-md bg-gray-50 text-gray-700 text-sm`} // Refined border and text color
                                 rows={2}
+                                spellCheck={false}
                               />
                             </div>
                           )}

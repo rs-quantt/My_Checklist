@@ -248,7 +248,7 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
   const validateTaskCode = (code: string): string | null => {
     const trimmedCode = code.trim();
     if (trimmedCode.length === 0) {
-      return null; // Don't show error if field is empty (will be handled by required attribute)
+      return 'Task Code cannot be empty.'; // Explicitly return error for empty task code
     }
     if (trimmedCode.length < 3) {
       return 'Task Code must be at least 3 characters long.';
@@ -368,13 +368,16 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
   };
 
   useEffect(() => {
-    // Only check for taskCodeError if taskCode is not empty and not in edit mode
-    const isTaskCodeInvalid =
-      !categorySummaryId && taskCode.trim() !== '' && taskCodeError !== null;
+    const isTaskCodeEmpty = taskCode.trim() === '';
+    // isTaskCodeInvalid is true if NOT in edit mode AND taskCode is NOT empty AND taskCodeError exists.
+    // For disabling, we also need to consider if taskCode is empty in non-edit mode.
+    const isTaskCodeInvalidOrEmpty =
+      (!categorySummaryId && isTaskCodeEmpty) ||
+      (!categorySummaryId && !isTaskCodeEmpty && taskCodeError !== null);
 
     if (
       !loggedInUserId ||
-      isTaskCodeInvalid ||
+      isTaskCodeInvalidOrEmpty || // Use the new condition here
       !selectedCategory ||
       checklistTemplates.length === 0 // Check if any checklists are loaded
     ) {

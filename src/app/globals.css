@@ -13,20 +13,39 @@ a {
   text-decoration: none;
 }
 
-/* Custom scrollbar */
+/* Custom global scrollbar (can be overridden by specific elements) */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px; /* Default width for other scrollbars */
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f1f1f1; /* Default track background */
 }
 
 ::-webkit-scrollbar-thumb {
   background: #888;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+/* Custom scrollbar for textarea to prevent ring overlap and place it inside */
+textarea::-webkit-scrollbar {
+  margin-right: 1px;
+  width: 4px; /* Thinner scrollbar for textarea */
+}
+
+textarea::-webkit-scrollbar-track {
+  background: transparent; /* Make track transparent */
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background-color: rgba(28, 57, 142, 0.2); /* Slightly transparent thumb */
+  border-radius: 4px; /* Smaller radius for thinner thumb */
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(28, 57, 142, 0.3); /* Slightly darker on hover */
 }
