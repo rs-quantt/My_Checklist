@@ -147,7 +147,7 @@ export default function MyCategorySummaryPage() {
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <div className="flex flex-wrap justify-between items-center mb-6">
         <div className="mb-4 sm:mb-0">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-blue-900">
             My Category Summary
           </h1>
           <p className="text-gray-600 mb-6 pt-2">
@@ -165,7 +165,7 @@ export default function MyCategorySummaryPage() {
           >
             <Link
               href="/my-checklist"
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold !text-white shadow-md transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-900 px-4 py-2 text-sm font-bold !text-white shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
             >
               Create a new task
               <svg
@@ -197,7 +197,7 @@ export default function MyCategorySummaryPage() {
         dates.map((date) => (
           <div key={date} className="mb-8 last:mb-0">
             <div className="bg-blue-50 rounded-md px-4 py-2 mb-4 border-l-4 border-blue-500 flex items-center justify-between shadow-sm">
-              <h2 className="text-lg font-bold text-blue-800">
+              <h2 className="text-lg font-bold text-blue-900">
                 {new Date(date).toLocaleDateString('en-US', {
                   weekday: 'long',
                   year: 'numeric',
@@ -228,11 +228,10 @@ export default function MyCategorySummaryPage() {
                   >
                     {/* Edit icon at top right - Updated with specific hover background, more margin, and cursor pointer */}
                     <motion.button
-                      className="absolute top-4 right-4 p-3 rounded-full bg-transparent text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 cursor-pointer"
+                      className="absolute top-4 right-4 p-3 rounded-full bg-transparent text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 cursor-pointer"
                       onClick={(e) => handleEditClick(e, summary._id)}
                       aria-label="Edit Checklist"
-                      whileHover={{ backgroundColor: '#2b7fff', color: 'white' }} // Change to blue-500
-                      whileTap={{ scale: 0.9, backgroundColor: '#bfdbfe' }} // blue-200
+                      whileHover={{ backgroundColor: '#1c398e', color: 'white', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}
                       transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                     >
                       <svg
@@ -250,7 +249,7 @@ export default function MyCategorySummaryPage() {
                       </svg>
                     </motion.button>
 
-                    <h2 className="text-lg font-bold text-blue-700 mb-1 pr-8">
+                    <h2 className="text-lg font-bold text-blue-900 mb-1 pr-8">
                       {summary.title}
                     </h2>
                     {summary.taskCode && (
@@ -282,7 +281,7 @@ export default function MyCategorySummaryPage() {
                             {summary.completedChecklists}
                           </span>
                         </p>
-                        <p className="text-sm font-semibold text-blue-700 mt-1">
+                        <p className="text-sm font-semibold text-blue-900 mt-1">
                           {summary.completionPercentage.toFixed(0)}% Complete
                         </p>
                       </div>
