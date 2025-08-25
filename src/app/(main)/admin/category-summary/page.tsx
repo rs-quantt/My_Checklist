@@ -3,10 +3,10 @@
 import CompletionCircle from '@/app/components/CompletionCircle'; // Import CompletionCircle
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 import { AdminCategoryListItem } from '@/services/categoryService';
-import { motion, AnimatePresence, Variants } from 'framer-motion'; // Import AnimatePresence
+import { ChevronDownIcon } from '@heroicons/react/24/outline'; // Import icons
+import { AnimatePresence, motion, Variants } from 'framer-motion'; // Import AnimatePresence
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'; // Import icons
 
 interface GroupedAdminCategorySummaries {
   [date: string]: AdminCategoryListItem[];

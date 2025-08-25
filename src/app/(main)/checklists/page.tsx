@@ -6,24 +6,18 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  FaCode,
-  FaLightbulb,
+  FaFlask,
   FaList,
   FaPlus,
   FaQuestionCircle,
+  FaRocket,
   FaSearch,
   FaSortAlphaDown,
   FaSortAlphaUp,
   FaStar,
+  FaTasks,
   FaTh,
-  FaTimes,
-  FaVial,
-  FaBook,
-  FaRocket,
-  FaLaptopCode,
-  FaFlask,
-  FaClipboardList,
-  FaTasks
+  FaTimes
 } from 'react-icons/fa';
 
 type Checklist = {
