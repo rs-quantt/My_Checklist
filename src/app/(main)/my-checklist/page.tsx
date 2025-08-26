@@ -1,3 +1,4 @@
+
 'use client';
 
 import BackButton from '@/app/components/BackButton';
@@ -9,7 +10,7 @@ import { Status } from '@/types/enum';
 import { PortableText } from '@portabletext/react';
 import { AnimatePresence, motion, Variants } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
-import { FaQuestionCircle, FaSave, FaTimesCircle } from 'react-icons/fa';
+import { FaQuestionCircle, FaSave, FaTimesCircle, FaCheckCircle, FaEdit } from 'react-icons/fa'; // Import new icons
 import ptComponents from '../../components/ptComponents';
 
 const containerVariants: Variants = {
@@ -53,13 +54,20 @@ export default function MyChecklistPage() {
     setShowSuccessPopup,
     error,
     initialLoading,
+    isConfirmed, // NEW: Get isConfirmed state
     handleCategoryChange,
     saveAllChecklists,
     handleStatusChange,
     toggleItem,
     handleNoteChange,
     handleTaskCodeBlur,
+    handleConfirm, // NEW: Get handleConfirm function
+    handleEdit, // NEW: Get handleEdit function
   } = useMyChecklistLogic(categorySummaryId);
+
+  // Determine if the Confirm/Change button should be enabled
+  const isConfirmButtonEnabled =
+    !!selectedCategory && taskCode.trim() !== '' && taskCodeError === null;
 
   if (initialLoading || sessionStatus === 'loading')
     return <LoadingSpinner text="Loading page..." />;
@@ -108,14 +116,14 @@ export default function MyChecklistPage() {
 
           <div className="space-y-8">
             <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start"
+              className="grid grid-cols-3 gap-x-3 items-start"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
             >
               <motion.div
                 id="category-select-container"
-                className="space-y-2"
+                className="space-y-2 md:col-span-2"
                 variants={itemVariants}
               >
                 <label className="block text-base font-semibold text-gray-700">
@@ -129,12 +137,14 @@ export default function MyChecklistPage() {
                   value={selectedCategory?._id || ''}
                   onChange={handleCategoryChange}
                   placeholder="-- Select a category --"
-                  disabled={!!categorySummaryId}
+                  disabled={!!categorySummaryId || isConfirmed}
                 />
               </motion.div>
               <motion.div
                 id="task-code-input-container"
-                className="space-y-2 text-base"
+                className={`space-y-2 text-base ${
+                  categorySummaryId ? 'md:col-span-10' : 'md:col-span-8'
+                }`}
                 variants={itemVariants}
               >
                 <label className="block text-base font-semibold text-gray-700">
@@ -142,7 +152,7 @@ export default function MyChecklistPage() {
                 </label>
                 <input
                   className={`appearance-none block w-full border ${taskCodeError ? 'border-red-500' : 'border-gray-300'} text-gray-800 py-2 px-3 rounded-md leading-tight ${
-                    !!categorySummaryId
+                    !!categorySummaryId || isConfirmed
                       ? 'bg-gray-200 opacity-100 cursor-not-allowed'
                       : 'bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
                   } transition duration-200 ease-in-out shadow-sm text-base`}
@@ -151,17 +161,41 @@ export default function MyChecklistPage() {
                   value={taskCode}
                   onChange={(e) => setTaskCode(e.target.value)}
                   onBlur={handleTaskCodeBlur}
-                  disabled={!!categorySummaryId}
+                  disabled={!!categorySummaryId || isConfirmed}
                   spellCheck={false}
                 />
-                {taskCodeError && (
-                  <p className="flex items-center text-red-500 font-medium text-sm mt-1">
-                    <FaTimesCircle className="mr-2" /> {taskCodeError}
-                  </p>
-                )}
+                <div className="min-h-[1.5rem]">
+                  {taskCodeError && (
+                    <p className="flex items-center text-red-500 font-medium text-sm mt-1">
+                      <FaTimesCircle className="mr-2" /> {taskCodeError}
+                    </p>
+                  )}
+                </div>
               </motion.div>
+
+              {!categorySummaryId && ( /* Conditional rendering for Confirm/Change buttons */
+                <motion.div className="md:col-span-2 h-full flex items-center" variants={itemVariants}>
+                  {!isConfirmed ? (
+                    <button
+                      onClick={handleConfirm}
+                      disabled={!isConfirmButtonEnabled}
+                      className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-blue-900 text-white font-bold shadow-md transition-all duration-300 ease-in-out disabled:bg-gray-400 cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      <FaCheckCircle className="mr-2" /> Confirm
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleEdit}
+                      className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-blue-900 text-white font-bold shadow-md transition-all duration-300 ease-in-out disabled:bg-gray-400 cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      <FaEdit className="mr-2" /> Change
+                    </button>
+                  )}
+                </motion.div>
+              )}
+
               <motion.div
-                className="space-y-2 md:col-span-2"
+                className="space-y-2 md:col-span-12"
                 variants={itemVariants}
               >
                 <label
@@ -184,7 +218,7 @@ export default function MyChecklistPage() {
 
             <div className="relative min-h-[5rem]">
               <AnimatePresence mode="wait">
-                {isTemplateLoading && selectedCategory && (
+                {isTemplateLoading && selectedCategory && isConfirmed && (
                   <motion.div
                     key="template-loader"
                     initial={{ opacity: 0 }}
@@ -196,7 +230,7 @@ export default function MyChecklistPage() {
                   </motion.div>
                 )}
 
-                {selectedCategory && checklistTemplates.length > 0 && (
+                {isConfirmed && selectedCategory && checklistTemplates.length > 0 && (
                   <motion.div
                     key="all-checklists"
                     className="space-y-8"
@@ -391,7 +425,7 @@ export default function MyChecklistPage() {
                                                 >
                                                   Reason / Note{' '}
                                                   <span
-                                                    className={`text-red-500 ${isNoteRequired ? '' : 'hidden'
+                                                    className={`text-red-500 ${isNoteRequired ? '' : 'hidden'}
                                                       }`}
                                                   >
                                                     *
@@ -484,7 +518,7 @@ export default function MyChecklistPage() {
                                   <path
                                     className="opacity-75"
                                     fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 A7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                   ></path>
                                 </svg>
                                 <span>Saving...</span>
@@ -507,12 +541,12 @@ export default function MyChecklistPage() {
                     </div>
                   </motion.div>
                 )}
-                {!selectedCategory && !isTemplateLoading && !error && (
+                {!isConfirmed && !selectedCategory && !isTemplateLoading && !error && (
                   <div className="text-center text-gray-500 mt-10">
-                    Please select a category to start.
+                    Please select a category and enter a task code to confirm.
                   </div>
                 )}
-                {selectedCategory && !isTemplateLoading && checklistTemplates.length === 0 && (
+                {isConfirmed && selectedCategory && !isTemplateLoading && checklistTemplates.length === 0 && (
                   <div className="text-center text-gray-500 mt-10">
                     No checklists found for this category.
                   </div>
@@ -521,7 +555,7 @@ export default function MyChecklistPage() {
             </div>
           </div>
         </motion.div>
-      </div >
+      </div>
       <AnimatePresence>
         {showSuccessPopup && (
           <motion.div
@@ -555,6 +589,6 @@ export default function MyChecklistPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div >
+    </div>
   );
 }

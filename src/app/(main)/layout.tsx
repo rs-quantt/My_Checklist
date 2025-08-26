@@ -91,9 +91,9 @@ export default function MainLayout({
               className="flex items-center"
             >
               <motion.img
-                src="/company-logo.jpg"
+                src="/company-logo.svg"
                 alt="Company Logo"
-                className="h-9"
+                className="h-4 mr-2"
               />
               {isAuthenticated && user?.role === 'admin' && (
                 <motion.span

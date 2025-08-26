@@ -23,6 +23,9 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
   const [taskCodeError, setTaskCodeError] = useState<string | null>(null);
   const [commitMessage, setCommitMessage] = useState<string>('');
 
+  // NEW: State to manage the confirmation of category and task code
+  const [isConfirmed, setIsConfirmed] = useState(false);
+
   // State to hold ALL item states across all checklists within the selected category
   const [allChecklistsItemStates, setAllChecklistsItemStates] = useState<
     Record<string, ItemStateMap>
@@ -130,6 +133,7 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
           setAllChecklistsItemStates(initialItemStates);
           setAllChecklistsExpandedStates(initialExpandedStates);
           setIsTemplateLoading(false);
+          setIsConfirmed(true); // Automatically confirm if loading an existing summary
 
           setInitialLoading(false); // Set initialLoading to false when done with categorySummaryId flow
         } else {
@@ -161,28 +165,8 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
     }
   }, [categorySummaryId, loggedInUserId, sessionStatus]);
 
-  const handleCategoryChange = async (categoryId: string) => {
-    if (categorySummaryId) {
-      // Prevent changing category if editing an existing summary
-      console.warn('Cannot change category when editing an existing summary.');
-      return;
-    }
-
-    if (!categoryId) {
-      setSelectedCategory(null);
-      setChecklistTemplates([]);
-      setAllChecklistsItemStates({}); // Clear all saved states for all checklists
-      setAllChecklistsExpandedStates({}); // Clear all expanded states
-      return;
-    }
-
-    const category = categories.find((c) => c._id === categoryId);
-    setSelectedCategory(category || null);
-    setAllChecklistsItemStates({}); // Clear all saved states for all checklists
-    setAllChecklistsExpandedStates({}); // Clear all expanded states
-
+  const fetchChecklistsForCategory = async (categoryId: string) => {
     setIsTemplateLoading(true);
-
     try {
       const checklistRes = await fetch(
         `/api/category-checklists?categoryId=${categoryId}`,
@@ -194,7 +178,6 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
       const checklistData = await checklistRes.json();
       setChecklistTemplates(checklistData);
 
-      // Initialize states for newly loaded checklists
       const initialItemStates: Record<string, ItemStateMap> = {};
       const initialExpandedStates: Record<string, { [itemId: string]: boolean }> = {};
 
@@ -219,6 +202,28 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
     } finally {
       setIsTemplateLoading(false);
     }
+  }
+
+  const handleCategoryChange = async (categoryId: string) => {
+    if (categorySummaryId || isConfirmed) { // Prevent changing category if editing or confirmed
+      console.warn('Cannot change category when editing or confirmed.');
+      return;
+    }
+
+    if (!categoryId) {
+      setSelectedCategory(null);
+      setChecklistTemplates([]);
+      setAllChecklistsItemStates({}); // Clear all saved states for all checklists
+      setAllChecklistsExpandedStates({}); // Clear all expanded states
+      return;
+    }
+
+    const category = categories.find((c) => c._id === categoryId);
+    setSelectedCategory(category || null);
+    setAllChecklistsItemStates({}); // Clear all saved states for all checklists
+    setAllChecklistsExpandedStates({}); // Clear all expanded states
+    setChecklistTemplates([]); // Clear templates when category changes before confirmation
+
   };
 
   // Helper to validate a single checklist's items based on its specific itemStates
@@ -260,6 +265,10 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
   };
 
   const handleSetTaskCode = (value: string) => {
+    if (categorySummaryId || isConfirmed) { // Prevent changing task code if editing or confirmed
+      console.warn('Cannot change task code when editing or confirmed.');
+      return;
+    }
     setTaskCode(value);
     // Do NOT set taskCodeError here. It should only be set on blur.
   };
@@ -270,6 +279,31 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
     const error = validateTaskCode(trimmedValue);
     setTaskCodeError(error);
   };
+
+  // NEW: Handle confirmation of category and task code
+  const handleConfirm = useCallback(async () => {
+    if (!selectedCategory || taskCodeError || taskCode.trim() === '') {
+      setError('Please select a category and enter a valid task code to confirm.');
+      return;
+    }
+
+    if (!selectedCategory._id) {
+      setError('Selected category is missing ID.');
+      return;
+    }
+
+    setError(null);
+    setIsConfirmed(true);
+    await fetchChecklistsForCategory(selectedCategory._id);
+  }, [selectedCategory, taskCode, taskCodeError, fetchChecklistsForCategory]);
+
+  // NEW: Handle changing confirmed status
+  const handleEdit = useCallback(() => {
+    setIsConfirmed(false);
+    setChecklistTemplates([]); // Clear checklists when going back to edit
+    setAllChecklistsItemStates({});
+    setAllChecklistsExpandedStates({});
+  }, []);
 
   const saveAllChecklists = async () => {
     if (!loggedInUserId || !selectedCategory) return;
@@ -368,18 +402,23 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
   };
 
   useEffect(() => {
+    // Determine if the Confirm button should be disabled
+    const isCategorySelected = selectedCategory !== null;
+    const isTaskCodeValid = taskCode.trim() !== '' && taskCodeError === null;
+    const canConfirm = isCategorySelected && isTaskCodeValid;
+
+    // Save button disabled logic
     const isTaskCodeEmpty = taskCode.trim() === '';
-    // isTaskCodeInvalid is true if NOT in edit mode AND taskCode is NOT empty AND taskCodeError exists.
-    // For disabling, we also need to consider if taskCode is empty in non-edit mode.
     const isTaskCodeInvalidOrEmpty =
       (!categorySummaryId && isTaskCodeEmpty) ||
       (!categorySummaryId && !isTaskCodeEmpty && taskCodeError !== null);
 
     if (
       !loggedInUserId ||
-      isTaskCodeInvalidOrEmpty || // Use the new condition here
+      isTaskCodeInvalidOrEmpty ||
       !selectedCategory ||
-      checklistTemplates.length === 0 // Check if any checklists are loaded
+      checklistTemplates.length === 0 ||
+      !isConfirmed // NEW: Save button is disabled if not confirmed
     ) {
       setIsSaveButtonDisabled(true);
       return;
@@ -399,6 +438,7 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
     checklistTemplates, // Dependency on all checklists
     validateChecklistItems,
     categorySummaryId,
+    isConfirmed, // NEW: Add isConfirmed to dependencies
   ]);
 
   const resetForm = () => {
@@ -410,6 +450,7 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
     setAllChecklistsItemStates({}); // Full form reset
     setAllChecklistsExpandedStates({}); // Full form reset
     setError(null);
+    setIsConfirmed(false); // NEW: Reset confirmation status
   };
 
   // Update currentChecklistItemStates via allChecklistsItemStates
@@ -468,6 +509,7 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
     initialLoading,
     savedChecklistId,
     loggedInUserId,
+    isConfirmed, // NEW: Expose isConfirmed
     handleCategoryChange,
     saveAllChecklists,
     resetForm,
@@ -475,5 +517,7 @@ export const useMyChecklistLogic = (categorySummaryId?: string) => {
     toggleItem,
     handleNoteChange,
     handleTaskCodeBlur,
+    handleConfirm, // NEW: Expose handleConfirm
+    handleEdit, // NEW: Expose handleEdit
   };
 };
