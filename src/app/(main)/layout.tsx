@@ -11,7 +11,7 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import * as Popover from '@radix-ui/react-popover';
-import { motion, Variants } from 'framer-motion';
+import { motion, Variants, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import React, { useState } from 'react';
 import Avatar from '../components/Avatar';
@@ -26,9 +26,11 @@ export default function MainLayout({
   const { user, logout, isAuthenticated } = useAuth();
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); // New state for profile menu
 
   const handleLogout = () => {
     logout();
+    setIsProfileMenuOpen(false); // Close menu on logout
   };
 
   const handleDeleteUserChecklistData = async () => {
@@ -45,6 +47,7 @@ export default function MainLayout({
     try {
       await clearUserChecklistItems();
       alert('Successfully deleted all item data.');
+      setIsProfileMenuOpen(false); // Close menu after action
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'An unknown error occurred';
@@ -59,6 +62,19 @@ export default function MainLayout({
     hover: {
       scale: 1.05,
       transition: { type: 'spring', stiffness: 400, damping: 10 },
+    },
+  };
+
+  const menuVariants: Variants = {
+    open: {
+      opacity: 1,
+      scale: 1,
+      transition: { type: 'spring', stiffness: 300, damping: 25 },
+    },
+    closed: {
+      opacity: 0,
+      scale: 0.95,
+      transition: { type: 'spring', stiffness: 300, damping: 25 },
     },
   };
 
@@ -140,7 +156,7 @@ export default function MainLayout({
                   width={32}
                   height={32}
                 />
-                <Popover.Root>
+                <Popover.Root open={isProfileMenuOpen} onOpenChange={setIsProfileMenuOpen}>
                   <Popover.Trigger asChild>
                     <button className="p-2 rounded-full hover:bg-gray-100 focus:outline-none cursor-pointer">
                       <Bars3Icon className="h-6 w-6 text-gray-500" />
@@ -148,74 +164,87 @@ export default function MainLayout({
                   </Popover.Trigger>
                   <Popover.Portal>
                     <Popover.Content
-                      className="z-10 mt-2 w-64 rounded-xl bg-white p-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2"
+                      forceMount // Ensure Popover.Content is always mounted for AnimatePresence to work
+                      className="z-10 mt-2 w-64 rounded-xl bg-white p-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none"
                       align="end"
                       sideOffset={5}
                     >
-                      <div className="flex items-center gap-4 px-4 py-3 border-b border-gray-100 mb-2">
-                        <Avatar
-                          src={user.image}
-                          name={user.name}
-                          alt={user.name}
-                          width={48}
-                          height={48}
-                        />
-                        <div className="flex flex-col">
-                          <p className="text-lg font-bold text-gray-900 truncate">
-                            {user.name}
-                          </p>
-                          <p className="text-sm text-gray-600 truncate">
-                            {user.email}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="p-2">
-                        {isAuthenticated && (
-                          <Link
-                            href="/my-category-summary"
-                            className="flex w-full items-center rounded-lg px-3 py-2 text-base font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 cursor-pointer"
+                      <AnimatePresence>
+                        {isProfileMenuOpen && (
+                          <motion.div
+                            initial="closed"
+                            animate="open"
+                            exit="closed"
+                            variants={menuVariants}
                           >
-                            <DocumentCheckIcon className="mr-3 h-5 w-5" />
-                            My Checklists
-                          </Link>
-                        )}
-                        <button
-                          onClick={handleLogout}
-                          className="flex w-full items-center rounded-lg px-3 py-2 text-base font-medium text-red-700 hover:bg-red-50 hover:text-red-900 transition-all duration-200 cursor-pointer"
-                        >
-                          <ArrowRightStartOnRectangleIcon className="mr-3 h-5 w-5" />
-                          Logout
-                        </button>
-                      </div>
-                      {user.email === 'quantt@runsystem.net' && (
-                        <div className="mt-3 pt-3 border-t border-gray-100 p-2">
-                          <div className="px-3 mb-2">
-                            <h3 className="text-sm font-bold uppercase text-red-700">
-                              Danger Zone
-                            </h3>
-                          </div>
-                          {deleteError && (
-                            <p className="px-3 text-xs text-red-500 mb-2">
-                              Error: {deleteError}
-                            </p>
-                          )}
-                          <button
-                            onClick={handleDeleteUserChecklistData}
-                            disabled={isDeleting}
-                            className="group flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-red-50 text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                          >
-                            {isDeleting ? (
-                              <ButtonLoadingSpinner />
-                            ) : (
-                              <TrashIcon className="mr-2 h-4 w-4" />
+                            <div className="flex items-center gap-4 px-4 py-3 border-b border-gray-100 mb-2">
+                              <Avatar
+                                src={user.image}
+                                name={user.name}
+                                alt={user.name}
+                                width={48}
+                                height={48}
+                              />
+                              <div className="flex flex-col">
+                                <p className="text-lg font-bold text-gray-900 truncate">
+                                  {user.name}
+                                </p>
+                                <p className="text-sm text-gray-600 truncate">
+                                  {user.email}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="p-2">
+                              {isAuthenticated && (
+                                <Link
+                                  href="/my-category-summary"
+                                  onClick={() => setIsProfileMenuOpen(false)} // Close menu on click
+                                  className="flex w-full items-center rounded-lg px-3 py-2 text-base font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 cursor-pointer"
+                                >
+                                  <DocumentCheckIcon className="mr-3 h-5 w-5" />
+                                  My Checklists
+                                </Link>
+                              )}
+                              <button
+                                onClick={handleLogout}
+                                className="flex w-full items-center rounded-lg px-3 py-2 text-base font-medium text-red-700 hover:bg-red-50 hover:text-red-900 transition-all duration-200 cursor-pointer"
+                              >
+                                <ArrowRightStartOnRectangleIcon className="mr-3 h-5 w-5" />
+                                Logout
+                              </button>
+                            </div>
+                            {user.email === 'quantt@runsystem.net' && (
+                              <div className="mt-3 pt-3 border-t border-gray-100 p-2">
+                                <div className="px-3 mb-2">
+                                  <h3 className="text-sm font-bold uppercase text-red-700">
+                                    Danger Zone
+                                  </h3>
+                                </div>
+                                {deleteError && (
+                                  <p className="px-3 text-xs text-red-500 mb-2">
+                                    Error: {deleteError}
+                                  </p>
+                                )}
+                                <button
+                                  onClick={handleDeleteUserChecklistData}
+                                  disabled={isDeleting}
+                                  className="group flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold bg-red-50 text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                                >
+                                  {isDeleting ? (
+                                    <ButtonLoadingSpinner />
+                                  ) : (
+                                    <TrashIcon className="mr-2 h-4 w-4" />
+                                  )}
+                                  {isDeleting
+                                    ? 'Deleting Data...'
+                                    : 'Delete All My Data'}
+                                </button>
+                              </div>
                             )}
-                            {isDeleting
-                              ? 'Deleting Data...'
-                              : 'Delete All My Data'}
-                          </button>
-                        </div>
-                      )}
-                      <Popover.Arrow className="fill-current text-white" />
+                            <Popover.Arrow className="fill-current text-white" />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </Popover.Content>
                   </Popover.Portal>
                 </Popover.Root>
