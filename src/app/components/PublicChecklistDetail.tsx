@@ -39,13 +39,13 @@ interface PublicChecklistDetailProps {
 const getStatusBadgeColor = (status: Status) => {
   switch (status) {
     case 'done':
-      return 'bg-emerald-50 text-emerald-700'; // Softer green
+      return 'bg-emerald-200 text-emerald-700'; // Softer green
     case 'incomplete':
-      return 'bg-amber-50 text-amber-700'; // Softer yellow/amber
+      return 'bg-amber-200 text-amber-700'; // Softer yellow/amber
     case 'na':
-      return 'bg-gray-50 text-gray-700'; // Softer gray
+      return 'bg-gray-200 text-gray-700'; // Softer gray
     default:
-      return 'bg-gray-50 text-gray-700';
+      return 'bg-gray-200 text-gray-700';
   }
 };
 
@@ -83,7 +83,7 @@ export default function PublicChecklistDetail({ checklist }: PublicChecklistDeta
   const { items } = checklist.checklist;
   
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6 max-w-4xl mx-auto border border-gray-100"> {/* Refined container styling */}
+    <div className="bg-gray-100 rounded-xl p-6 max-w-4xl mx-auto border border-gray-100"> {/* Refined container styling */}
       <div className="border-b border-gray-100 pb-2 mb-3"> {/* Reduced padding and margin */}
         <div className="flex items-center">
           <img
@@ -144,7 +144,7 @@ export default function PublicChecklistDetail({ checklist }: PublicChecklistDeta
                         </span>
                       )}
                       <span
-                        className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getStatusBadgeColor(
+                        className={`px-2 py-0.5 text-xs font-bold rounded-full ${getStatusBadgeColor(
                           item.status,
                         )}`}
                       >
@@ -206,7 +206,7 @@ export default function PublicChecklistDetail({ checklist }: PublicChecklistDeta
                             <div>
                               <label
                                 htmlFor={`note-${item._key}`}
-                                className="block text-xs font-medium text-gray-600 mt-2 pb-2" // Smaller label
+                                className="block text-sm font-medium text-blue-900 mt-2 pb-2" // Smaller label
                               >
                                 Reason / Note
                               </label>
@@ -214,7 +214,7 @@ export default function PublicChecklistDetail({ checklist }: PublicChecklistDeta
                                 id={`note-${item._key}`}
                                 value={item.note}
                                 readOnly
-                                className={`w-full p-2 border border-gray-200 rounded-md bg-gray-50 text-gray-700 text-sm`} // Refined border and text color
+                                className={`w-full p-2 border border-gray-400 rounded-md bg-gray-50 text-gray-700 text-sm focus:outline-none`} // Refined border and text color
                                 rows={2}
                                 spellCheck={false}
                               />
