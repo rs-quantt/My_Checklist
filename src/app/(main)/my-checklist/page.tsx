@@ -12,6 +12,7 @@ import { AnimatePresence, motion, Variants } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import { FaQuestionCircle, FaSave, FaTimesCircle, FaCheckCircle, FaEdit } from 'react-icons/fa'; // Import new icons
 import ptComponents from '../../components/ptComponents';
+import { useState } from 'react'; // Import useState
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -33,6 +34,7 @@ const itemVariants: Variants = {
 export default function MyChecklistPage() {
   const searchParams = useSearchParams();
   const categorySummaryId = searchParams.get('categorySummaryId') || undefined;
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false); // NEW state for confirmation popup
 
   const {
     sessionStatus,
@@ -54,16 +56,27 @@ export default function MyChecklistPage() {
     setShowSuccessPopup,
     error,
     initialLoading,
-    isConfirmed, // NEW: Get isConfirmed state
+    isConfirmed,
     handleCategoryChange,
     saveAllChecklists,
     handleStatusChange,
     toggleItem,
     handleNoteChange,
     handleTaskCodeBlur,
-    handleConfirm, // NEW: Get handleConfirm function
-    handleEdit, // NEW: Get handleEdit function
+    handleConfirm,
+    handleEdit,
   } = useMyChecklistLogic(categorySummaryId);
+
+  // Function to handle the click on the "Change" button
+  const handleChangeClick = () => {
+    setShowConfirmPopup(true);
+  };
+
+  // Function to handle confirmation from the dialog
+  const handleConfirmChange = () => {
+    setShowConfirmPopup(false);
+    handleEdit();
+  };
 
   // Determine if the Confirm/Change button should be enabled
   const isConfirmButtonEnabled =
@@ -185,8 +198,8 @@ export default function MyChecklistPage() {
                     </button>
                   ) : (
                     <button
-                      onClick={handleEdit}
-                      className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-blue-900 text-white font-bold shadow-md transition-all duration-300 ease-in-out disabled:bg-gray-400 cursor-pointer disabled:cursor-not-allowed"
+                      onClick={handleChangeClick}
+                      className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-yellow-500 text-white font-bold shadow-md transition-all duration-300 ease-in-out hover:bg-yellow-600 disabled:bg-gray-400 cursor-pointer disabled:cursor-not-allowed"
                     >
                       <FaEdit className="mr-2" /> Change
                     </button>
@@ -583,6 +596,43 @@ export default function MyChecklistPage() {
                   className="bg-blue-900 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 ease-in-out"
                 >
                   OK
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+        {showConfirmPopup && (
+          <motion.div
+            className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900/50 backdrop-blur-xs"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white rounded-lg shadow-xl p-6 max-w-sm mx-auto text-center border border-gray-200"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+            >
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                Confirm Change
+              </h3>
+              <p className="text-gray-700 mb-6">
+                Are you sure you want to change? This action will clear your current session.
+              </p>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={handleConfirmChange}
+                  className="bg-blue-900 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 ease-in-out"
+                >
+                  OK
+                </button>
+                <button
+                  onClick={() => setShowConfirmPopup(false)}
+                  className="bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors duration-200 ease-in-out"
+                >
+                  Cancel
                 </button>
               </div>
             </motion.div>
