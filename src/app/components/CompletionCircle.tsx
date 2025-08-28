@@ -40,7 +40,7 @@ const CompletionCircle = ({ percentage }: CompletionCircleProps) => {
     },
   };
 
-  let color = 'text-green-500';
+  let color = 'text-green-600';
   if (percentage < 75) {
     color = 'text-yellow-500';
   }
@@ -49,7 +49,7 @@ const CompletionCircle = ({ percentage }: CompletionCircleProps) => {
   }
 
   return (
-    <div className="flex items-center justify-start gap-1 w-20">
+    <div className="flex items-center justify-center gap-1 w-20">
       <div className="relative h-10 w-10">
         <svg
           width={size}

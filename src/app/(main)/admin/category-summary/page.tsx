@@ -1,4 +1,3 @@
-
 'use client';
 
 import CompletionCircle from '@/app/components/CompletionCircle';
@@ -7,19 +6,11 @@ import { motion, AnimatePresence, Variants } from 'framer-motion'; // Import Ani
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-
-interface CategorySummary {
-  _id: string;
-  title: string;
-  totalChecklists: number;
-  completedChecklists: number;
-  completionPercentage: number;
-  taskCode?: string;
-  updatedAt: string;
-}
+import { FaInfoCircle } from 'react-icons/fa'; // Import FaInfoCircle
+import { AdminCategoryListItem } from '@/services/categoryService'; // Import AdminCategoryListItem
 
 interface GroupedCategorySummaries {
-  [date: string]: CategorySummary[];
+  [date: string]: AdminCategoryListItem[];
 }
 
 const CACHE_KEY = 'adminCategorySummariesCache';
@@ -27,8 +18,16 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 const itemVariants: Variants = {
   hidden: { opacity: 0, height: 0 },
-  visible: { opacity: 1, height: 'auto', transition: { duration: 0.3, ease: 'easeOut' } },
-  exit: { opacity: 0, height: 0, transition: { duration: 0.3, ease: 'easeOut' } },
+  visible: {
+    opacity: 1,
+    height: 'auto',
+    transition: { duration: 0.3, ease: 'easeOut' },
+  },
+  exit: {
+    opacity: 0,
+    height: 0,
+    transition: { duration: 0.3, ease: 'easeOut' },
+  },
 };
 
 export default function AdminCategorySummaryPage() {
@@ -37,7 +36,9 @@ export default function AdminCategorySummaryPage() {
     useState<GroupedCategorySummaries>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>({});
+  const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>(
+    {},
+  );
 
   useEffect(() => {
     async function fetchCategorySummaries() {
@@ -48,7 +49,7 @@ export default function AdminCategorySummaryPage() {
           const groupedData = groupSummaries(data);
           setGroupedCategorySummaries(groupedData);
           const initialExpandedState: Record<string, boolean> = {};
-          Object.keys(groupedData).forEach(date => {
+          Object.keys(groupedData).forEach((date) => {
             initialExpandedState[date] = true;
           });
           setExpandedDates(initialExpandedState);
@@ -67,7 +68,7 @@ export default function AdminCategorySummaryPage() {
             `Error: ${response.statusText} - ${errorData.error || 'Unknown'}`,
           );
         }
-        const data: CategorySummary[] = await response.json();
+        const data: AdminCategoryListItem[] = await response.json();
         const groupedData = groupSummaries(data);
         setGroupedCategorySummaries(groupedData);
         sessionStorage.setItem(
@@ -75,7 +76,7 @@ export default function AdminCategorySummaryPage() {
           JSON.stringify({ data, timestamp: Date.now() }),
         );
         const initialExpandedState: Record<string, boolean> = {};
-        Object.keys(groupedData).forEach(date => {
+        Object.keys(groupedData).forEach((date) => {
           initialExpandedState[date] = true;
         });
         setExpandedDates(initialExpandedState);
@@ -95,7 +96,7 @@ export default function AdminCategorySummaryPage() {
     fetchCategorySummaries();
   }, []);
 
-  const groupSummaries = (summaries: CategorySummary[]) => {
+  const groupSummaries = (summaries: AdminCategoryListItem[]) => {
     const grouped: GroupedCategorySummaries = {};
     summaries.forEach((summary) => {
       const date = new Date(summary.updatedAt).toLocaleDateString('en-US', {
@@ -134,12 +135,6 @@ export default function AdminCategorySummaryPage() {
     return dateB.getTime() - dateA.getTime();
   });
 
-  const handleEditClick = (e: React.MouseEvent, summaryId: string) => {
-    e.stopPropagation();
-    e.preventDefault();
-    router.push(`/admin/checklists?categorySummaryId=${summaryId}`);
-  };
-
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <div className="flex flex-wrap justify-between items-center mb-6">
@@ -148,24 +143,22 @@ export default function AdminCategorySummaryPage() {
             Admin Category Summary
           </h1>
           <p className="text-gray-600 mb-6 pt-2">
-            Overview of checklist progress across different categories for all users.
+            Overview of checklist progress across different categories for all
+            users.
           </p>
         </div>
       </div>
-
       {dates.length === 0 ? (
         <div className="text-center text-gray-600">
           <p>No category summaries found.</p>
-          <p className="mt-2">
-            Check back later for user progress!
-          </p>
+          <p className="mt-2">Check back later for user progress!</p>
         </div>
       ) : (
         dates.map((date) => (
           <div key={date} className="mb-8 last:mb-0">
             <div className="bg-white p-4 rounded-lg backdrop-blur-md">
               <div
-                className="flex items-center justify-between cursor-pointer"
+                className="flex items-center justify-between cursor-pointer py-2"
                 onClick={() => toggleDateExpansion(date)}
               >
                 <h2 className="text-lg font-bold text-blue-900 flex items-center">
@@ -195,96 +188,116 @@ export default function AdminCategorySummaryPage() {
               <AnimatePresence>
                 {expandedDates[date] && (
                   <motion.div
-                    key={date} // Key is important for AnimatePresence to track items
+                    key={date}
                     variants={itemVariants}
                     initial="hidden"
                     animate="visible"
                     exit="exit"
-                    className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    className="mt-4 overflow-x-auto" // Added overflow for responsiveness
                   >
-                    {groupedCategorySummaries[date].map((summary) => (
-                      <Link
-                        key={summary._id}
-                        href={`/admin/category-summary/${summary._id}`}
-                        className="block"
-                      >
-                        <motion.div
-                          className="bg-[#edf8ff] rounded-lg shadow-sm p-4 border border-gray-200 cursor-pointer flex flex-col h-full relative"
-                          whileHover={{
-                            translateY: -3,
-                            boxShadow:
-                              '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                            borderColor: '#3b82f6',
-                          }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <motion.button
-                            className="absolute top-4 right-4 p-3 rounded-full bg-transparent text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 cursor-pointer"
-                            onClick={(e) => handleEditClick(e, summary._id)}
-                            aria-label="Edit Checklist"
-                            whileHover={{ backgroundColor: '#1c398e', color: 'white', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}
-                            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                    <table className="min-w-full divide-y divide-gray-200 shadow-sm rounded-lg overflow-hidden">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th
+                            scope="col"
+                            className="w-2/12 px-6 py-3 text-center text-sm font-medium text-gray-500 uppercase tracking-wider"
                           >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                              <path d="M18.5 2.5a2.121 2 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                            </svg>
-                          </motion.button>
-
-                          <h2 className="text-lg font-bold text-blue-900 mb-1 pr-8">
-                            {summary.title}
-                          </h2>
-                          {summary.taskCode && (
-                            <p className="text-gray-600 text-sm mb-1">
-                              Task Code:{' '}
-                              <span className="font-medium text-gray-700">
-                                {summary.taskCode}
-                              </span>
-                            </p>
-                          )}
-
-                          <div className="flex items-center mt-3 mb-3">
-                            <div className="flex-shrink-0 mr-4">
-                              <CompletionCircle
-                                percentage={summary.completionPercentage}
-                              />
-                            </div>
-                            <div>
-                              <p className="text-gray-700 text-sm">
-                                Total Checklists:{' '}
-                                <span className="font-semibold">
-                                  {summary.totalChecklists}
-                                </span>
-                              </p>
-                              <p className="text-gray-700 text-sm">
-                                Completed:{' '}
-                                <span className="font-semibold">
-                                  {summary.completedChecklists}
-                                </span>
-                              </p>
-                              <p className="text-sm font-semibold text-blue-900 mt-1">
-                                {summary.completionPercentage.toFixed(0)}% Complete
-                              </p>
-                            </div>
-                          </div>
-
-                          <p className="text-xs text-gray-500 mt-auto text-right">
-                            Last Updated:{' '}
-                            {new Date(summary.updatedAt).toLocaleDateString()}{' '}
-                            {new Date(summary.updatedAt).toLocaleTimeString()}
-                          </p>
-                        </motion.div>
-                      </Link>
-                    ))}
+                            Title
+                          </th>
+                          <th
+                            scope="col"
+                            className="w-2/12 px-6 py-3 text-center text-sm font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Task Code
+                          </th>
+                          <th
+                            scope="col"
+                            className="w-2/12 px-6 py-3 text-center text-sm font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            User
+                          </th>
+                          <th
+                            scope="col"
+                            className="w-1/12 px-6 py-3 text-center text-sm font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Total
+                          </th>
+                          <th
+                            scope="col"
+                            className="w-1/12 px-6 py-3 text-center text-sm font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Completed
+                          </th>
+                          <th
+                            scope="col"
+                            className="w-1/12 px-6 py-3 text-center text-sm font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Completion
+                          </th>
+                          <th
+                            scope="col"
+                            className="w-2/12 px-6 py-3 text-center text-sm font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Last Updated
+                          </th>
+                          <th
+                            scope="col"
+                            className="w-1/12 px-6 py-3 text-center text-sm font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {groupedCategorySummaries[date].map((summary) => (
+                          <tr
+                            key={summary._id}
+                            className="hover:bg-gray-50 transition-colors duration-150 ease-in-out"
+                          >
+                            <td className="w-2/12 px-6 py-4 text-base font-medium text-blue-900 text-center">
+                              <Link
+                                href={`/admin/category-summary/${summary._id}`}
+                                className="hover:underline"
+                              >
+                                {summary.title}
+                              </Link>
+                            </td>
+                            <td className="w-2/12 px-6 py-4 text-base text-gray-700 text-center">
+                              {summary.taskCode || 'N/A'}
+                            </td>
+                            <td className="w-2/12 px-6 py-4 text-base text-gray-700 text-center">
+                              {summary.userName || 'N/A'}
+                            </td>
+                            <td className="w-1/12 px-6 py-4 text-base text-gray-700 text-center">
+                              {summary.totalChecklists}
+                            </td>
+                            <td className="w-1/12 px-6 py-4 text-base text-gray-700 text-center">
+                              {summary.completedChecklists}
+                            </td>
+                            <td className="w-1/12 px-6 py-4 text-base text-gray-700 text-center">
+                              <div className="flex items-center justify-center">
+                                <CompletionCircle
+                                  percentage={summary.completionPercentage}
+                                />
+                              </div>
+                            </td>
+                            <td className="w-2/12 px-6 py-4 text-base text-gray-500 text-center">
+                              {new Date(summary.updatedAt).toLocaleDateString()}{' '}
+                              {new Date(summary.updatedAt).toLocaleTimeString()}
+                            </td>
+                            <td className="w-1/12 px-6 py-4 text-center text-base font-medium text-gray-500">
+                              <Link
+                                href={`/admin/category-summary/${summary._id}`}
+                                className="text-blue-600 hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md p-1 inline-flex items-center justify-center"
+                                aria-label="View Details"
+                              >
+                                <FaInfoCircle className="h-5.5 w-5.5" />
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </motion.div>
                 )}
               </AnimatePresence>
